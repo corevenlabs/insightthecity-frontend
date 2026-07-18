@@ -1,0 +1,26 @@
+name: Publicar update OTA (canal preview)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # EXPO_TOKEN: token de acceso de expo.dev (Account settings -> Access tokens),
+      # guardado como secret del repo.
+      - name: Publicar el update
+        run: npx eas-cli@latest update --channel preview --message "${{ github.event.head_commit.message }}" --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

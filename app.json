@@ -1,16 +1,23 @@
 {
   "expo": {
-    "name": "mi-app",
-    "slug": "mi-app",
+    "name": "ITC Club",
+    "slug": "itc-club",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "miapp",
+    "scheme": "itcclub",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.insightthecity.app",
       "icon": "./assets/expo.icon",
       "infoPlist": {
-        "LSApplicationQueriesSchemes": ["miapp"]
+        "LSApplicationQueriesSchemes": [
+          "itcclub",
+          "itcclub",
+          "itcclub",
+          "itcclub"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -43,6 +50,19 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f5ed8eb6-1918-470f-8f4f-9e68776661cf"
+      }
+    },
+    "owner": "corevenlabs-dev",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f5ed8eb6-1918-470f-8f4f-9e68776661cf"
     }
   }
 }

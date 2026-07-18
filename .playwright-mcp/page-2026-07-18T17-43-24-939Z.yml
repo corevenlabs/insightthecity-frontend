@@ -1,0 +1,307 @@
+- generic [ref=e28]:
+  - button "ra.navigation.skip_nav" [ref=e29] [cursor=pointer]
+  - generic [ref=e30]:
+    - banner [ref=e31]:
+      - generic [ref=e32]:
+        - button "Open/Close menu" [ref=e33] [cursor=pointer]
+        - heading "Lista de Experiencias" [level=6] [ref=e36]
+        - button "Toggle Theme" [ref=e39] [cursor=pointer]
+        - button "Refrescar" [ref=e43] [cursor=pointer]
+        - button "ra.auth.user_menu" [ref=e47] [cursor=pointer]: Orlando
+    - main [ref=e51]:
+      - menu [ref=e55]:
+        - menuitem [ref=e56] [cursor=pointer]:
+          - paragraph [ref=e60]: Experiencias
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - textbox "ra.action.search" [ref=e68]
+          - generic [ref=e73]:
+            - button "Agregar filtro" [ref=e75] [cursor=pointer]
+            - link "Crear" [ref=e79] [cursor=pointer]:
+              - /url: "#/experiences/create"
+            - button "ra.action.export" [ref=e83] [cursor=pointer]
+        - generic [ref=e88]:
+          - generic:
+            - generic:
+              - generic [ref=e89]:
+                - button "ra.action.unselect" [ref=e90] [cursor=pointer]
+                - paragraph [ref=e93]: 0 seleccionado
+              - button "Borrar" [ref=e95] [cursor=pointer]
+          - table [ref=e100]:
+            - rowgroup [ref=e101]:
+              - row [ref=e102]:
+                - columnheader [ref=e103]:
+                  - checkbox "Select all" [ref=e105] [cursor=pointer]
+                - columnheader [ref=e108]:
+                  - button "Ordenar" [ref=e109] [cursor=pointer]:
+                    - generic [ref=e110]: Image
+                - columnheader [ref=e111]:
+                  - button "Ordenar" [ref=e112] [cursor=pointer]:
+                    - generic [ref=e113]: Título
+                - columnheader [ref=e114]:
+                  - button "Ordenar" [ref=e115] [cursor=pointer]:
+                    - generic [ref=e116]: Categoría
+                - columnheader [ref=e117]:
+                  - button "Ordenar" [ref=e118] [cursor=pointer]:
+                    - generic [ref=e119]: Sección
+                - columnheader [ref=e120]:
+                  - button "Ordenar" [ref=e121] [cursor=pointer]:
+                    - generic [ref=e122]: Acceso
+                - columnheader [ref=e123]:
+                  - button "Ordenar" [ref=e124] [cursor=pointer]:
+                    - generic [ref=e125]: Publicado
+                - columnheader [ref=e126]
+            - rowgroup [ref=e127]:
+              - row [ref=e128] [cursor=pointer]:
+                - cell [ref=e129]:
+                  - generic "Select this row" [ref=e130]:
+                    - checkbox [ref=e131]
+                - cell [ref=e134]
+                - cell "Broadway Week" [ref=e137]
+                - cell "DROP" [ref=e138]
+                - cell "drops" [ref=e139]
+                - cell "premium" [ref=e140]
+                - cell [ref=e141]
+                - cell [ref=e145]:
+                  - link "Editar" [ref=e146]:
+                    - /url: "#/experiences/broadway-week"
+              - row [ref=e150] [cursor=pointer]:
+                - cell [ref=e151]:
+                  - generic "Select this row" [ref=e152]:
+                    - checkbox [ref=e153]
+                - cell [ref=e156]
+                - cell "Brooklyn Flea" [ref=e159]
+                - cell "FOOD" [ref=e160]
+                - cell [ref=e161]
+                - cell "free" [ref=e162]
+                - cell [ref=e163]
+                - cell [ref=e167]:
+                  - link "Editar" [ref=e168]:
+                    - /url: "#/experiences/brooklyn-flea"
+              - row [ref=e172] [cursor=pointer]:
+                - cell [ref=e173]:
+                  - generic "Select this row" [ref=e174]:
+                    - checkbox [ref=e175]
+                - cell [ref=e178]
+                - cell "Concierto en Central Park" [ref=e181]
+                - cell "EVENTO" [ref=e182]
+                - cell "top_today" [ref=e183]
+                - cell "free" [ref=e184]
+                - cell [ref=e185]
+                - cell [ref=e189]:
+                  - link "Editar" [ref=e190]:
+                    - /url: "#/experiences/central-park-concert"
+              - row [ref=e194] [cursor=pointer]:
+                - cell [ref=e195]:
+                  - generic "Select this row" [ref=e196]:
+                    - checkbox [ref=e197]
+                - cell [ref=e200]
+                - cell "Chelsea Market Tour" [ref=e203]
+                - cell "FOOD" [ref=e204]
+                - cell [ref=e205]
+                - cell "premium" [ref=e206]
+                - cell [ref=e207]
+                - cell [ref=e211]:
+                  - link "Editar" [ref=e212]:
+                    - /url: "#/experiences/chelsea-market-tour"
+              - row [ref=e216] [cursor=pointer]:
+                - cell [ref=e217]:
+                  - generic "Select this row" [ref=e218]:
+                    - checkbox [ref=e219]
+                - cell [ref=e222]
+                - cell "Comedy Cellar" [ref=e225]
+                - cell "NIGHTLIFE" [ref=e226]
+                - cell [ref=e227]
+                - cell "premium" [ref=e228]
+                - cell [ref=e229]
+                - cell [ref=e233]:
+                  - link "Editar" [ref=e234]:
+                    - /url: "#/experiences/comedy-cellar"
+              - row [ref=e238] [cursor=pointer]:
+                - cell [ref=e239]:
+                  - generic "Select this row" [ref=e240]:
+                    - checkbox [ref=e241]
+                - cell [ref=e244]
+                - cell "Edge Observatory" [ref=e247]
+                - cell "DROP" [ref=e248]
+                - cell "drops" [ref=e249]
+                - cell "premium" [ref=e250]
+                - cell [ref=e251]
+                - cell [ref=e255]:
+                  - link "Editar" [ref=e256]:
+                    - /url: "#/experiences/edge-observatory"
+              - row [ref=e260] [cursor=pointer]:
+                - cell [ref=e261]:
+                  - generic "Select this row" [ref=e262]:
+                    - checkbox [ref=e263]
+                - cell [ref=e266]
+                - cell "Ellen's Stardust Diner" [ref=e269]
+                - cell "DESCUENTO" [ref=e270]
+                - cell "top_today" [ref=e271]
+                - cell "free" [ref=e272]
+                - cell [ref=e273]
+                - cell [ref=e277]:
+                  - link "Editar" [ref=e278]:
+                    - /url: "#/experiences/ellens-stardust-diner"
+              - row [ref=e282] [cursor=pointer]:
+                - cell [ref=e283]:
+                  - generic "Select this row" [ref=e284]:
+                    - checkbox [ref=e285]
+                - cell [ref=e288]
+                - cell "Hamilton" [ref=e291]
+                - cell "BROADWAY" [ref=e292]
+                - cell [ref=e293]
+                - cell "premium" [ref=e294]
+                - cell [ref=e295]
+                - cell [ref=e299]:
+                  - link "Editar" [ref=e300]:
+                    - /url: "#/experiences/hamilton-broadway"
+              - row [ref=e304] [cursor=pointer]:
+                - cell [ref=e305]:
+                  - generic "Select this row" [ref=e306]:
+                    - checkbox [ref=e307]
+                - cell [ref=e310]
+                - cell "Jazz Night Brooklyn" [ref=e313]
+                - cell "MÚSICA" [ref=e314]
+                - cell [ref=e315]
+                - cell "free" [ref=e316]
+                - cell [ref=e317]
+                - cell [ref=e321]:
+                  - link "Editar" [ref=e322]:
+                    - /url: "#/experiences/jazz-night-brooklyn"
+              - row [ref=e326] [cursor=pointer]:
+                - cell [ref=e327]:
+                  - generic "Select this row" [ref=e328]:
+                    - checkbox [ref=e329]
+                - cell [ref=e332]
+                - cell "The Lion King" [ref=e335]
+                - cell "BROADWAY" [ref=e336]
+                - cell [ref=e337]
+                - cell "premium" [ref=e338]
+                - cell [ref=e339]
+                - cell [ref=e343]:
+                  - link "Editar" [ref=e344]:
+                    - /url: "#/experiences/lion-king-broadway"
+              - row [ref=e348] [cursor=pointer]:
+                - cell [ref=e349]:
+                  - generic "Select this row" [ref=e350]:
+                    - checkbox [ref=e351]
+                - cell [ref=e354]
+                - cell "MoMA Late Fridays" [ref=e357]
+                - cell "ARTE" [ref=e358]
+                - cell [ref=e359]
+                - cell "free" [ref=e360]
+                - cell [ref=e361]
+                - cell [ref=e365]:
+                  - link "Editar" [ref=e366]:
+                    - /url: "#/experiences/moma-late-fridays"
+              - row [ref=e370] [cursor=pointer]:
+                - cell [ref=e371]:
+                  - generic "Select this row" [ref=e372]:
+                    - checkbox [ref=e373]
+                - cell [ref=e376]
+                - cell "Museum Nights" [ref=e379]
+                - cell "DROP" [ref=e380]
+                - cell "drops" [ref=e381]
+                - cell "free" [ref=e382]
+                - cell [ref=e383]
+                - cell [ref=e387]:
+                  - link "Editar" [ref=e388]:
+                    - /url: "#/experiences/museum-nights"
+              - row [ref=e392] [cursor=pointer]:
+                - cell [ref=e393]:
+                  - generic "Select this row" [ref=e394]:
+                    - checkbox [ref=e395]
+                - cell [ref=e398]
+                - cell "Noticias y alertas que debes saber hoy" [ref=e401]
+                - cell "NUEVA YORK AL DÍA" [ref=e402]
+                - cell "ny_al_dia" [ref=e403]
+                - cell "free" [ref=e404]
+                - cell [ref=e405]
+                - cell [ref=e409]:
+                  - link "Editar" [ref=e410]:
+                    - /url: "#/experiences/ny-alerts-today"
+              - row [ref=e414] [cursor=pointer]:
+                - cell [ref=e415]:
+                  - generic "Select this row" [ref=e416]:
+                    - checkbox [ref=e417]
+                - cell [ref=e420]
+                - cell "Guías para vivir NYC como local" [ref=e423]
+                - cell "GUÍA TURÍSTICA" [ref=e424]
+                - cell "guias" [ref=e425]
+                - cell "premium" [ref=e426]
+                - cell [ref=e427]
+                - cell [ref=e431]:
+                  - link "Editar" [ref=e432]:
+                    - /url: "#/experiences/nyc-local-guides"
+              - row [ref=e436] [cursor=pointer]:
+                - cell [ref=e437]:
+                  - generic "Select this row" [ref=e438]:
+                    - checkbox [ref=e439]
+                - cell [ref=e442]
+                - cell "Planes para esta semana en Nueva York" [ref=e445]
+                - cell "QUE HACER EN NY" [ref=e446]
+                - cell "que_hacer" [ref=e447]
+                - cell "free" [ref=e448]
+                - cell [ref=e449]
+                - cell [ref=e453]:
+                  - link "Editar" [ref=e454]:
+                    - /url: "#/experiences/ny-weekend-plans"
+              - row [ref=e458] [cursor=pointer]:
+                - cell [ref=e459]:
+                  - generic "Select this row" [ref=e460]:
+                    - checkbox [ref=e461]
+                - cell [ref=e464]
+                - cell "Restaurant Week NYC" [ref=e467]
+                - cell "FOOD" [ref=e468]
+                - cell "drops" [ref=e469]
+                - cell "premium" [ref=e470]
+                - cell [ref=e471]
+                - cell [ref=e475]:
+                  - link "Editar" [ref=e476]:
+                    - /url: "#/experiences/restaurant-week-nyc"
+              - row [ref=e480] [cursor=pointer]:
+                - cell [ref=e481]:
+                  - generic "Select this row" [ref=e482]:
+                    - checkbox [ref=e483]
+                - cell [ref=e486]
+                - cell "230 Fifth Rooftop" [ref=e489]
+                - cell "DROP" [ref=e490]
+                - cell "drops" [ref=e491]
+                - cell "premium" [ref=e492]
+                - cell [ref=e493]
+                - cell [ref=e497]:
+                  - link "Editar" [ref=e498]:
+                    - /url: "#/experiences/rooftop-230-fifth"
+              - row [ref=e502] [cursor=pointer]:
+                - cell [ref=e503]:
+                  - generic "Select this row" [ref=e504]:
+                    - checkbox [ref=e505]
+                - cell [ref=e508]
+                - cell "Rooftop Sunset Party" [ref=e511]
+                - cell "NIGHTLIFE" [ref=e512]
+                - cell [ref=e513]
+                - cell "premium" [ref=e514]
+                - cell [ref=e515]
+                - cell [ref=e519]:
+                  - link "Editar" [ref=e520]:
+                    - /url: "#/experiences/rooftop-sunset-party"
+              - row [ref=e524] [cursor=pointer]:
+                - cell [ref=e525]:
+                  - generic "Select this row" [ref=e526]:
+                    - checkbox [ref=e527]
+                - cell [ref=e530]
+                - cell "2x1 SUMMIT" [ref=e533]
+                - cell "CITY DROP" [ref=e534]
+                - cell "drops" [ref=e535]
+                - cell "premium" [ref=e536]
+                - cell [ref=e537]
+                - cell [ref=e541]:
+                  - link "Editar" [ref=e542]:
+                    - /url: "#/experiences/summit-nyc-2x1"
+        - generic [ref=e547]:
+          - paragraph [ref=e548]: ra.navigation.page_rows_per_page
+          - generic [ref=e549]:
+            - combobox "ra.navigation.page_rows_per_page" [ref=e550] [cursor=pointer]: "25"
+            - textbox: "25"
+          - paragraph [ref=e551]: 1-19 de 19

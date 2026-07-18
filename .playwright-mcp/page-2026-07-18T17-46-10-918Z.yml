@@ -1,0 +1,86 @@
+- generic [ref=f1e3]:
+  - button "Ir al contenido" [ref=f1e4] [cursor=pointer]
+  - generic [ref=f1e5]:
+    - banner [ref=f1e6]:
+      - generic [ref=f1e7]:
+        - button "Close menu" [ref=f1e8] [cursor=pointer]
+        - heading "Crear Experiencias" [level=6] [ref=f1e629]
+        - button "Cambiar tema" [ref=f1e14] [cursor=pointer]
+        - button "Refrescar" [ref=f1e18] [cursor=pointer]
+        - button "Perfil" [ref=f1e25] [cursor=pointer]: Orlando
+    - main [ref=f1e29]:
+      - menu [ref=f1e33]:
+        - menuitem [ref=f1e34] [cursor=pointer]:
+          - paragraph [ref=f1e38]: Experiencias
+      - generic [ref=f1e635]:
+        - generic [ref=f1e637]:
+          - generic [ref=f1e638]:
+            - generic: Título *
+            - textbox "Título" [ref=f1e640]
+            - paragraph [ref=f1e641]
+          - generic [ref=f1e642]:
+            - generic: Categoría *
+            - generic [ref=f1e643]:
+              - combobox "Categoría" [ref=f1e644] [cursor=pointer]
+              - textbox
+            - paragraph [ref=f1e645]
+          - generic [ref=f1e646]:
+            - generic: Sección
+            - generic [ref=f1e647]:
+              - combobox "Sección" [ref=f1e648] [cursor=pointer]
+              - textbox
+            - paragraph [ref=f1e649]
+          - generic [ref=f1e650]:
+            - generic [ref=f1e651]: Acceso
+            - generic [ref=f1e652]:
+              - combobox "Acceso" [ref=f1e653] [cursor=pointer]: Gratis
+              - textbox: free
+            - paragraph [ref=f1e654]
+          - generic [ref=f1e655]:
+            - text: Imagen
+            - generic [ref=f1e656]:
+              - generic [ref=f1e657]:
+                - generic: URL de la imagen
+                - textbox "URL de la imagen" [ref=f1e659]
+              - button "Subir" [ref=f1e660] [cursor=pointer]
+          - generic [ref=f1e661]:
+            - generic: Fecha (texto visible)
+            - textbox "Fecha (texto visible)" [ref=f1e663]
+            - paragraph [ref=f1e664]: "Ej: 15 Ago · 20:00"
+          - generic [ref=f1e665]:
+            - generic: Ubicación
+            - textbox "Ubicación" [ref=f1e667]
+            - paragraph [ref=f1e668]
+          - generic [ref=f1e669]:
+            - generic: Descripción
+            - textbox "Descripción" [ref=f1e671]
+            - paragraph [ref=f1e672]
+          - generic [ref=f1e673]:
+            - generic: Incluye (una línea por ítem)
+            - textbox "Incluye (una línea por ítem)" [ref=f1e675]
+            - paragraph [ref=f1e676]
+          - generic [ref=f1e677]:
+            - generic: Recomendación
+            - textbox "Recomendación" [ref=f1e679]
+            - paragraph [ref=f1e680]
+          - generic [ref=f1e681]:
+            - generic [ref=f1e682]: Termina el (para el contador)
+            - textbox "Termina el (para el contador)" [ref=f1e684]
+            - paragraph [ref=f1e685]
+          - generic [ref=f1e686]:
+            - generic [ref=f1e687]: Orden
+            - spinbutton "Orden" [ref=f1e689]: "0"
+            - paragraph [ref=f1e690]
+          - generic [ref=f1e691]:
+            - generic [ref=f1e692] [cursor=pointer]:
+              - switch "Destacado" [ref=f1e695]
+              - generic [ref=f1e698]: Destacado
+            - paragraph [ref=f1e699]
+          - generic [ref=f1e700]:
+            - generic [ref=f1e701] [cursor=pointer]:
+              - switch "Publicado" [checked] [ref=f1e704]
+              - generic [ref=f1e707]: Publicado
+            - paragraph [ref=f1e708]
+        - toolbar [ref=f1e709]:
+          - generic [ref=f1e710]:
+            - button "Guardar" [disabled]

@@ -1,0 +1,89 @@
+- generic [ref=f1e3]:
+  - button "Ir al contenido" [ref=f1e4] [cursor=pointer]
+  - generic [ref=f1e5]:
+    - banner [ref=f1e6]:
+      - generic [ref=f1e7]:
+        - button "Close menu" [ref=f1e8] [cursor=pointer]
+        - 'heading "Experiencias #summit-nyc-2x1" [level=6] [ref=f1e11]'
+        - button "Cambiar tema" [ref=f1e14] [cursor=pointer]
+        - generic [ref=f1e17]:
+          - button "Refrescar" [ref=f1e18] [cursor=pointer]
+          - progressbar [ref=f1e21]
+        - button "Perfil" [ref=f1e25] [cursor=pointer]: Orlando
+    - main [ref=f1e29]:
+      - menu [ref=f1e33]:
+        - menuitem [ref=f1e34] [cursor=pointer]:
+          - paragraph [ref=f1e38]: Experiencias
+      - generic [ref=f1e43]:
+        - generic [ref=f1e45]:
+          - generic [ref=f1e46]:
+            - generic [ref=f1e47]: Título *
+            - textbox "Título" [ref=f1e50]: 2x1 SUMMIT
+            - paragraph [ref=f1e51]
+          - generic [ref=f1e52]:
+            - generic [ref=f1e53]: Categoría *
+            - generic [ref=f1e55]:
+              - combobox "Categoría" [ref=f1e56] [cursor=pointer]: CITY DROP
+              - textbox: CITY DROP
+            - paragraph [ref=f1e57]
+          - generic [ref=f1e58]:
+            - generic [ref=f1e59]: Sección
+            - generic [ref=f1e60]:
+              - combobox "Sección" [ref=f1e61] [cursor=pointer]: Drops
+              - textbox: drops
+            - paragraph [ref=f1e62]
+          - generic [ref=f1e63]:
+            - generic [ref=f1e64]: Acceso
+            - generic [ref=f1e65]:
+              - combobox "Acceso" [ref=f1e66] [cursor=pointer]: Premium (ITC Club)
+              - textbox: premium
+            - paragraph [ref=f1e67]
+          - generic [ref=f1e68]:
+            - text: Imagen
+            - generic [ref=f1e69]:
+              - generic [ref=f1e70]:
+                - generic [ref=f1e71]: URL de la imagen
+                - textbox "URL de la imagen" [ref=f1e73]: https://images.unsplash.com/photo-1518391846015-55a9cc003b25
+              - button "Subir" [ref=f1e74] [cursor=pointer]
+          - generic [ref=f1e75]:
+            - generic [ref=f1e76]: Fecha (texto visible)
+            - textbox "Fecha (texto visible)" [ref=f1e78]: Disponible por 48 horas
+            - paragraph [ref=f1e79]: "Ej: 15 Ago · 20:00"
+          - generic [ref=f1e80]:
+            - generic [ref=f1e81]: Ubicación
+            - textbox "Ubicación" [ref=f1e83]: One Vanderbilt, Midtown Manhattan
+            - paragraph [ref=f1e84]
+          - generic [ref=f1e85]:
+            - generic [ref=f1e86]: Descripción
+            - textbox "Descripción" [ref=f1e88]: Un beneficio por tiempo limitado para vivir una de las vistas más icónicas de Manhattan. Perfecto para fotos, atardecer y una experiencia premium sobre la ciudad.
+            - paragraph [ref=f1e89]
+          - generic [ref=f1e90]:
+            - generic [ref=f1e91]: Incluye (una línea por ítem)
+            - textbox "Incluye (una línea por ítem)" [ref=f1e93]: Beneficio 2x1 en entradas seleccionadas Acceso sujeto a disponibilidad Recomendaciones para mejor horario
+            - paragraph [ref=f1e94]
+          - generic [ref=f1e95]:
+            - generic [ref=f1e96]: Recomendación
+            - textbox "Recomendación" [ref=f1e98]: El atardecer suele ser el mejor momento, pero reserva temprano porque los horarios se agotan rápido.
+            - paragraph [ref=f1e99]
+          - generic [ref=f1e100]:
+            - generic [ref=f1e101]: Termina el (para el contador)
+            - textbox "Termina el (para el contador)" [ref=f1e103]
+            - paragraph [ref=f1e104]
+          - generic [ref=f1e105]:
+            - generic [ref=f1e106]: Orden
+            - spinbutton "Orden" [ref=f1e108]: "0"
+            - paragraph [ref=f1e109]
+          - generic [ref=f1e110]:
+            - generic [ref=f1e111] [cursor=pointer]:
+              - switch "Destacado" [checked] [ref=f1e114]
+              - generic [ref=f1e117]: Destacado
+            - paragraph [ref=f1e118]
+          - generic [ref=f1e119]:
+            - generic [ref=f1e120] [cursor=pointer]:
+              - switch "Publicado" [checked] [ref=f1e123]
+              - generic [ref=f1e126]: Publicado
+            - paragraph [ref=f1e127]
+        - toolbar [ref=f1e128]:
+          - generic [ref=f1e129]:
+            - button "Guardar" [disabled]
+            - button "Borrar" [ref=f1e130] [cursor=pointer]
