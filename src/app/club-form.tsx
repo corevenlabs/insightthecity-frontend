@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { API_URL } from '../constants/api';
 import {
     Alert,
     ScrollView,
@@ -162,7 +163,7 @@ export default function ClubFormScreen() {
         try {
             setLoading(true);
 
-            const res = await fetch("http://localhost:3000/api/payment/create-subscription", {
+            const res = await fetch(`${API_URL}/api/payment/create-subscription`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

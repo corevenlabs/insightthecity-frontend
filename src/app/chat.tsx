@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getLocation } from '../../services/location';
+import { API_URL } from '../constants/api';
 
 type Message =
   | {
@@ -57,7 +58,7 @@ export default function ChatScreen() {
     setInput('');
 
     try {
-      const res = await fetch('http://192.168.1.91:3000/api/places', {
+      const res = await fetch(`${API_URL}/api/places`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
