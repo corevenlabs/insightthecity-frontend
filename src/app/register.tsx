@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,16 +14,41 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuth } from '../context/AuthContext';
+
 const GOLD = '#D4AF37';
 const BLACK = '#0A0A0A';
 
 export default function RegisterScreen() {
+  const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const createAccount = () => {
-    router.replace('/home' as any);
+  const createAccount = async () => {
+    if (submitting) return;
+    setError(null);
+
+    if (!name.trim() || !email.trim() || !password) {
+      setError('Completa todos los campos.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await signUp(name.trim(), email.trim(), password);
+      router.replace('/home' as any);
+    } catch (err: any) {
+      setError(err?.message ?? 'No se pudo crear la cuenta.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -80,12 +106,22 @@ export default function RegisterScreen() {
               secureTextEntry
               style={styles.input}
             />
+
+            {error && <Text style={styles.errorText}>{error}</Text>}
           </View>
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.primaryButton} onPress={createAccount}>
-            <Text style={styles.primaryText}>CREAR CUENTA</Text>
+          <TouchableOpacity
+            style={[styles.primaryButton, submitting && styles.primaryButtonDisabled]}
+            onPress={createAccount}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color={BLACK} />
+            ) : (
+              <Text style={styles.primaryText}>CREAR CUENTA</Text>
+            )}
           </TouchableOpacity>
 
           <Pressable onPress={() => router.push('/login' as any)}>
@@ -185,10 +221,20 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     alignItems: 'center',
   },
+  primaryButtonDisabled: {
+    opacity: 0.6,
+  },
   primaryText: {
     color: BLACK,
     fontSize: 15,
     fontWeight: '900',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 4,
+    marginBottom: 4,
   },
   switchText: {
     color: '#888',

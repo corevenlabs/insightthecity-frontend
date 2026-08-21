@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,15 +14,36 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuth } from '../context/AuthContext';
+
 const GOLD = '#D4AF37';
 const BLACK = '#0A0A0A';
 
 export default function LoginScreen() {
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const enterApp = () => {
-    router.replace('/home' as any);
+  const enterApp = async () => {
+    if (submitting) return;
+    setError(null);
+
+    if (!email.trim() || !password) {
+      setError('Ingresa tu correo y contraseña.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await signIn(email.trim(), password);
+      router.replace('/home' as any);
+    } catch (err: any) {
+      setError(err?.message ?? 'No se pudo iniciar sesión.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -73,12 +95,22 @@ export default function LoginScreen() {
             <Pressable>
               <Text style={styles.forgotText}>Olvidé mi contraseña</Text>
             </Pressable>
+
+            {error && <Text style={styles.errorText}>{error}</Text>}
           </View>
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.primaryButton} onPress={enterApp}>
-            <Text style={styles.primaryText}>ENTRAR</Text>
+          <TouchableOpacity
+            style={[styles.primaryButton, submitting && styles.primaryButtonDisabled]}
+            onPress={enterApp}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color={BLACK} />
+            ) : (
+              <Text style={styles.primaryText}>ENTRAR</Text>
+            )}
           </TouchableOpacity>
 
           <Pressable onPress={() => router.push('/register' as any)}>
@@ -183,10 +215,19 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     alignItems: 'center',
   },
+  primaryButtonDisabled: {
+    opacity: 0.6,
+  },
   primaryText: {
     color: BLACK,
     fontSize: 15,
     fontWeight: '900',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 14,
   },
   switchText: {
     color: '#888',

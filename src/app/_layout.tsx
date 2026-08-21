@@ -10,6 +10,8 @@ import {
   useFonts
 } from '@expo-google-fonts/spline-sans';
 
+import { AuthProvider } from '../context/AuthContext';
+
 export default function RootLayout() {
   const router = useRouter();
   const pathname = usePathname();
@@ -33,7 +35,7 @@ export default function RootLayout() {
   ].includes(pathname);
 
   return (
-    <>
+    <AuthProvider>
       <Stack
         initialRouteName="welcome"
         screenOptions={{
@@ -62,7 +64,7 @@ export default function RootLayout() {
           <Ionicons name="chatbubble-ellipses" size={24} color="#000" />
         </TouchableOpacity>
       )}
-    </>
+    </AuthProvider>
   );
 }
 
