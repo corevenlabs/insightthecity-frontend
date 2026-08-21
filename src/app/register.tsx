@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -27,8 +29,12 @@ export default function RegisterScreen() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+
   const createAccount = async () => {
     if (submitting) return;
+    Keyboard.dismiss();
     setError(null);
 
     if (!name.trim() || !email.trim() || !password) {
@@ -52,84 +58,103 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.keyboard}
+        style={styles.flex}
       >
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={22} color={GOLD} />
-          </TouchableOpacity>
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={22} color={GOLD} />
+            </TouchableOpacity>
 
-          <View style={styles.logoPill}>
-            <Text style={styles.logoText}>ITC</Text>
+            <View style={styles.logoPill}>
+              <Text style={styles.logoText}>ITC</Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.content}>
-          <Text style={styles.eyebrow}>JOIN THE CITY</Text>
-          <Text style={styles.title}>Crea tu cuenta y empieza a explorar.</Text>
-          <Text style={styles.subtitle}>
-            Tu acceso personal a eventos, lugares, guías y beneficios del club.
-          </Text>
-
-          <View style={styles.form}>
-            <Text style={styles.label}>Nombre completo</Text>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="Tu nombre"
-              placeholderTextColor="#666"
-              autoCapitalize="words"
-              style={styles.input}
-            />
-
-            <Text style={styles.label}>Correo electrónico</Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="tu@email.com"
-              placeholderTextColor="#666"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={styles.input}
-            />
-
-            <Text style={styles.label}>Contraseña</Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Mínimo 8 caracteres"
-              placeholderTextColor="#666"
-              secureTextEntry
-              style={styles.input}
-            />
-
-            {error && <Text style={styles.errorText}>{error}</Text>}
-          </View>
-        </View>
-
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.primaryButton, submitting && styles.primaryButtonDisabled]}
-            onPress={createAccount}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator color={BLACK} />
-            ) : (
-              <Text style={styles.primaryText}>CREAR CUENTA</Text>
-            )}
-          </TouchableOpacity>
-
-          <Pressable onPress={() => router.push('/login' as any)}>
-            <Text style={styles.switchText}>
-              ¿Ya tienes cuenta? <Text style={styles.switchAccent}>Iniciar sesión</Text>
+          <View style={styles.content}>
+            <Text style={styles.eyebrow}>JOIN THE CITY</Text>
+            <Text style={styles.title}>Crea tu cuenta y empieza a explorar.</Text>
+            <Text style={styles.subtitle}>
+              Tu acceso personal a eventos, lugares, guías y beneficios del club.
             </Text>
-          </Pressable>
-        </View>
+
+            <View style={styles.form}>
+              <Text style={styles.label}>Nombre completo</Text>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="Tu nombre"
+                placeholderTextColor="#666"
+                autoCapitalize="words"
+                returnKeyType="next"
+                onSubmitEditing={() => emailRef.current?.focus()}
+                submitBehavior="submit"
+                style={styles.input}
+              />
+
+              <Text style={styles.label}>Correo electrónico</Text>
+              <TextInput
+                ref={emailRef}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="tu@email.com"
+                placeholderTextColor="#666"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                submitBehavior="submit"
+                style={styles.input}
+              />
+
+              <Text style={styles.label}>Contraseña</Text>
+              <TextInput
+                ref={passwordRef}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Mínimo 8 caracteres"
+                placeholderTextColor="#666"
+                secureTextEntry
+                returnKeyType="done"
+                onSubmitEditing={createAccount}
+                style={styles.input}
+              />
+
+              {error && <Text style={styles.errorText}>{error}</Text>}
+            </View>
+          </View>
+
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[styles.primaryButton, submitting && styles.primaryButtonDisabled]}
+              onPress={createAccount}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator color={BLACK} />
+              ) : (
+                <Text style={styles.primaryText}>CREAR CUENTA</Text>
+              )}
+            </TouchableOpacity>
+
+            <Pressable onPress={() => router.push('/login' as any)}>
+              <Text style={styles.switchText}>
+                ¿Ya tienes cuenta? <Text style={styles.switchAccent}>Iniciar sesión</Text>
+              </Text>
+            </Pressable>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -140,9 +165,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BLACK,
   },
-  keyboard: {
+  flex: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 22,
+    paddingBottom: 28,
   },
   header: {
     flexDirection: 'row',
@@ -173,6 +202,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
+    paddingTop: 28,
   },
   eyebrow: {
     color: GOLD,
@@ -213,7 +243,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   footer: {
-    paddingBottom: 28,
+    paddingTop: 24,
   },
   primaryButton: {
     backgroundColor: GOLD,
