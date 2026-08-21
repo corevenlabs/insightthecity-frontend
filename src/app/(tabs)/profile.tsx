@@ -1,40 +1,111 @@
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { useAuth } from '../../context/AuthContext';
+
+const GOLD = '#D4AF37';
+const BLACK = '#0A0A0A';
+
+// Iniciales para el avatar (JP, R, …) a partir del nombre o el correo.
+function initials(nameOrEmail: string) {
+  const source = nameOrEmail.trim();
+  if (!source) return '?';
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return source.slice(0, 2).toUpperCase();
+}
 
 export default function ProfileScreen() {
-  return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Image
-          source={{
-            uri: 'https://i.pravatar.cc/300',
-          }}
-          style={styles.avatar}
-        />
+  const { user, isAuthenticated, signOut } = useAuth();
 
-        <Text style={styles.name}>Juan Pérez</Text>
-        <Text style={styles.role}>Administrador</Text>
+  // Estado invitado: sin sesión iniciada.
+  if (!isAuthenticated || !user) {
+    return (
+      <View style={styles.guestContainer}>
+        <View style={styles.guestAvatar}>
+          <Ionicons name="person-outline" size={44} color={GOLD} />
+        </View>
+        <Text style={styles.guestTitle}>No has iniciado sesión</Text>
+        <Text style={styles.guestSubtitle}>
+          Inicia sesión para guardar tus favoritos y acceder a los beneficios del club.
+        </Text>
+
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => router.push('/login' as any)}
+        >
+          <Text style={styles.primaryText}>INICIAR SESIÓN</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => router.push('/register' as any)}
+        >
+          <Text style={styles.secondaryText}>CREAR CUENTA</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const displayName = user.name || user.email.split('@')[0];
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      <View style={styles.header}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>{initials(user.name || user.email)}</Text>
+        </View>
+
+        <Text style={styles.name}>{displayName}</Text>
+        <View style={[styles.badge, user.is_premium ? styles.badgePremium : styles.badgeFree]}>
+          <Ionicons
+            name={user.is_premium ? 'star' : 'person'}
+            size={13}
+            color={user.is_premium ? BLACK : GOLD}
+          />
+          <Text style={[styles.badgeText, user.is_premium && styles.badgeTextPremium]}>
+            {user.is_premium ? 'Miembro Club' : 'Cuenta gratuita'}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Información</Text>
 
+        <Text style={styles.label}>Nombre</Text>
+        <Text style={styles.value}>{user.name || '—'}</Text>
+
         <Text style={styles.label}>Correo</Text>
-        <Text style={styles.value}>juan.perez@empresa.com</Text>
+        <Text style={styles.value}>{user.email}</Text>
 
-        <Text style={styles.label}>Teléfono</Text>
-        <Text style={styles.value}>+56 9 1234 5678</Text>
-
-        <Text style={styles.label}>Departamento</Text>
-        <Text style={styles.value}>Operaciones</Text>
+        <Text style={styles.label}>Membresía</Text>
+        <Text style={styles.value}>
+          {user.is_premium ? 'Club (premium)' : 'Gratuita'}
+        </Text>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Actividad</Text>
+      {!user.is_premium && (
+        <TouchableOpacity
+          style={styles.upgradeCard}
+          onPress={() => router.push('/club-form' as any)}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.upgradeTitle}>Únete al Club</Text>
+            <Text style={styles.upgradeSubtitle}>
+              Accede a drops y beneficios exclusivos.
+            </Text>
+          </View>
+          <Ionicons name="arrow-forward" size={20} color={BLACK} />
+        </TouchableOpacity>
+      )}
 
-        <Text style={styles.value}>Proyectos asignados: 12</Text>
-        <Text style={styles.value}>Tareas completadas: 48</Text>
-        <Text style={styles.value}>Último acceso: Hoy</Text>
-      </View>
+      <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+        <Ionicons name="log-out-outline" size={18} color="#FF6B6B" />
+        <Text style={styles.logoutText}>Cerrar sesión</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -42,7 +113,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: BLACK,
   },
   header: {
     alignItems: 'center',
@@ -53,16 +124,45 @@ const styles = StyleSheet.create({
     height: 110,
     borderRadius: 55,
     marginBottom: 15,
+    backgroundColor: '#1A1A1A',
+    borderWidth: 2,
+    borderColor: GOLD,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: GOLD,
+    fontSize: 38,
+    fontWeight: '900',
   },
   name: {
     color: '#FFFFFF',
     fontSize: 24,
     fontWeight: 'bold',
   },
-  role: {
-    color: '#D4AF37',
-    fontSize: 16,
-    marginTop: 4,
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  badgeFree: {
+    borderWidth: 1,
+    borderColor: GOLD,
+  },
+  badgePremium: {
+    backgroundColor: GOLD,
+  },
+  badgeText: {
+    color: GOLD,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  badgeTextPremium: {
+    color: BLACK,
   },
   card: {
     backgroundColor: '#1A1A1A',
@@ -72,7 +172,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   sectionTitle: {
-    color: '#D4AF37',
+    color: GOLD,
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 15,
@@ -80,10 +180,105 @@ const styles = StyleSheet.create({
   label: {
     color: '#888',
     marginTop: 10,
+    fontSize: 13,
   },
   value: {
     color: '#FFF',
     fontSize: 16,
     marginTop: 4,
+  },
+  upgradeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: GOLD,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 16,
+  },
+  upgradeTitle: {
+    color: BLACK,
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  upgradeSubtitle: {
+    color: '#3A2F00',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#3A1A1A',
+  },
+  logoutText: {
+    color: '#FF6B6B',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  // Estado invitado
+  guestContainer: {
+    flex: 1,
+    backgroundColor: BLACK,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  guestAvatar: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  guestTitle: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  guestSubtitle: {
+    color: '#A7A7A7',
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 28,
+  },
+  primaryButton: {
+    backgroundColor: GOLD,
+    borderRadius: 14,
+    paddingVertical: 18,
+    alignItems: 'center',
+    alignSelf: 'stretch',
+  },
+  primaryText: {
+    color: BLACK,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: GOLD,
+    borderRadius: 14,
+    paddingVertical: 18,
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    marginTop: 12,
+  },
+  secondaryText: {
+    color: GOLD,
+    fontSize: 15,
+    fontWeight: '900',
   },
 });
