@@ -3,6 +3,14 @@ import { router } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Experience, experiences } from '@/constants/experiences';
+import { useAuth } from '../../context/AuthContext';
+
+// Primer nombre para el saludo ("Carlos Pérez" -> "Carlos").
+function firstName(name: string | null, email?: string): string | null {
+  if (name && name.trim()) return name.trim().split(/\s+/)[0];
+  if (email) return email.split('@')[0];
+  return null;
+}
 
 type EventCardProps = {
   experience: Experience;
@@ -65,6 +73,9 @@ function DropCard({ experience }: DropCardProps) {
 }
 
 export default function HomeScreen() {
+  const { user } = useAuth();
+  const name = firstName(user?.name ?? null, user?.email);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -76,7 +87,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>
-              Hola, Carlos 👋
+              {name ? `Hola, ${name} 👋` : 'Hola 👋'}
             </Text>
 
             <Text style={styles.subtitle}>
