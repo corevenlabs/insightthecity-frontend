@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -26,8 +28,11 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const passwordRef = useRef<TextInput>(null);
+
   const enterApp = async () => {
     if (submitting) return;
+    Keyboard.dismiss();
     setError(null);
 
     if (!email.trim() || !password) {
@@ -47,60 +52,74 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.keyboard}
+        style={styles.flex}
       >
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={22} color={GOLD} />
-          </TouchableOpacity>
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={22} color={GOLD} />
+            </TouchableOpacity>
 
-          <View style={styles.logoPill}>
-            <Text style={styles.logoText}>ITC</Text>
+            <View style={styles.logoPill}>
+              <Text style={styles.logoText}>ITC</Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.content}>
-          <Text style={styles.eyebrow}>WELCOME BACK</Text>
-          <Text style={styles.title}>Inicia sesión y vuelve a la ciudad.</Text>
-          <Text style={styles.subtitle}>
-            Guarda tus favoritos, recibe drops y accede a beneficios exclusivos.
-          </Text>
+          <View style={styles.content}>
+            <Text style={styles.eyebrow}>WELCOME BACK</Text>
+            <Text style={styles.title}>Inicia sesión y vuelve a la ciudad.</Text>
+            <Text style={styles.subtitle}>
+              Guarda tus favoritos, recibe drops y accede a beneficios exclusivos.
+            </Text>
 
-          <View style={styles.form}>
-            <Text style={styles.label}>Correo electrónico</Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="tu@email.com"
-              placeholderTextColor="#666"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={styles.input}
-            />
+            <View style={styles.form}>
+              <Text style={styles.label}>Correo electrónico</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="tu@email.com"
+                placeholderTextColor="#666"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                submitBehavior="submit"
+                style={styles.input}
+              />
 
-            <Text style={styles.label}>Contraseña</Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              placeholderTextColor="#666"
-              secureTextEntry
-              style={styles.input}
-            />
+              <Text style={styles.label}>Contraseña</Text>
+              <TextInput
+                ref={passwordRef}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="••••••••"
+                placeholderTextColor="#666"
+                secureTextEntry
+                returnKeyType="done"
+                onSubmitEditing={enterApp}
+                style={styles.input}
+              />
 
-            <Pressable>
-              <Text style={styles.forgotText}>Olvidé mi contraseña</Text>
-            </Pressable>
+              <Pressable>
+                <Text style={styles.forgotText}>Olvidé mi contraseña</Text>
+              </Pressable>
 
-            {error && <Text style={styles.errorText}>{error}</Text>}
+              {error && <Text style={styles.errorText}>{error}</Text>}
+            </View>
           </View>
-        </View>
 
-        <View style={styles.footer}>
+          <View style={styles.footer}>
           <TouchableOpacity
             style={[styles.primaryButton, submitting && styles.primaryButtonDisabled]}
             onPress={enterApp}
@@ -113,12 +132,13 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          <Pressable onPress={() => router.push('/register' as any)}>
-            <Text style={styles.switchText}>
-              ¿No tienes cuenta? <Text style={styles.switchAccent}>Crear cuenta</Text>
-            </Text>
-          </Pressable>
-        </View>
+            <Pressable onPress={() => router.push('/register' as any)}>
+              <Text style={styles.switchText}>
+                ¿No tienes cuenta? <Text style={styles.switchAccent}>Crear cuenta</Text>
+              </Text>
+            </Pressable>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -129,9 +149,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BLACK,
   },
-  keyboard: {
+  flex: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 22,
+    paddingBottom: 28,
   },
   header: {
     flexDirection: 'row',
@@ -162,6 +186,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
+    paddingTop: 28,
   },
   eyebrow: {
     color: GOLD,
@@ -207,7 +232,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   footer: {
-    paddingBottom: 28,
+    paddingTop: 24,
   },
   primaryButton: {
     backgroundColor: GOLD,
