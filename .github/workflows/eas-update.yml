@@ -24,3 +24,5 @@ jobs:
         run: npx eas-cli@latest update --channel preview --message "Preview ${GITHUB_SHA}" --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_API_URL: https://itc-backend-1031252664334.us-east1.run.app
+          EXPO_PUBLIC_ENABLE_PREMIUM_SIMULATION: "true"

@@ -35,6 +35,8 @@ type AuthContextValue = {
 const TOKEN_KEY = 'itc_token';
 const USER_KEY = 'itc_user';
 const DEV_PREMIUM_USER_KEY = 'itc_dev_premium_user';
+const PREMIUM_SIMULATION_ENABLED =
+  __DEV__ || process.env.EXPO_PUBLIC_ENABLE_PREMIUM_SIMULATION === 'true';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -96,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const cachedUser = JSON.parse(savedUser) as User;
           const devPremiumUserId = await AsyncStorage.getItem(DEV_PREMIUM_USER_KEY);
           setUser(
-            __DEV__ && devPremiumUserId === String(cachedUser.id)
+            PREMIUM_SIMULATION_ENABLED && devPremiumUserId === String(cachedUser.id)
               ? { ...cachedUser, is_premium: true }
               : cachedUser
           );
@@ -116,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (data?.user) {
               const devPremiumUserId = await AsyncStorage.getItem(DEV_PREMIUM_USER_KEY);
               const refreshedUser =
-                __DEV__ && devPremiumUserId === String(data.user.id)
+                PREMIUM_SIMULATION_ENABLED && devPremiumUserId === String(data.user.id)
                   ? { ...data.user, is_premium: true }
                   : data.user;
               setUser(refreshedUser);
@@ -182,7 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!data?.user) return null;
       const devPremiumUserId = await AsyncStorage.getItem(DEV_PREMIUM_USER_KEY);
       const refreshedUser: User =
-        __DEV__ && devPremiumUserId === String(data.user.id)
+        PREMIUM_SIMULATION_ENABLED && devPremiumUserId === String(data.user.id)
           ? { ...data.user, is_premium: true }
           : data.user;
       setUser(refreshedUser);
@@ -194,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   const activatePremiumForDevelopment = useCallback(async () => {
-    if (!__DEV__) return null;
+    if (!PREMIUM_SIMULATION_ENABLED) return null;
     const rawUser = await AsyncStorage.getItem(USER_KEY);
     if (!rawUser) return null;
     const premiumUser: User = { ...(JSON.parse(rawUser) as User), is_premium: true };

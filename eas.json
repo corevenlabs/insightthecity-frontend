@@ -16,7 +16,8 @@
       "channel": "preview",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://itc-backend-1031252664334.us-east1.run.app"
+        "EXPO_PUBLIC_API_URL": "https://itc-backend-1031252664334.us-east1.run.app",
+        "EXPO_PUBLIC_ENABLE_PREMIUM_SIMULATION": "true"
       },
       "ios": {
         "resourceClass": "m-medium"
