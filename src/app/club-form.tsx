@@ -179,7 +179,9 @@ export default function ClubFormScreen() {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`,
                 },
-                body: JSON.stringify({}),
+                // Se conserva el email para compatibilidad con el backend actualmente desplegado.
+                // La versión nueva del backend usa el email del token autenticado.
+                body: JSON.stringify({ email: email.trim() }),
             });
 
             const data = await res.json();
