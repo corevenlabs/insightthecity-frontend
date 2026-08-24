@@ -106,7 +106,7 @@ export default function HomeScreen() {
 
         {/* HERO CARD */}
 
-        <TouchableOpacity style={styles.heroCard}>
+        <View style={styles.heroCard}>
           <Image
             source={{
               uri: 'https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2',
@@ -121,20 +121,21 @@ export default function HomeScreen() {
             </Text>
 
             <Text style={styles.clubDescription}>
-              Acceso anticipado a experiencias
-              exclusivas, descuentos y más.
+              {user?.is_premium
+                ? 'Tus beneficios están activos. Descubre eventos, descuentos y experiencias para miembros.'
+                : 'Acceso anticipado a experiencias exclusivas, descuentos y más.'}
             </Text>
 
             <TouchableOpacity
               style={styles.joinBtn}
-              onPress={() => router.push('/club-form')}
+              onPress={() => router.push(user?.is_premium ? '/club' : '/club-form')}
             >
               <Text style={styles.joinBtnText}>
-                UNIRME AL CLUB
+                {user?.is_premium ? 'VER MIS BENEFICIOS' : 'UNIRME AL CLUB'}
               </Text>
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
 
         {/* TOP DE HOY */}
 

@@ -28,10 +28,13 @@ type AuthContextValue = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
+  activatePremiumForDevelopment: () => Promise<User | null>;
 };
 
 const TOKEN_KEY = 'itc_token';
 const USER_KEY = 'itc_user';
+const DEV_PREMIUM_USER_KEY = 'itc_dev_premium_user';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -89,7 +92,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!savedToken) return;
 
         setToken(savedToken);
-        if (savedUser) setUser(JSON.parse(savedUser));
+        if (savedUser) {
+          const cachedUser = JSON.parse(savedUser) as User;
+          const devPremiumUserId = await AsyncStorage.getItem(DEV_PREMIUM_USER_KEY);
+          setUser(
+            __DEV__ && devPremiumUserId === String(cachedUser.id)
+              ? { ...cachedUser, is_premium: true }
+              : cachedUser
+          );
+        }
 
         // Revalida contra el backend; si el token expiró, cierra sesión.
         try {
@@ -97,14 +108,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             headers: { Authorization: `Bearer ${savedToken}` },
           });
           if (res.status === 401) {
-            await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+            await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY, DEV_PREMIUM_USER_KEY]);
             setToken(null);
             setUser(null);
           } else if (res.ok) {
             const data = await res.json();
             if (data?.user) {
-              setUser(data.user);
-              await AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user));
+              const devPremiumUserId = await AsyncStorage.getItem(DEV_PREMIUM_USER_KEY);
+              const refreshedUser =
+                __DEV__ && devPremiumUserId === String(data.user.id)
+                  ? { ...data.user, is_premium: true }
+                  : data.user;
+              setUser(refreshedUser);
+              await AsyncStorage.setItem(USER_KEY, JSON.stringify(refreshedUser));
             }
           }
           // otros errores (red/servidor): conservamos la sesión en caché
@@ -144,9 +160,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
-    await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+    await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY, DEV_PREMIUM_USER_KEY]);
     setToken(null);
     setUser(null);
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    if (!token) return null;
+    try {
+      const res = await fetch(`${API_URL}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) {
+        await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY, DEV_PREMIUM_USER_KEY]);
+        setToken(null);
+        setUser(null);
+        return null;
+      }
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data?.user) return null;
+      const devPremiumUserId = await AsyncStorage.getItem(DEV_PREMIUM_USER_KEY);
+      const refreshedUser: User =
+        __DEV__ && devPremiumUserId === String(data.user.id)
+          ? { ...data.user, is_premium: true }
+          : data.user;
+      setUser(refreshedUser);
+      await AsyncStorage.setItem(USER_KEY, JSON.stringify(refreshedUser));
+      return refreshedUser;
+    } catch {
+      return null;
+    }
+  }, [token]);
+
+  const activatePremiumForDevelopment = useCallback(async () => {
+    if (!__DEV__) return null;
+    const rawUser = await AsyncStorage.getItem(USER_KEY);
+    if (!rawUser) return null;
+    const premiumUser: User = { ...(JSON.parse(rawUser) as User), is_premium: true };
+    await AsyncStorage.multiSet([
+      [USER_KEY, JSON.stringify(premiumUser)],
+      [DEV_PREMIUM_USER_KEY, String(premiumUser.id)],
+    ]);
+    setUser(premiumUser);
+    return premiumUser;
   }, []);
 
   const value = useMemo(
@@ -158,8 +215,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signUp,
       signOut,
+      refreshUser,
+      activatePremiumForDevelopment,
     }),
-    [user, token, loading, signIn, signUp, signOut]
+    [user, token, loading, signIn, signUp, signOut, refreshUser, activatePremiumForDevelopment]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

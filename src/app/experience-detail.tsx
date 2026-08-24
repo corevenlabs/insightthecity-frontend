@@ -3,9 +3,11 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getExperienceById } from '@/constants/experiences';
+import { useAuth } from '../context/AuthContext';
 
 export default function ExperienceDetailScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
+  const { user } = useAuth();
   const experience = getExperienceById(id);
 
   if (!experience) {
@@ -21,7 +23,8 @@ export default function ExperienceDetailScreen() {
     );
   }
 
-  const isPremium = experience.access === 'premium';
+  const requiresPremium = experience.access === 'premium';
+  const isLocked = requiresPremium && !user?.is_premium;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -51,14 +54,18 @@ export default function ExperienceDetailScreen() {
           </View>
         </View>
 
-        <View style={[styles.accessBadge, isPremium ? styles.premiumBadge : styles.freeBadge]}>
+        <View style={[styles.accessBadge, isLocked ? styles.premiumBadge : styles.freeBadge]}>
           <Ionicons
-            name={isPremium ? 'lock-closed' : 'gift-outline'}
+            name={isLocked ? 'lock-closed' : requiresPremium ? 'lock-open' : 'gift-outline'}
             size={15}
-            color={isPremium ? '#D4AF37' : '#050505'}
+            color={isLocked ? '#D4AF37' : '#050505'}
           />
-          <Text style={[styles.accessText, isPremium && styles.premiumText]}>
-            {isPremium ? 'Premium ITC Club' : 'Beneficio gratis'}
+          <Text style={[styles.accessText, isLocked && styles.premiumText]}>
+            {isLocked
+              ? 'Premium ITC Club'
+              : requiresPremium
+                ? 'Incluido en tu membresía'
+                : 'Beneficio gratis'}
           </Text>
         </View>
 
@@ -79,20 +86,26 @@ export default function ExperienceDetailScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.ctaButton, isPremium && styles.lockedButton]}
+          style={[styles.ctaButton, isLocked && styles.lockedButton]}
           onPress={() => {
-            if (isPremium) {
+            if (isLocked) {
               router.push('/club-form');
             }
           }}
+          disabled={!isLocked}
+          accessibilityState={{ disabled: !isLocked }}
         >
           <Ionicons
-            name={isPremium ? 'lock-closed' : 'ticket-outline'}
+            name={isLocked ? 'lock-closed' : requiresPremium ? 'checkmark-circle' : 'ticket-outline'}
             size={18}
-            color={isPremium ? '#D4AF37' : '#050505'}
+            color={isLocked ? '#D4AF37' : '#050505'}
           />
-          <Text style={[styles.ctaText, isPremium && styles.lockedText]}>
-            {isPremium ? 'SUSCRÍBETE PARA DESBLOQUEAR' : 'OBTENER BENEFICIO'}
+          <Text style={[styles.ctaText, isLocked && styles.lockedText]}>
+            {isLocked
+              ? 'SUSCRÍBETE PARA DESBLOQUEAR'
+              : requiresPremium
+                ? 'BENEFICIO DESBLOQUEADO'
+                : 'BENEFICIO DISPONIBLE'}
           </Text>
         </TouchableOpacity>
 

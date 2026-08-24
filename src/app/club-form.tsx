@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { API_URL } from '../constants/api';
+import { useAuth } from '../context/AuthContext';
 import {
     Alert,
     ScrollView,
@@ -130,13 +131,14 @@ const styles = StyleSheet.create({
 });
 
 export default function ClubFormScreen() {
+    const { user, token } = useAuth();
     const [showPayment, setShowPayment] = useState(false);
     const [loading, setLoading] = useState(false);
 
     // ✅ FIX 2: Estado para los inputs del formulario
     const [formData, setFormData] = useState({
-        nombre: '',
-        email: '',
+        nombre: user?.name ?? '',
+        email: user?.email ?? '',
         telefono: '',
         ciudad: '',
     });
@@ -148,6 +150,14 @@ export default function ClubFormScreen() {
     // ✅ FIX 3: Validación antes de ir a Stripe, email real del input
     const handlePayment = async () => {
         const { nombre, email, telefono, ciudad } = formData;
+
+        if (!token || !user) {
+            Alert.alert('Inicia sesión', 'Necesitas una cuenta para activar tu membresía.', [
+                { text: 'Cancelar', style: 'cancel' },
+                { text: 'Iniciar sesión', onPress: () => router.push('/login') },
+            ]);
+            return;
+        }
 
         if (!nombre.trim() || !email.trim() || !telefono.trim() || !ciudad.trim()) {
             Alert.alert('Campos incompletos', 'Por favor completa todos los campos antes de continuar.');
@@ -167,10 +177,9 @@ export default function ClubFormScreen() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
                 },
-                body: JSON.stringify({
-                    email: email.trim(), // ✅ Email real del formulario
-                }),
+                body: JSON.stringify({}),
             });
 
             const data = await res.json();
