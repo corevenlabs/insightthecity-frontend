@@ -1,4 +1,4 @@
-name: Generar build iOS Preview
+name: Publicar update OTA (canal preview)
 
 on:
   push:
@@ -20,8 +20,8 @@ jobs:
 
       # EXPO_TOKEN: token de acceso de expo.dev (Account settings -> Access tokens),
       # guardado como secret del repo.
-      - name: Generar build iOS para el cliente
-        run: npx eas-cli@latest build --profile preview --platform ios --non-interactive --no-wait
+      - name: Publicar el update
+        run: npx eas-cli@latest update --channel preview --message "Preview ${GITHUB_SHA}" --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_API_URL: https://itc-backend-1031252664334.us-east1.run.app
