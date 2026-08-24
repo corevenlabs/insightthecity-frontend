@@ -20,8 +20,8 @@ jobs:
 
       # EXPO_TOKEN: token de acceso de expo.dev (Account settings -> Access tokens),
       # guardado como secret del repo.
-      - name: Publicar el update
-        run: npx eas-cli@latest update --channel preview --message "Preview ${GITHUB_SHA}" --non-interactive
+      - name: Consultar compilación iOS preview
+        run: npx eas-cli@latest build:view 53bce798-7939-41eb-a54c-a88d2b16aec0 --json
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_API_URL: https://itc-backend-1031252664334.us-east1.run.app
