@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  AccessibilityInfo,
   Animated,
   Easing,
   Pressable,
@@ -17,100 +18,110 @@ const BLACK = '#050505';
 
 export default function WelcomeScreen() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const logoSwap = useRef(new Animated.Value(0)).current;
-  const content = useRef(new Animated.Value(0)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const [logoReveal] = useState(() => new Animated.Value(0));
+  const [logoPulse] = useState(() => new Animated.Value(0));
+  const [content] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    Animated.timing(content, {
-      toValue: 1,
-      duration: 700,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
+    let pulseAnimation: Animated.CompositeAnimation | undefined;
 
-    Animated.loop(
-      Animated.sequence([
-        Animated.delay(900),
-        Animated.timing(logoSwap, {
+    const startAnimations = async () => {
+      const shouldReduceMotion = await AccessibilityInfo.isReduceMotionEnabled();
+      setReduceMotion(shouldReduceMotion);
+
+      if (shouldReduceMotion) {
+        logoReveal.setValue(1);
+        content.setValue(1);
+        return;
+      }
+
+      Animated.parallel([
+        Animated.timing(logoReveal, {
           toValue: 1,
-          duration: 720,
-          easing: Easing.inOut(Easing.cubic),
+          duration: 900,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.delay(1250),
-        Animated.timing(logoSwap, {
-          toValue: 0,
-          duration: 720,
-          easing: Easing.inOut(Easing.cubic),
+        Animated.timing(content, {
+          toValue: 1,
+          duration: 700,
+          delay: 220,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.delay(1250),
-      ])
-    ).start();
+      ]).start(() => {
+        pulseAnimation = Animated.loop(
+          Animated.sequence([
+            Animated.delay(1400),
+            Animated.timing(logoPulse, {
+              toValue: 1,
+              duration: 1600,
+              easing: Easing.inOut(Easing.sin),
+              useNativeDriver: true,
+            }),
+            Animated.timing(logoPulse, {
+              toValue: 0,
+              duration: 1600,
+              easing: Easing.inOut(Easing.sin),
+              useNativeDriver: true,
+            }),
+          ])
+        );
+        pulseAnimation.start();
+      });
+    };
 
-  }, [content, logoSwap]);
+    startAnimations();
+
+    return () => pulseAnimation?.stop();
+  }, [content, logoPulse, logoReveal]);
 
   const contentTranslate = content.interpolate({
     inputRange: [0, 1],
     outputRange: [28, 0],
   });
 
-  const monogramOpacity = logoSwap.interpolate({
-    inputRange: [0, 0.45, 1],
-    outputRange: [1, 0, 0],
-  });
-
-  const fullLogoOpacity = logoSwap.interpolate({
-    inputRange: [0, 0.55, 1],
-    outputRange: [0, 0, 1],
-  });
-
-  const monogramScale = logoSwap.interpolate({
+  const logoTranslate = logoReveal.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 0.9],
+    outputRange: [18, 0],
   });
 
-  const fullLogoScale = logoSwap.interpolate({
+  const logoScale = logoReveal.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.92, 1],
+    outputRange: [0.94, 1],
+  });
+
+  const pulseScale = logoPulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.018],
   });
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.logoSection}>
-        <View style={styles.logoWrap}>
-          <Animated.View
-            style={[
-              styles.logoLayer,
-              {
-                opacity: monogramOpacity,
-                transform: [{ scale: monogramScale }],
-              },
-            ]}
-          >
-            <Text style={styles.clubLogo}>
-              <Text style={styles.clubLogoWhite}>ITC </Text>
-              <Text style={styles.clubLogoGold}>CLUB</Text>
-            </Text>
-          </Animated.View>
-
-          <Animated.View
-            style={[
-              styles.logoLayer,
-              {
-                opacity: fullLogoOpacity,
-                transform: [{ scale: fullLogoScale }],
-              },
-            ]}
-          >
-            <Text style={styles.insight}>INSIGHT</Text>
-            <View style={styles.cityRow}>
-              <Text style={styles.cityText}>THE</Text>
-              <View style={styles.divider} />
-              <Text style={styles.cityText}>CITY</Text>
-            </View>
-          </Animated.View>
-        </View>
+        <Animated.View
+          accessible
+          accessibilityRole="image"
+          accessibilityLabel="Insight The City"
+          style={[
+            styles.logoWrap,
+            {
+              opacity: logoReveal,
+              transform: [
+                { translateY: logoTranslate },
+                { scale: reduceMotion ? 1 : Animated.multiply(logoScale, pulseScale) },
+              ],
+            },
+          ]}
+        >
+          <Text style={styles.insight}>INSIGHT</Text>
+          <View style={styles.cityRow}>
+            <Text style={styles.cityText}>THE</Text>
+            <View style={styles.divider} />
+            <Text style={styles.cityText}>CITY</Text>
+          </View>
+        </Animated.View>
       </View>
 
       <Animated.View
@@ -180,49 +191,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   logoWrap: {
-    width: 260,
-    height: 260,
+    width: 310,
+    minHeight: 118,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logoLayer: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  clubLogo: {
-    fontSize: 54,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  clubLogoWhite: {
-    color: '#FFFFFF',
-  },
-  clubLogoGold: {
-    color: GOLD,
   },
   insight: {
     color: '#FFFFFF',
-    fontSize: 34,
-    fontWeight: '900',
-    letterSpacing: 0,
+    fontFamily: 'SplineSans_700Bold',
+    fontSize: 53,
+    lineHeight: 58,
+    letterSpacing: -1.4,
   },
   cityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: -2,
+    justifyContent: 'center',
+    marginTop: -10,
   },
   cityText: {
-    color: GOLD,
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 5,
+    color: '#FFFFFF',
+    fontFamily: 'SplineSans_700Bold',
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: 4.5,
   },
   divider: {
-    width: 3,
-    height: 25,
-    marginHorizontal: 8,
-    backgroundColor: GOLD,
+    width: 4,
+    height: 40,
+    marginHorizontal: 10,
+    backgroundColor: '#FFFFFF',
   },
   actionPanel: {
     paddingHorizontal: 24,
