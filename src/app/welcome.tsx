@@ -115,8 +115,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   animatedLogo: {
-    width: '100%',
-    height: '100%',
+    width: '88%',
+    height: '88%',
   },
   actionPanel: {
     paddingHorizontal: 24,
