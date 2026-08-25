@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  AccessibilityInfo,
   Animated,
   Easing,
   Pressable,
@@ -18,110 +18,34 @@ const BLACK = '#050505';
 
 export default function WelcomeScreen() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(false);
-  const [logoReveal] = useState(() => new Animated.Value(0));
-  const [logoPulse] = useState(() => new Animated.Value(0));
   const [content] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    let pulseAnimation: Animated.CompositeAnimation | undefined;
-
-    const startAnimations = async () => {
-      const shouldReduceMotion = await AccessibilityInfo.isReduceMotionEnabled();
-      setReduceMotion(shouldReduceMotion);
-
-      if (shouldReduceMotion) {
-        logoReveal.setValue(1);
-        content.setValue(1);
-        return;
-      }
-
-      Animated.parallel([
-        Animated.timing(logoReveal, {
-          toValue: 1,
-          duration: 900,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(content, {
-          toValue: 1,
-          duration: 700,
-          delay: 220,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        pulseAnimation = Animated.loop(
-          Animated.sequence([
-            Animated.delay(1400),
-            Animated.timing(logoPulse, {
-              toValue: 1,
-              duration: 1600,
-              easing: Easing.inOut(Easing.sin),
-              useNativeDriver: true,
-            }),
-            Animated.timing(logoPulse, {
-              toValue: 0,
-              duration: 1600,
-              easing: Easing.inOut(Easing.sin),
-              useNativeDriver: true,
-            }),
-          ])
-        );
-        pulseAnimation.start();
-      });
-    };
-
-    startAnimations();
-
-    return () => pulseAnimation?.stop();
-  }, [content, logoPulse, logoReveal]);
+    Animated.timing(content, {
+      toValue: 1,
+      duration: 700,
+      delay: 220,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [content]);
 
   const contentTranslate = content.interpolate({
     inputRange: [0, 1],
     outputRange: [28, 0],
   });
 
-  const logoTranslate = logoReveal.interpolate({
-    inputRange: [0, 1],
-    outputRange: [18, 0],
-  });
-
-  const logoScale = logoReveal.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.94, 1],
-  });
-
-  const pulseScale = logoPulse.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.018],
-  });
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.logoSection}>
-        <Animated.View
-          accessible
+        <Image
+          source={require('@/assets/images/itc-login-logo.gif')}
+          style={styles.animatedLogo}
+          contentFit="cover"
+          transition={0}
           accessibilityRole="image"
           accessibilityLabel="Insight The City"
-          style={[
-            styles.logoWrap,
-            {
-              opacity: logoReveal,
-              transform: [
-                { translateY: logoTranslate },
-                { scale: reduceMotion ? 1 : Animated.multiply(logoScale, pulseScale) },
-              ],
-            },
-          ]}
-        >
-          <Text style={styles.insight}>INSIGHT</Text>
-          <View style={styles.cityRow}>
-            <Text style={styles.cityText}>THE</Text>
-            <View style={styles.divider} />
-            <Text style={styles.cityText}>CITY</Text>
-          </View>
-        </Animated.View>
+        />
       </View>
 
       <Animated.View
@@ -188,39 +112,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    overflow: 'hidden',
   },
-  logoWrap: {
-    width: 310,
-    minHeight: 118,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  insight: {
-    color: '#FFFFFF',
-    fontFamily: 'SplineSans_700Bold',
-    fontSize: 53,
-    lineHeight: 58,
-    letterSpacing: -1.4,
-  },
-  cityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -10,
-  },
-  cityText: {
-    color: '#FFFFFF',
-    fontFamily: 'SplineSans_700Bold',
-    fontSize: 28,
-    lineHeight: 34,
-    letterSpacing: 4.5,
-  },
-  divider: {
-    width: 4,
-    height: 40,
-    marginHorizontal: 10,
-    backgroundColor: '#FFFFFF',
+  animatedLogo: {
+    width: '100%',
+    height: '100%',
   },
   actionPanel: {
     paddingHorizontal: 24,
