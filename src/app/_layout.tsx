@@ -53,6 +53,7 @@ export default function RootLayout() {
         <Stack.Screen name="guides" />
         <Stack.Screen name="que-hacer" />
         <Stack.Screen name="ny-al-dia" />
+        <Stack.Screen name="news-detail" />
         <Stack.Screen name="experience-detail" />
       </Stack>
 
