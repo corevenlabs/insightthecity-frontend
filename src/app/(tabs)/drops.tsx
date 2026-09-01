@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../../context/AuthContext';
 
 type MiniDropCardProps = { 
   id: string;
@@ -9,10 +10,12 @@ type MiniDropCardProps = {
   title: string; 
   subtitle: string; 
   access: 'free' | 'premium';
+  isPremiumMember: boolean;
 };
 
 export default function DropsScreen() { 
   const router = useRouter(); 
+  const { user } = useAuth();
 
   const openExperience = (id: string) => {
     router.push({
@@ -93,6 +96,7 @@ export default function DropsScreen() {
           title="Broadway Week" 
           subtitle="Tickets desde $49" 
           access="premium"
+          isPremiumMember={Boolean(user?.is_premium)}
         /> 
         <MiniDropCard 
           id="rooftop-230-fifth"
@@ -100,6 +104,7 @@ export default function DropsScreen() {
           title="230 Fifth Rooftop" 
           subtitle="30% OFF cocktails" 
           access="premium"
+          isPremiumMember={Boolean(user?.is_premium)}
         /> 
         <MiniDropCard 
           id="restaurant-week-nyc"
@@ -107,6 +112,7 @@ export default function DropsScreen() {
           title="Restaurant Week NYC" 
           subtitle="Menús especiales" 
           access="premium"
+          isPremiumMember={Boolean(user?.is_premium)}
         /> 
         <MiniDropCard 
           id="museum-nights"
@@ -114,6 +120,7 @@ export default function DropsScreen() {
           title="Museum Nights" 
           subtitle="Entrada gratuita" 
           access="free"
+          isPremiumMember={Boolean(user?.is_premium)}
         /> 
         <MiniDropCard 
           id="edge-observatory"
@@ -121,6 +128,7 @@ export default function DropsScreen() {
           title="Edge Observatory" 
           subtitle="25% OFF entradas" 
           access="premium"
+          isPremiumMember={Boolean(user?.is_premium)}
         /> 
 
         <View style={{ height: 100 }} /> 
@@ -129,7 +137,7 @@ export default function DropsScreen() {
   ); 
 } 
 
-function MiniDropCard({ id, image, title, subtitle, access }: MiniDropCardProps) { 
+function MiniDropCard({ id, image, title, subtitle, access, isPremiumMember }: MiniDropCardProps) {
   const router = useRouter();
 
   const openExperience = () => {
@@ -145,7 +153,7 @@ function MiniDropCard({ id, image, title, subtitle, access }: MiniDropCardProps)
       <View style={styles.miniDropContent}> 
         <View style={[styles.accessPill, access === 'premium' && styles.premiumPill]}>
           <Text style={[styles.accessPillText, access === 'premium' && styles.premiumPillText]}>
-            {access === 'premium' ? 'PREMIUM' : 'GRATIS'}
+            {access === 'premium' ? isPremiumMember ? 'ITC CLUB' : 'PREMIUM' : 'GRATIS'}
           </Text>
         </View>
         <Text style={styles.miniDropTitle}> {title} </Text> 

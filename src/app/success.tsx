@@ -34,7 +34,7 @@ export default function SuccessScreen() {
       </Animated.View>
       <Animated.View style={[styles.buttonContainer, { opacity: fadeAnim }]}>
         <TouchableOpacity style={styles.button} onPress={() => router.replace('/club')} accessibilityRole="button">
-          <Text style={styles.buttonText}>VER CONTENIDO PREMIUM</Text>
+          <Text style={styles.buttonText}>VER CONTENIDO ITC CLUB</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>

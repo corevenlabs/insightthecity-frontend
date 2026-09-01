@@ -45,7 +45,14 @@
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Permite que ITC Club use Face ID para proteger y desbloquear tu sesión."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

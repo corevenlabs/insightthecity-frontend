@@ -1,9 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Experience, experiences } from '@/constants/experiences';
+import { NewsImage } from '../../components/NewsImage';
 import { useAuth } from '../../context/AuthContext';
+import { fetchNews, formatDate, type NewsCard } from '../../lib/news';
+import {
+  DEFAULT_FEATURED_PARTNERSHIP,
+  fetchFeaturedPartnership,
+  type FeaturedPartnership,
+} from '../../lib/partnerships';
 
 // Primer nombre para el saludo ("Carlos Pérez" -> "Carlos").
 function firstName(name: string | null, email?: string): string | null {
@@ -14,6 +32,7 @@ function firstName(name: string | null, email?: string): string | null {
 
 type EventCardProps = {
   experience: Experience;
+  isPremiumMember: boolean;
 };
 
 type DropCardProps = {
@@ -41,6 +60,169 @@ function openExperience(id: string) {
     pathname: '/experience-detail',
     params: { id },
   } as any);
+}
+
+type HomeNewsSectionProps = {
+  section: 'ny-al-dia' | 'que-hacer';
+  title: string;
+  route: '/ny-al-dia' | '/que-hacer';
+};
+
+function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
+  const { width: windowWidth } = useWindowDimensions();
+  const [items, setItems] = useState<NewsCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const isNewsSection = section === 'ny-al-dia';
+  const carouselCardWidth = Math.min(windowWidth - 76, 320);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const itemLimit = isNewsSection ? 5 : 4;
+      const page = await fetchNews(section, 1, itemLimit);
+      setItems(page.items.slice(0, itemLimit));
+    } catch (err: any) {
+      setError(err?.message ?? 'No se pudo cargar el contenido.');
+    } finally {
+      setLoading(false);
+    }
+  }, [isNewsSection, section]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const openArticle = (item: NewsCard) => {
+    router.push({
+      pathname: '/news-detail',
+      params: { id: String(item.id), section: title },
+    } as any);
+  };
+
+  const renderImage = (item: NewsCard, imageStyle: object) => (
+    <NewsImage
+      uri={item.image}
+      style={imageStyle}
+      accessibilityLabel={`Imagen de ${item.title}`}
+    />
+  );
+
+  const renderNewsLayout = () => {
+    const [featured, ...secondary] = items;
+
+    return (
+      <View>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={`${featured.title}, ${formatDate(featured.date)}`}
+          style={styles.newsFeaturedCard}
+          onPress={() => openArticle(featured)}
+          activeOpacity={0.82}
+        >
+          {renderImage(featured, styles.newsFeaturedImage)}
+          <View style={styles.newsFeaturedOverlay}>
+            <Text style={styles.newsFeaturedDate}>{formatDate(featured.date)}</Text>
+            <Text style={styles.newsFeaturedTitle} numberOfLines={3}>{featured.title}</Text>
+          </View>
+        </TouchableOpacity>
+
+        {secondary.slice(0, 4).map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            accessibilityRole="button"
+            accessibilityLabel={`${item.title}, ${formatDate(item.date)}`}
+            style={styles.newsCompactCard}
+            onPress={() => openArticle(item)}
+            activeOpacity={0.78}
+          >
+            {renderImage(item, styles.newsCompactImage)}
+            <View style={styles.newsCompactContent}>
+              <Text style={styles.newsCompactDate}>{formatDate(item.date)}</Text>
+              <Text style={styles.newsCompactTitle} numberOfLines={3}>{item.title}</Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  const renderPlansCarousel = () => (
+    <ScrollView
+      horizontal
+      nestedScrollEnabled
+      decelerationRate="fast"
+      snapToAlignment="start"
+      snapToInterval={carouselCardWidth + 12}
+      disableIntervalMomentum
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.plansCarouselContent}
+      accessibilityRole="list"
+    >
+      {items.map((item) => (
+        <TouchableOpacity
+          key={item.id}
+          accessibilityRole="button"
+          accessibilityLabel={`${item.title}, ${formatDate(item.date)}`}
+          accessibilityHint="Abre los detalles del plan"
+          style={[styles.planCarouselCard, { width: carouselCardWidth }]}
+          onPress={() => openArticle(item)}
+          activeOpacity={0.82}
+        >
+          {renderImage(item, styles.planCarouselImage)}
+          <View style={styles.planCarouselOverlay}>
+            <Text style={styles.planCarouselDate}>{formatDate(item.date)}</Text>
+            <Text style={styles.planCarouselTitle} numberOfLines={3}>{item.title}</Text>
+            {!!item.excerpt && (
+              <Text style={styles.planCarouselExcerpt} numberOfLines={2}>{item.excerpt}</Text>
+            )}
+          </View>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+
+  return (
+    <View style={styles.newsSection}>
+      <View style={styles.newsSectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={`Ver todo: ${title}`}
+          style={styles.newsSeeAllButton}
+          onPress={() => router.push(route as any)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.newsSeeAllText}>Ver todo</Text>
+          <Ionicons name="arrow-forward" size={18} color={COLORS.gold} />
+        </TouchableOpacity>
+      </View>
+
+      {loading ? (
+        <View style={styles.newsState} accessibilityLabel={`Cargando ${title}`}>
+          <ActivityIndicator color={COLORS.gold} />
+        </View>
+      ) : error ? (
+        <View style={styles.newsState}>
+          <Ionicons name="cloud-offline-outline" size={28} color={COLORS.secondary} />
+          <Text style={styles.newsError}>{error}</Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            style={styles.retryButton}
+            onPress={load}
+            activeOpacity={0.72}
+          >
+            <Text style={styles.retryButtonText}>REINTENTAR</Text>
+          </TouchableOpacity>
+        </View>
+      ) : items.length === 0 ? (
+        <Text style={styles.emptyText}>Todavía no hay publicaciones en esta sección.</Text>
+      ) : (
+        isNewsSection ? renderNewsLayout() : renderPlansCarousel()
+      )}
+    </View>
+  );
 }
 
 function DropCard({ experience }: DropCardProps) {
@@ -75,6 +257,23 @@ function DropCard({ experience }: DropCardProps) {
 export default function HomeScreen() {
   const { user } = useAuth();
   const name = firstName(user?.name ?? null, user?.email);
+  const [partnership, setPartnership] = useState<FeaturedPartnership | null>(
+    DEFAULT_FEATURED_PARTNERSHIP,
+  );
+
+  useEffect(() => {
+    let active = true;
+    fetchFeaturedPartnership()
+      .then((item) => {
+        if (active) setPartnership(item);
+      })
+      .catch(() => {
+        // Mientras el endpoint nuevo llega a producción, conservamos la muestra local.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -123,7 +322,7 @@ export default function HomeScreen() {
             <Text style={styles.clubDescription}>
               {user?.is_premium
                 ? 'Tus beneficios están activos. Descubre eventos, descuentos y experiencias para miembros.'
-                : 'Acceso anticipado a experiencias exclusivas, descuentos y más.'}
+                : 'Descuentos, experiencias exclusivas, acceso anticipado y mucho más.'}
             </Text>
 
             <TouchableOpacity
@@ -136,6 +335,49 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {partnership && (
+          <TouchableOpacity
+            style={styles.partnershipCard}
+            activeOpacity={partnership.ctaUrl ? 0.84 : 1}
+            disabled={!partnership.ctaUrl}
+            accessibilityRole={partnership.ctaUrl ? 'link' : undefined}
+            accessibilityLabel={`${partnership.brandName}: ${partnership.title}`}
+            onPress={() => {
+              if (partnership.ctaUrl) void Linking.openURL(partnership.ctaUrl);
+            }}
+          >
+            <NewsImage
+              uri={partnership.image}
+              style={styles.partnershipImage}
+              accessibilityLabel={`Imagen de ${partnership.brandName}`}
+            />
+            <View style={styles.partnershipOverlay}>
+              <View style={styles.partnershipLabel}>
+                <Ionicons name="sparkles" size={12} color={COLORS.gold} />
+                <Text style={styles.partnershipLabelText}>
+                  PARTNERSHIP · {partnership.brandName.toUpperCase()}
+                </Text>
+              </View>
+              <Text style={styles.partnershipTitle} numberOfLines={2}>
+                {partnership.title}
+              </Text>
+              {!!partnership.description && (
+                <Text style={styles.partnershipDescription} numberOfLines={2}>
+                  {partnership.description}
+                </Text>
+              )}
+              {!!partnership.ctaLabel && (
+                <View style={styles.partnershipCta}>
+                  <Text style={styles.partnershipCtaText}>{partnership.ctaLabel}</Text>
+                  {partnership.ctaUrl && (
+                    <Ionicons name="arrow-forward" size={15} color="#050505" />
+                  )}
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        )}
 
         {/* TOP DE HOY */}
 
@@ -159,7 +401,11 @@ export default function HomeScreen() {
         >
 
           {topToday.map((experience) => (
-            <EventCard key={experience.id} experience={experience} />
+            <EventCard
+              key={experience.id}
+              experience={experience}
+              isPremiumMember={Boolean(user?.is_premium)}
+            />
           ))}
         </ScrollView>
 
@@ -188,44 +434,18 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        {/* QUE HACER EN NY */}
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            ¿Qué hacer en NY?
-          </Text>
-
-          <TouchableOpacity onPress={() => router.push('/que-hacer' as any)}>
-            <Text style={styles.seeMore}>Ver todo</Text>
-          </TouchableOpacity>
-        </View>
-
-        <FeatureCard
-          image="https://images.unsplash.com/photo-1501386761578-eac5c94b800a"
-          tag="QUE HACER EN NY"
-          title="Planes para esta semana en Nueva York"
-          subtitle="Eventos, conciertos, cine al aire libre y experiencias para descubrir la ciudad."
-          onPress={() => openExperience('ny-weekend-plans')}
+        {/* NY AL DIA */}
+        <HomeNewsSection
+          section="ny-al-dia"
+          title="NY al día"
+          route="/ny-al-dia"
         />
 
-        {/* NY AL DIA */}
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            NY al día
-          </Text>
-
-          <TouchableOpacity onPress={() => router.push('/ny-al-dia' as any)}>
-            <Text style={styles.seeMore}>Ver todo</Text>
-          </TouchableOpacity>
-        </View>
-
-        <FeatureCard
-          image="https://images.unsplash.com/photo-1522083165195-3424ed129620"
-          tag="NUEVA YORK AL DÍA"
-          title="Noticias y alertas que debes saber hoy"
-          subtitle="Actualidad, transporte, clima, eventos masivos y cambios importantes en NYC/NJ."
-          onPress={() => openExperience('ny-alerts-today')}
+        {/* QUE HACER EN NY */}
+        <HomeNewsSection
+          section="que-hacer"
+          title="¿Qué hacer en NY?"
+          route="/que-hacer"
         />
 
         {/* GUIAS */}
@@ -254,7 +474,7 @@ export default function HomeScreen() {
   );
 }
 
-function EventCard({ experience }: EventCardProps) {
+function EventCard({ experience, isPremiumMember }: EventCardProps) {
   return (
     <TouchableOpacity style={styles.eventCard} onPress={() => openExperience(experience.id)}>
       <Image
@@ -278,7 +498,9 @@ function EventCard({ experience }: EventCardProps) {
 
       <View style={[styles.freeBadge, experience.access === 'premium' && styles.premiumSmallBadge]}>
         <Text style={[styles.freeText, experience.access === 'premium' && styles.premiumSmallText]}>
-          {experience.access === 'premium' ? 'PREMIUM' : 'GRATIS'}
+          {experience.access === 'premium'
+            ? isPremiumMember ? 'ITC CLUB' : 'PREMIUM'
+            : 'GRATIS'}
         </Text>
       </View>
     </TouchableOpacity>
@@ -371,6 +593,79 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
 
+  partnershipCard: {
+    height: 238,
+    marginTop: 16,
+    overflow: 'hidden',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#3A3115',
+    backgroundColor: COLORS.card,
+  },
+
+  partnershipImage: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+
+  partnershipOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.58)',
+  },
+
+  partnershipLabel: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 9,
+  },
+
+  partnershipLabelText: {
+    color: COLORS.gold,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.1,
+  },
+
+  partnershipTitle: {
+    maxWidth: 300,
+    color: COLORS.white,
+    fontSize: 23,
+    lineHeight: 27,
+    fontWeight: '800',
+  },
+
+  partnershipDescription: {
+    maxWidth: 310,
+    marginTop: 7,
+    color: '#D0D0D0',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+
+  partnershipCta: {
+    alignSelf: 'flex-start',
+    minHeight: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    marginTop: 14,
+    paddingHorizontal: 13,
+    borderRadius: 11,
+    backgroundColor: COLORS.gold,
+  },
+
+  partnershipCtaText: {
+    color: '#050505',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+
  clubTitle: {
   fontSize: 34,
   fontWeight: '800',
@@ -420,6 +715,202 @@ clubGold: {
 
   seeMore: {
     color: COLORS.gold,
+  },
+
+  newsSection: {
+    marginTop: 28,
+  },
+
+  newsSectionHeader: {
+    marginBottom: 14,
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+
+  newsSeeAllButton: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingLeft: 12,
+  },
+
+  newsSeeAllText: {
+    color: COLORS.gold,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  newsState: {
+    minHeight: 120,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#1F1F1F',
+    backgroundColor: COLORS.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    padding: 20,
+  },
+
+  newsError: {
+    color: COLORS.secondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+
+  retryButton: {
+    minHeight: 44,
+    paddingHorizontal: 18,
+    justifyContent: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.gold,
+  },
+
+  retryButtonText: {
+    color: COLORS.gold,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
+  emptyText: {
+    color: COLORS.secondary,
+    paddingVertical: 24,
+    textAlign: 'center',
+  },
+
+  newsFeaturedCard: {
+    height: 250,
+    overflow: 'hidden',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    backgroundColor: COLORS.card,
+    marginBottom: 12,
+  },
+
+  newsFeaturedImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    backgroundColor: '#1A1A1A',
+  },
+
+  newsFeaturedOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 18,
+    backgroundColor: 'rgba(0,0,0,0.46)',
+  },
+
+  newsFeaturedDate: {
+    color: COLORS.gold,
+    fontSize: 12,
+    fontWeight: '800',
+    marginBottom: 7,
+  },
+
+  newsFeaturedTitle: {
+    color: COLORS.white,
+    fontSize: 22,
+    lineHeight: 27,
+    fontWeight: '800',
+  },
+
+  newsCompactCard: {
+    minHeight: 104,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    marginBottom: 10,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#242424',
+    backgroundColor: COLORS.card,
+  },
+
+  newsCompactImage: {
+    width: 124,
+    minHeight: 104,
+    backgroundColor: '#1A1A1A',
+  },
+
+  newsCompactContent: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+
+  newsCompactDate: {
+    color: COLORS.gold,
+    fontSize: 11,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+
+  newsCompactTitle: {
+    color: COLORS.white,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '700',
+  },
+
+  plansCarouselContent: {
+    paddingRight: 8,
+  },
+
+  planCarouselCard: {
+    height: 360,
+    overflow: 'hidden',
+    marginRight: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    backgroundColor: COLORS.card,
+  },
+
+  planCarouselImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    backgroundColor: '#1A1A1A',
+  },
+
+  planCarouselOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 18,
+    backgroundColor: 'rgba(0,0,0,0.44)',
+  },
+
+  planCarouselDate: {
+    color: COLORS.gold,
+    fontSize: 12,
+    fontWeight: '800',
+    marginBottom: 7,
+  },
+
+  planCarouselTitle: {
+    color: COLORS.white,
+    fontSize: 22,
+    lineHeight: 27,
+    fontWeight: '800',
+  },
+
+  planCarouselExcerpt: {
+    color: '#D0D0D0',
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 8,
+  },
+
+  homeNewsImageFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   eventCard: {

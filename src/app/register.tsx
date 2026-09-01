@@ -49,6 +49,7 @@ export default function RegisterScreen() {
     setSubmitting(true);
     try {
       await signUp(name.trim(), email.trim(), password);
+      router.dismissAll();
       router.replace('/home' as any);
     } catch (err: any) {
       setError(err?.message ?? 'No se pudo crear la cuenta.');

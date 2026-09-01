@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../../context/AuthContext';
 
 type EventType = {
   id: number;
@@ -176,7 +177,8 @@ const tabs = [
 ];
 
 export default function ExploreScreen() {
- const router = useRouter();
+  const router = useRouter();
+  const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState('Todos');
   const [search, setSearch] = useState('');
 
@@ -291,7 +293,7 @@ export default function ExploreScreen() {
                   ]}
                 >
                   <Text style={[styles.badgeText, !event.free && styles.premiumBadgeText]}>
-                    {event.free ? 'GRATIS' : 'PREMIUM'}
+                    {event.free ? 'GRATIS' : user?.is_premium ? 'ITC CLUB' : 'PREMIUM'}
                   </Text>
                 </View>
               </View>

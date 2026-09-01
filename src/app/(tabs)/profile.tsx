@@ -83,7 +83,7 @@ export default function ProfileScreen() {
 
         <Text style={styles.label}>Membresía</Text>
         <Text style={styles.value}>
-          {user.is_premium ? 'Club (premium)' : 'Gratuita'}
+          {user.is_premium ? 'ITC CLUB' : 'Gratuita'}
         </Text>
       </View>
 

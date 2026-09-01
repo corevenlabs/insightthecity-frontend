@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -22,13 +23,26 @@ const GOLD = '#D4AF37';
 const BLACK = '#0A0A0A';
 
 export default function LoginScreen() {
-  const { signIn } = useAuth();
+  const {
+    biometricAvailable,
+    biometricEnabled,
+    biometricLabel,
+    enableBiometric,
+    signIn,
+    token,
+    unlockWithBiometrics,
+  } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const passwordRef = useRef<TextInput>(null);
+
+  const enterAuthenticatedApp = () => {
+    router.dismissAll();
+    router.replace('/home' as any);
+  };
 
   const enterApp = async () => {
     if (submitting) return;
@@ -43,9 +57,40 @@ export default function LoginScreen() {
     setSubmitting(true);
     try {
       await signIn(email.trim(), password);
-      router.replace('/home' as any);
+      if (biometricAvailable && !biometricEnabled) {
+        Alert.alert(
+          `Activar ${biometricLabel}`,
+          `Podrás volver a ingresar con ${biometricLabel} después de dejar la app en segundo plano.`,
+          [
+            { text: 'Ahora no', onPress: enterAuthenticatedApp },
+            {
+              text: 'Activar',
+              onPress: async () => {
+                await enableBiometric();
+                enterAuthenticatedApp();
+              },
+            },
+          ]
+        );
+      } else {
+        enterAuthenticatedApp();
+      }
     } catch (err: any) {
       setError(err?.message ?? 'No se pudo iniciar sesión.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const enterWithBiometrics = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await unlockWithBiometrics();
+      enterAuthenticatedApp();
+    } catch (err: any) {
+      setError(err?.message ?? `No se pudo ingresar con ${biometricLabel}.`);
     } finally {
       setSubmitting(false);
     }
@@ -131,6 +176,29 @@ export default function LoginScreen() {
               <Text style={styles.primaryText}>ENTRAR</Text>
             )}
           </TouchableOpacity>
+
+            {biometricEnabled && token && (
+              <>
+                <View style={styles.separatorRow}>
+                  <View style={styles.separatorLine} />
+                  <Text style={styles.separatorText}>O</Text>
+                  <View style={styles.separatorLine} />
+                </View>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={`Ingresar con ${biometricLabel}`}
+                  activeOpacity={0.72}
+                  style={styles.biometricButton}
+                  onPress={enterWithBiometrics}
+                  disabled={submitting}
+                >
+                  <Ionicons name="scan-outline" size={22} color={GOLD} />
+                  <Text style={styles.biometricText}>
+                    INGRESAR CON {biometricLabel.toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
 
             <Pressable onPress={() => router.push('/register' as any)}>
               <Text style={styles.switchText}>
@@ -246,6 +314,38 @@ const styles = StyleSheet.create({
   primaryText: {
     color: BLACK,
     fontSize: 15,
+    fontWeight: '900',
+  },
+  separatorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginVertical: 18,
+  },
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#2B2B2B',
+  },
+  separatorText: {
+    color: '#888',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  biometricButton: {
+    minHeight: 56,
+    borderWidth: 1,
+    borderColor: GOLD,
+    borderRadius: 14,
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  biometricText: {
+    color: GOLD,
+    fontSize: 14,
     fontWeight: '900',
   },
   errorText: {

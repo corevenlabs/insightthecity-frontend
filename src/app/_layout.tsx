@@ -11,6 +11,7 @@ import {
 } from '@expo-google-fonts/spline-sans';
 
 import { AuthProvider } from '../context/AuthContext';
+import { BiometricLockScreen } from '../components/BiometricLockScreen';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -45,7 +46,10 @@ export default function RootLayout() {
         <Stack.Screen name="welcome" />
         <Stack.Screen name="login" />
         <Stack.Screen name="register" />
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="(tabs)"
+          options={{ gestureEnabled: false }}
+        />
         <Stack.Screen name="club-form" />
         <Stack.Screen name="chat" />
         <Stack.Screen name="checkout" />
@@ -53,6 +57,7 @@ export default function RootLayout() {
         <Stack.Screen name="guides" />
         <Stack.Screen name="que-hacer" />
         <Stack.Screen name="ny-al-dia" />
+        <Stack.Screen name="news-detail" />
         <Stack.Screen name="experience-detail" />
       </Stack>
 
@@ -64,6 +69,7 @@ export default function RootLayout() {
           <Ionicons name="chatbubble-ellipses" size={24} color="#000" />
         </TouchableOpacity>
       )}
+      <BiometricLockScreen />
     </AuthProvider>
   );
 }
