@@ -1,0 +1,24 @@
+name: Publicar update OTA (canal production)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Publicar el update en producción
+        run: npx eas-cli@latest update --channel production --message "Production ${GITHUB_SHA}" --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_API_URL: https://itc-backend-1031252664334.us-east1.run.app
+          EXPO_PUBLIC_ENABLE_PREMIUM_SIMULATION: "true"
