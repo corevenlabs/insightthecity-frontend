@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -43,6 +44,9 @@ export default function ExperienceDetailScreen() {
 
   const requiresPremium = experience.access === 'premium';
   const isLocked = requiresPremium && !user?.is_premium;
+  const isPaidEvent = Boolean(experience.isPaidEvent && experience.ticketUrl);
+  const ticketCta = experience.ticketCta?.trim() || 'COMPRAR BOLETOS';
+  const isCtaEnabled = isPaidEvent || isLocked;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -72,14 +76,16 @@ export default function ExperienceDetailScreen() {
           </View>
         </View>
 
-        <View style={[styles.accessBadge, isLocked ? styles.premiumBadge : styles.freeBadge]}>
+        <View style={[styles.accessBadge, !isPaidEvent && isLocked ? styles.premiumBadge : styles.freeBadge]}>
           <Ionicons
-            name={isLocked ? 'lock-closed' : requiresPremium ? 'lock-open' : 'gift-outline'}
+            name={isPaidEvent ? 'ticket-outline' : isLocked ? 'lock-closed' : requiresPremium ? 'lock-open' : 'gift-outline'}
             size={15}
-            color={isLocked ? '#D4AF37' : '#050505'}
+            color={!isPaidEvent && isLocked ? '#D4AF37' : '#050505'}
           />
-          <Text style={[styles.accessText, isLocked && styles.premiumText]}>
-            {isLocked
+          <Text style={[styles.accessText, !isPaidEvent && isLocked && styles.premiumText]}>
+            {isPaidEvent
+              ? 'Evento con entrada de pago'
+              : isLocked
               ? 'Premium ITC Club'
               : requiresPremium
                 ? 'Incluido en tu membresía'
@@ -104,22 +110,29 @@ export default function ExperienceDetailScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.ctaButton, isLocked && styles.lockedButton]}
+          style={[styles.ctaButton, !isPaidEvent && isLocked && styles.lockedButton]}
           onPress={() => {
-            if (isLocked) {
+            if (isPaidEvent && experience.ticketUrl) {
+              void WebBrowser.openBrowserAsync(experience.ticketUrl);
+            } else if (isLocked) {
               router.push('/club-form');
             }
           }}
-          disabled={!isLocked}
-          accessibilityState={{ disabled: !isLocked }}
+          disabled={!isCtaEnabled}
+          accessibilityRole="button"
+          accessibilityLabel={isPaidEvent ? `${ticketCta}: ${experience.title}` : undefined}
+          accessibilityHint={isPaidEvent ? 'Abre el sitio de compra de boletos' : undefined}
+          accessibilityState={{ disabled: !isCtaEnabled }}
         >
           <Ionicons
-            name={isLocked ? 'lock-closed' : requiresPremium ? 'checkmark-circle' : 'ticket-outline'}
+            name={isPaidEvent ? 'ticket-outline' : isLocked ? 'lock-closed' : requiresPremium ? 'checkmark-circle' : 'gift-outline'}
             size={18}
-            color={isLocked ? '#D4AF37' : '#050505'}
+            color={!isPaidEvent && isLocked ? '#D4AF37' : '#050505'}
           />
-          <Text style={[styles.ctaText, isLocked && styles.lockedText]}>
-            {isLocked
+          <Text style={[styles.ctaText, !isPaidEvent && isLocked && styles.lockedText]}>
+            {isPaidEvent
+              ? ticketCta.toUpperCase()
+              : isLocked
               ? 'SUSCRÍBETE PARA DESBLOQUEAR'
               : requiresPremium
                 ? 'BENEFICIO DESBLOQUEADO'

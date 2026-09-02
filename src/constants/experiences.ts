@@ -11,6 +11,9 @@ export type Experience = {
   description: string;
   includes: string[];
   recommendation: string;
+  isPaidEvent?: boolean;
+  ticketUrl?: string | null;
+  ticketCta?: string | null;
 };
 
 export const experiences: Experience[] = [
