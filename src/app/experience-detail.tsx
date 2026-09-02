@@ -1,14 +1,32 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getExperienceById } from '@/constants/experiences';
 import { useAuth } from '../context/AuthContext';
+import type { Experience } from '../constants/experiences';
+import { fetchExperience } from '../lib/experiences';
 
 export default function ExperienceDetailScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { user } = useAuth();
-  const experience = getExperienceById(id);
+  const [experience, setExperience] = useState<Experience | undefined>(() => getExperienceById(id));
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    if (!id) { setLoading(false); return; }
+    fetchExperience(id)
+      .then((item) => { if (active) setExperience(item); })
+      .catch(() => undefined)
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [id]);
+
+  if (loading && !experience) {
+    return <SafeAreaView style={styles.container}><View style={styles.emptyState}><Text style={styles.emptyTitle}>Actualizando contenido…</Text></View></SafeAreaView>;
+  }
 
   if (!experience) {
     return (

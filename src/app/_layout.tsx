@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, usePathname, useRouter } from 'expo-router';
+import * as Updates from 'expo-updates';
+import { useEffect } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 
 import {
@@ -24,6 +26,19 @@ export default function RootLayout() {
     SplineSans_600SemiBold,
     SplineSans_700Bold,
   });
+
+  useEffect(() => {
+    if (__DEV__ || !Updates.isEnabled) return;
+    void Updates.checkForUpdateAsync()
+      .then(async (update) => {
+        if (!update.isAvailable) return;
+        await Updates.fetchUpdateAsync();
+        await Updates.reloadAsync();
+      })
+      .catch(() => {
+        // Una falla de actualización nunca debe impedir el acceso a la app instalada.
+      });
+  }, []);
 
   if (!fontsLoaded) return null;
 

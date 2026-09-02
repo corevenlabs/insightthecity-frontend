@@ -4,9 +4,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { experiences, type Experience } from '../../constants/experiences';
+import type { Experience } from '../../constants/experiences';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { fetchExperiences } from '../../lib/experiences';
 
 const GOLD = '#D4AF37';
 const ALL_CATEGORY = '__all__';
@@ -57,11 +58,15 @@ export default function ClubScreen() {
   const { user, loading, refreshUser } = useAuth();
   const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
 
-  useFocusEffect(useCallback(() => { void refreshUser(); }, [refreshUser]));
+  useFocusEffect(useCallback(() => {
+    void refreshUser();
+    void fetchExperiences().then(setExperiences).catch(() => undefined);
+  }, [refreshUser]));
 
   const premiumExperiences = useMemo(
-    () => experiences.filter((experience) => experience.access === 'premium'), []
+    () => experiences.filter((experience) => experience.access === 'premium'), [experiences]
   );
   const categories = useMemo(
     () => [ALL_CATEGORY, ...Array.from(new Set(premiumExperiences.map((item) => item.category)))],

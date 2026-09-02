@@ -26,31 +26,71 @@ export interface NewsPage {
 }
 
 const PER_PAGE = 10;
+const WORDPRESS_API_URL = 'https://insightthecity.com/wp-json/wp/v2';
+const SECTION_CATEGORIES: Record<string, number> = { 'ny-al-dia': 58, 'que-hacer': 84 };
+
+function stripHtml(value: string = '') {
+  return value.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&#8217;/g, '’').replace(/\s+/g, ' ').trim();
+}
+
+function wordpressCard(post: any): NewsCard {
+  const media = post?._embedded?.['wp:featuredmedia']?.[0];
+  const sizes = media?.media_details?.sizes || {};
+  return {
+    id: post.id,
+    title: stripHtml(post.title?.rendered),
+    excerpt: stripHtml(post.excerpt?.rendered),
+    image: sizes.large?.source_url || sizes.medium_large?.source_url || media?.source_url || null,
+    date: post.date,
+    link: post.link,
+  };
+}
+
+async function fetchNewsFromWordPress(section: string, page: number, perPage: number): Promise<NewsPage> {
+  const category = SECTION_CATEGORIES[section];
+  if (!category) throw new Error('Sección desconocida.');
+  const response = await fetch(`${WORDPRESS_API_URL}/posts?categories=${category}&page=${page}&per_page=${perPage}&_embed=1`);
+  if (!response.ok) throw new Error('No se pudo cargar el contenido.');
+  const posts = await response.json();
+  return {
+    items: posts.map(wordpressCard), page, perPage,
+    total: Number(response.headers.get('x-wp-total')) || posts.length,
+    totalPages: Number(response.headers.get('x-wp-totalpages')) || 1,
+  };
+}
 
 export async function fetchNews(
   section: string,
   page = 1,
   perPage = PER_PAGE,
 ): Promise<NewsPage> {
-  const res = await fetch(
-    `${API_URL}/api/news?section=${encodeURIComponent(section)}&page=${page}&perPage=${perPage}`,
-  );
-  if (!res.ok) throw new Error('No se pudo cargar el contenido.');
-  const data = (await res.json()) as { success: boolean } & NewsPage;
-  return {
-    items: data.items ?? [],
-    page: data.page ?? page,
-    perPage: data.perPage ?? perPage,
-    total: data.total ?? 0,
-    totalPages: data.totalPages ?? 0,
-  };
+  try {
+    const res = await fetch(
+      `${API_URL}/api/news?section=${encodeURIComponent(section)}&page=${page}&perPage=${perPage}`,
+    );
+    if (!res.ok) throw new Error('Backend de contenido no disponible.');
+    const data = (await res.json()) as { success: boolean } & NewsPage;
+    return {
+      items: data.items ?? [], page: data.page ?? page, perPage: data.perPage ?? perPage,
+      total: data.total ?? 0, totalPages: data.totalPages ?? 0,
+    };
+  } catch {
+    return fetchNewsFromWordPress(section, page, perPage);
+  }
 }
 
 export async function fetchArticle(id: number | string): Promise<NewsArticle> {
-  const res = await fetch(`${API_URL}/api/news/${encodeURIComponent(String(id))}`);
-  if (!res.ok) throw new Error('No se pudo cargar la nota.');
-  const data = (await res.json()) as { success: boolean; article: NewsArticle };
-  return data.article;
+  try {
+    const res = await fetch(`${API_URL}/api/news/${encodeURIComponent(String(id))}`);
+    if (!res.ok) throw new Error('Backend de contenido no disponible.');
+    const data = (await res.json()) as { success: boolean; article: NewsArticle };
+    return data.article;
+  } catch {
+    const fallback = await fetch(`${WORDPRESS_API_URL}/posts/${encodeURIComponent(String(id))}?_embed=1`);
+    if (!fallback.ok) throw new Error('No se pudo cargar la nota.');
+    const post = await fallback.json();
+    return { ...wordpressCard(post), contentHtml: post.content?.rendered || '' };
+  }
 }
 
 // Formatea la fecha ISO a algo corto tipo "28 Ago 2026".

@@ -1,9 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import type { Experience } from '../../constants/experiences';
+import { fetchExperiences } from '../../lib/experiences';
 
 type MiniDropCardProps = { 
   id: string;
@@ -18,6 +21,13 @@ export default function DropsScreen() {
   const router = useRouter(); 
   const { user } = useAuth();
   const { t } = useLanguage();
+  const [items, setItems] = useState<Experience[]>([]);
+
+  useFocusEffect(useCallback(() => {
+    void fetchExperiences('drops').then(setItems).catch(() => undefined);
+  }, []));
+
+  const [featured, ...upcoming] = items;
 
   const openExperience = (id: string) => {
     router.push({
@@ -48,22 +58,22 @@ export default function DropsScreen() {
         </Text> 
 
         {/* DROP PRINCIPAL */}
-        <TouchableOpacity
+        {featured && <TouchableOpacity
           style={styles.heroCard}
-          onPress={() => openExperience('summit-nyc-2x1')}
+          onPress={() => openExperience(featured.id)}
         > 
           <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1518391846015-55a9cc003b25' }} 
+            source={{ uri: featured.image }}
             style={styles.heroImage} 
           /> 
           <View style={styles.overlay}> 
             <Text style={styles.badge}> {t('drops.featured')} </Text>
-            <Text style={styles.heroTitle}> SUMMIT NYC </Text> 
+            <Text style={styles.heroTitle}> {featured.title} </Text>
             <Text style={styles.heroDescription}> 
-              Consigue entradas 2x1 para una de las mejores vistas de Nueva York. 
+              {featured.description}
             </Text> 
             <Text style={styles.location}> 
-              📍 One Vanderbilt, Midtown Manhattan 
+              {featured.location}
             </Text> 
             <Text style={styles.endsIn}> {t('drops.endsIn')} </Text>
             <View style={styles.countdownContainer}> 
@@ -82,56 +92,21 @@ export default function DropsScreen() {
             </View> 
             <TouchableOpacity
               style={styles.claimButton}
-              onPress={() => openExperience('summit-nyc-2x1')}
+              onPress={() => openExperience(featured.id)}
             > 
               <Text style={styles.claimButtonText}> {t('drops.detail')} </Text>
             </TouchableOpacity> 
           </View> 
-        </TouchableOpacity> 
+        </TouchableOpacity>}
 
         {/* PROXIMOS DROPS */}
         <Text style={styles.sectionTitle}> {t('drops.upcoming')} </Text>
 
-        <MiniDropCard 
-          id="broadway-week"
-          image="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba" 
-          title="Broadway Week" 
-          subtitle="Tickets desde $49" 
-          access="premium"
-          isPremiumMember={Boolean(user?.is_premium)}
-        /> 
-        <MiniDropCard 
-          id="rooftop-230-fifth"
-          image="https://images.unsplash.com/photo-1514565131-fce0801e5785" 
-          title="230 Fifth Rooftop" 
-          subtitle="30% OFF cocktails" 
-          access="premium"
-          isPremiumMember={Boolean(user?.is_premium)}
-        /> 
-        <MiniDropCard 
-          id="restaurant-week-nyc"
-          image="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4" 
-          title="Restaurant Week NYC" 
-          subtitle="Menús especiales" 
-          access="premium"
-          isPremiumMember={Boolean(user?.is_premium)}
-        /> 
-        <MiniDropCard 
-          id="museum-nights"
-          image="https://images.unsplash.com/photo-1522083165195-3424ed129620" 
-          title="Museum Nights" 
-          subtitle="Entrada gratuita" 
-          access="free"
-          isPremiumMember={Boolean(user?.is_premium)}
-        /> 
-        <MiniDropCard 
-          id="edge-observatory"
-          image="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" 
-          title="Edge Observatory" 
-          subtitle="25% OFF entradas" 
-          access="premium"
-          isPremiumMember={Boolean(user?.is_premium)}
-        /> 
+        {upcoming.map((item) => (
+          <MiniDropCard key={item.id} id={item.id} image={item.image} title={item.title}
+            subtitle={item.date || item.description} access={item.access}
+            isPremiumMember={Boolean(user?.is_premium)} />
+        ))}
 
         <View style={{ height: 100 }} /> 
       </ScrollView> 

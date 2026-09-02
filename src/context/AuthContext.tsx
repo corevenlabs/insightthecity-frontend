@@ -50,8 +50,6 @@ const BIOMETRIC_ENABLED_KEY = 'itc_biometric_enabled';
 const LAST_BACKGROUND_AT_KEY = 'itc_last_background_at';
 const BACKGROUND_LOCK_DELAY_MS = 30 * 60 * 1000;
 const DEV_PREMIUM_USER_KEY = 'itc_dev_premium_user';
-const PREMIUM_SIMULATION_ENABLED =
-  __DEV__ || process.env.EXPO_PUBLIC_ENABLE_PREMIUM_SIMULATION === 'true';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -80,7 +78,7 @@ async function persist(token: string, user: User) {
 }
 
 async function restoreSimulatedPremium(user: User): Promise<User> {
-  if (!PREMIUM_SIMULATION_ENABLED || user.is_premium) return user;
+  if (user.is_premium) return user;
   const premiumUserId = await AsyncStorage.getItem(DEV_PREMIUM_USER_KEY);
   return premiumUserId === String(user.id) ? { ...user, is_premium: true } : user;
 }
@@ -367,17 +365,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   const activatePremiumForDevelopment = useCallback(async () => {
-    if (!PREMIUM_SIMULATION_ENABLED) return null;
-    const rawUser = await AsyncStorage.getItem(USER_KEY);
-    if (!rawUser) return null;
-    const premiumUser: User = { ...(JSON.parse(rawUser) as User), is_premium: true };
-    await AsyncStorage.multiSet([
-      [USER_KEY, JSON.stringify(premiumUser)],
-      [DEV_PREMIUM_USER_KEY, String(premiumUser.id)],
-    ]);
-    setUser(premiumUser);
-    return premiumUser;
-  }, []);
+    if (!token) return null;
+    try {
+      const response = await fetch(`${API_URL}/api/users/me/activate-premium`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.user) return null;
+      const premiumUser = data.user as User;
+      await AsyncStorage.multiSet([
+        [USER_KEY, JSON.stringify(premiumUser)],
+        [DEV_PREMIUM_USER_KEY, String(premiumUser.id)],
+      ]);
+      setUser(premiumUser);
+      return premiumUser;
+    } catch {
+      return null;
+    }
+  }, [token]);
 
   const value = useMemo(
     () => ({

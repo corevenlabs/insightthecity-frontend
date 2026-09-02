@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useState, type ComponentProps } from 'react';
 import {
@@ -14,12 +14,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Experience, experiences } from '@/constants/experiences';
+import type { Experience } from '@/constants/experiences';
 import { NewsImage } from '../../components/NewsImage';
 import { WeatherWidget } from '../../components/WeatherWidget';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { fetchNews, formatDate, type NewsCard } from '../../lib/news';
+import { fetchExperiences } from '../../lib/experiences';
 import {
   DEFAULT_FEATURED_PARTNERSHIP,
   fetchFeaturedPartnership,
@@ -121,26 +122,17 @@ function HeaderWeather() {
         temperature: Math.round(weather.temperature),
       })}
     >
+      <Text style={styles.headerWeatherTemperature}>{Math.round(weather.temperature)}°</Text>
       <SymbolView
         name={compactWeatherSymbol(weather.weatherCode, weather.isDay)}
-        size={30}
+        size={38}
         type="multicolor"
-        tintColor={COLORS.gold}
         style={styles.headerWeatherSymbol}
         accessibilityLabel={description}
       />
-      <Text style={styles.headerWeatherTemperature}>{Math.round(weather.temperature)}°</Text>
     </View>
   );
 }
-
-const topToday = experiences.filter((experience) =>
-  ['central-park-concert', 'summit-nyc-2x1', 'ellens-stardust-diner'].includes(experience.id)
-);
-
-const homeDrops = experiences.filter((experience) =>
-  ['summit-nyc-2x1', 'broadway-week', 'rooftop-230-fifth'].includes(experience.id)
-);
 
 function openExperience(id: string) {
   router.push({
@@ -366,12 +358,21 @@ function DropCard({ experience }: DropCardProps) {
 }
 
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { t } = useLanguage();
   const name = firstName(user?.name ?? null, user?.email);
   const [partnership, setPartnership] = useState<FeaturedPartnership | null>(
     DEFAULT_FEATURED_PARTNERSHIP,
   );
+  const [topToday, setTopToday] = useState<Experience[]>([]);
+  const [homeDrops, setHomeDrops] = useState<Experience[]>([]);
+
+  useFocusEffect(useCallback(() => {
+    void refreshUser();
+    void Promise.all([fetchExperiences('top_today'), fetchExperiences('drops')])
+      .then(([top, drops]) => { setTopToday(top); setHomeDrops(drops); })
+      .catch(() => undefined);
+  }, [refreshUser]));
 
   useEffect(() => {
     let active = true;
@@ -401,7 +402,6 @@ export default function HomeScreen() {
               <Text style={styles.greeting} numberOfLines={1}>
                 {name ? t('home.hello', { name }) : t('home.helloGuest')}
               </Text>
-              <HeaderWeather />
             </View>
 
             <Text style={styles.subtitle}>
@@ -409,13 +409,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.notificationBtn}>
-            <Ionicons
-              name="notifications-outline"
-              size={22}
-              color="#FFF"
-            />
-          </TouchableOpacity>
+          <HeaderWeather />
         </View>
 
         {/* HERO CARD */}
@@ -700,8 +694,8 @@ const styles = StyleSheet.create({
   },
 
   headerWeatherBadge: {
-    minWidth: 62,
-    height: 36,
+    minWidth: 72,
+    height: 44,
     flexDirection: 'row',
     flexShrink: 0,
     alignItems: 'center',
@@ -710,13 +704,13 @@ const styles = StyleSheet.create({
   },
 
   headerWeatherSymbol: {
-    width: 30,
-    height: 30,
+    width: 38,
+    height: 38,
   },
 
   headerWeatherTemperature: {
     color: COLORS.white,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '800',
   },
 
