@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const GOLD = '#D4AF37';
 const BLACK = '#0A0A0A';
@@ -20,6 +21,7 @@ function initials(nameOrEmail: string) {
 
 export default function ProfileScreen() {
   const { user, isAuthenticated, signOut } = useAuth();
+  const { t } = useLanguage();
 
   // Estado invitado: sin sesión iniciada.
   if (!isAuthenticated || !user) {
@@ -28,23 +30,23 @@ export default function ProfileScreen() {
         <View style={styles.guestAvatar}>
           <Ionicons name="person-outline" size={44} color={GOLD} />
         </View>
-        <Text style={styles.guestTitle}>No has iniciado sesión</Text>
+        <Text style={styles.guestTitle}>{t('profile.signedOut')}</Text>
         <Text style={styles.guestSubtitle}>
-          Inicia sesión para guardar tus favoritos y acceder a los beneficios del club.
+          {t('profile.signedOutSubtitle')}
         </Text>
 
         <TouchableOpacity
           style={styles.primaryButton}
           onPress={() => router.push('/login' as any)}
         >
-          <Text style={styles.primaryText}>INICIAR SESIÓN</Text>
+          <Text style={styles.primaryText}>{t('welcome.signIn')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.secondaryButton}
           onPress={() => router.push('/register' as any)}
         >
-          <Text style={styles.secondaryText}>CREAR CUENTA</Text>
+          <Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -67,23 +69,23 @@ export default function ProfileScreen() {
             color={user.is_premium ? BLACK : GOLD}
           />
           <Text style={[styles.badgeText, user.is_premium && styles.badgeTextPremium]}>
-            {user.is_premium ? 'Miembro Club' : 'Cuenta gratuita'}
+            {user.is_premium ? t('profile.member') : t('profile.freeAccount')}
           </Text>
         </View>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Información</Text>
+        <Text style={styles.sectionTitle}>{t('profile.information')}</Text>
 
-        <Text style={styles.label}>Nombre</Text>
+        <Text style={styles.label}>{t('profile.name')}</Text>
         <Text style={styles.value}>{user.name || '—'}</Text>
 
-        <Text style={styles.label}>Correo</Text>
+        <Text style={styles.label}>{t('profile.email')}</Text>
         <Text style={styles.value}>{user.email}</Text>
 
-        <Text style={styles.label}>Membresía</Text>
+        <Text style={styles.label}>{t('profile.membership')}</Text>
         <Text style={styles.value}>
-          {user.is_premium ? 'ITC CLUB' : 'Gratuita'}
+          {user.is_premium ? 'ITC CLUB' : t('profile.free')}
         </Text>
       </View>
 
@@ -93,9 +95,9 @@ export default function ProfileScreen() {
           onPress={() => router.push('/club-form' as any)}
         >
           <View style={{ flex: 1 }}>
-            <Text style={styles.upgradeTitle}>Únete al Club</Text>
+            <Text style={styles.upgradeTitle}>{t('profile.joinClub')}</Text>
             <Text style={styles.upgradeSubtitle}>
-              Accede a drops y beneficios exclusivos.
+              {t('profile.joinClubSubtitle')}
             </Text>
           </View>
           <Ionicons name="arrow-forward" size={20} color={BLACK} />
@@ -104,7 +106,7 @@ export default function ProfileScreen() {
 
       <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
         <Ionicons name="log-out-outline" size={18} color="#FF6B6B" />
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
+        <Text style={styles.logoutText}>{t('profile.signOut')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

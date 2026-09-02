@@ -1,7 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function TabLayout() {
+  const { t } = useLanguage();
+
   return (
     <Tabs
       screenOptions={{
@@ -20,7 +23,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Inicio',
+          title: t('tabs.home'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="home-outline"
@@ -34,7 +37,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explorar',
+          title: t('tabs.explore'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="search-outline"
@@ -48,7 +51,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="drops"
         options={{
-          title: 'Drops',
+          title: t('tabs.drops'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="gift-outline"
@@ -62,7 +65,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="club"
         options={{
-          title: 'Club',
+          title: t('tabs.club'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="ticket-outline"
@@ -76,7 +79,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Perfil',
+          title: t('tabs.profile'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="person-outline"

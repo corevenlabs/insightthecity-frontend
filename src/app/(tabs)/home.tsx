@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { SymbolView } from 'expo-symbols';
+import { useCallback, useEffect, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -15,13 +16,20 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Experience, experiences } from '@/constants/experiences';
 import { NewsImage } from '../../components/NewsImage';
+import { WeatherWidget } from '../../components/WeatherWidget';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { fetchNews, formatDate, type NewsCard } from '../../lib/news';
 import {
   DEFAULT_FEATURED_PARTNERSHIP,
   fetchFeaturedPartnership,
   type FeaturedPartnership,
 } from '../../lib/partnerships';
+import {
+  fetchCurrentWeather,
+  weatherDescription,
+  type CurrentWeather,
+} from '../../lib/weather';
 
 // Primer nombre para el saludo ("Carlos Pérez" -> "Carlos").
 function firstName(name: string | null, email?: string): string | null {
@@ -47,6 +55,85 @@ type FeatureCardProps = {
   onPress: () => void;
 };
 
+type CarouselMoreCardProps = {
+  width: number;
+  height: number;
+  label: string;
+  onPress: () => void;
+};
+
+function compactWeatherSymbol(
+  code: number,
+  isDay: boolean,
+): ComponentProps<typeof SymbolView>['name'] {
+  if (!isDay) {
+    return code <= 1
+      ? { ios: 'moon.stars.fill', android: 'nightlight', web: 'nightlight' }
+      : { ios: 'cloud.moon.fill', android: 'partly_cloudy_night', web: 'partly_cloudy_night' };
+  }
+  if (code === 0) return { ios: 'sun.max.fill', android: 'sunny', web: 'sunny' };
+  if (code <= 3) {
+    return { ios: 'cloud.sun.fill', android: 'partly_cloudy_day', web: 'partly_cloudy_day' };
+  }
+  if (code === 45 || code === 48) return { ios: 'cloud.fog.fill', android: 'foggy', web: 'foggy' };
+  if (code >= 51 && code <= 57) return { ios: 'cloud.drizzle.fill', android: 'rainy', web: 'rainy' };
+  if (code >= 71 && code <= 86) {
+    return { ios: 'cloud.snow.fill', android: 'weather_snowy', web: 'weather_snowy' };
+  }
+  if (code >= 61 && code <= 82) return { ios: 'cloud.rain.fill', android: 'rainy', web: 'rainy' };
+  if (code >= 95) return { ios: 'cloud.bolt.rain.fill', android: 'thunderstorm', web: 'thunderstorm' };
+  return { ios: 'cloud.fill', android: 'cloud', web: 'cloud' };
+}
+
+function HeaderWeather() {
+  const { t } = useLanguage();
+  const [weather, setWeather] = useState<CurrentWeather | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetchCurrentWeather()
+      .then((current) => {
+        if (active) setWeather(current);
+      })
+      .catch(() => {
+        // El widget completo al final del Home conserva el estado de reintento.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!weather) {
+    return (
+      <View style={styles.headerWeatherBadge} accessibilityLabel={t('weather.loading')}>
+        <ActivityIndicator size="small" color={COLORS.gold} />
+      </View>
+    );
+  }
+
+  const description = weatherDescription(weather.weatherCode);
+
+  return (
+    <View
+      style={styles.headerWeatherBadge}
+      accessibilityLabel={t('weather.degrees', {
+        description,
+        temperature: Math.round(weather.temperature),
+      })}
+    >
+      <SymbolView
+        name={compactWeatherSymbol(weather.weatherCode, weather.isDay)}
+        size={30}
+        type="multicolor"
+        tintColor={COLORS.gold}
+        style={styles.headerWeatherSymbol}
+        accessibilityLabel={description}
+      />
+      <Text style={styles.headerWeatherTemperature}>{Math.round(weather.temperature)}°</Text>
+    </View>
+  );
+}
+
 const topToday = experiences.filter((experience) =>
   ['central-park-concert', 'summit-nyc-2x1', 'ellens-stardust-diner'].includes(experience.id)
 );
@@ -62,6 +149,23 @@ function openExperience(id: string) {
   } as any);
 }
 
+function CarouselMoreCard({ width, height, label, onPress }: CarouselMoreCardProps) {
+  return (
+    <TouchableOpacity
+      style={[styles.carouselMoreCard, { width, height }]}
+      activeOpacity={0.78}
+      accessibilityRole="button"
+      accessibilityLabel={`Ver más de ${label}`}
+      onPress={onPress}
+    >
+      <View style={styles.carouselMoreIcon}>
+        <Ionicons name="arrow-forward" size={24} color="#050505" />
+      </View>
+      <Text style={styles.carouselMoreText}>Ver más</Text>
+    </TouchableOpacity>
+  );
+}
+
 type HomeNewsSectionProps = {
   section: 'ny-al-dia' | 'que-hacer';
   title: string;
@@ -69,6 +173,7 @@ type HomeNewsSectionProps = {
 };
 
 function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
+  const { t } = useLanguage();
   const { width: windowWidth } = useWindowDimensions();
   const [items, setItems] = useState<NewsCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -180,6 +285,12 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
           </View>
         </TouchableOpacity>
       ))}
+      <CarouselMoreCard
+        width={carouselCardWidth}
+        height={360}
+        label={title}
+        onPress={() => router.push(route as any)}
+      />
     </ScrollView>
   );
 
@@ -194,7 +305,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
           onPress={() => router.push(route as any)}
           activeOpacity={0.7}
         >
-          <Text style={styles.newsSeeAllText}>Ver todo</Text>
+          <Text style={styles.newsSeeAllText}>{t('common.seeAll')}</Text>
           <Ionicons name="arrow-forward" size={18} color={COLORS.gold} />
         </TouchableOpacity>
       </View>
@@ -213,7 +324,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
             onPress={load}
             activeOpacity={0.72}
           >
-            <Text style={styles.retryButtonText}>REINTENTAR</Text>
+            <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       ) : items.length === 0 ? (
@@ -256,6 +367,7 @@ function DropCard({ experience }: DropCardProps) {
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const name = firstName(user?.name ?? null, user?.email);
   const [partnership, setPartnership] = useState<FeaturedPartnership | null>(
     DEFAULT_FEATURED_PARTNERSHIP,
@@ -284,13 +396,16 @@ export default function HomeScreen() {
         {/* HEADER */}
 
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>
-              {name ? `Hola, ${name} 👋` : 'Hola 👋'}
-            </Text>
+          <View style={styles.headerCopy}>
+            <View style={styles.greetingRow}>
+              <Text style={styles.greeting} numberOfLines={1}>
+                {name ? t('home.hello', { name }) : t('home.helloGuest')}
+              </Text>
+              <HeaderWeather />
+            </View>
 
             <Text style={styles.subtitle}>
-              ¿Qué pasa hoy en NYC?
+              {t('home.subtitle')}
             </Text>
           </View>
 
@@ -383,14 +498,14 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            Top de hoy
+            {t('home.topToday')}
           </Text>
 
           <TouchableOpacity
             onPress={() => router.push('/explore')}
           >
             <Text style={styles.seeMore}>
-              Ver todo
+              {t('common.seeAll')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -407,6 +522,12 @@ export default function HomeScreen() {
               isPremiumMember={Boolean(user?.is_premium)}
             />
           ))}
+          <CarouselMoreCard
+            width={180}
+            height={224}
+            label="Top de hoy"
+            onPress={() => router.push('/explore')}
+          />
         </ScrollView>
 
         {/* DROPS */}
@@ -420,7 +541,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/drops')}
           >
             <Text style={styles.seeMore}>
-              Ver todo
+            {t('common.seeAll')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -432,6 +553,12 @@ export default function HomeScreen() {
           {homeDrops.map((experience) => (
             <DropCard key={experience.id} experience={experience} />
           ))}
+          <CarouselMoreCard
+            width={180}
+            height={160}
+            label="Drops"
+            onPress={() => router.push('/drops')}
+          />
         </ScrollView>
 
         {/* NY AL DIA */}
@@ -452,11 +579,11 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            Guías
+            {t('home.guides')}
           </Text>
 
           <TouchableOpacity onPress={() => router.push('/guides')}>
-            <Text style={styles.seeMore}>Ver todo</Text>
+            <Text style={styles.seeMore}>{t('common.seeAll')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -467,6 +594,8 @@ export default function HomeScreen() {
           subtitle="Rutas, miradores, museos, rooftops y planes gratis para organizar tu viaje."
           onPress={() => openExperience('nyc-local-guides')}
         />
+
+        <WeatherWidget />
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -551,10 +680,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  headerCopy: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 12,
+  },
+
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+
   greeting: {
+    flexShrink: 1,
     color: COLORS.white,
     fontSize: 28,
     fontWeight: '700',
+  },
+
+  headerWeatherBadge: {
+    minWidth: 62,
+    height: 36,
+    flexDirection: 'row',
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+
+  headerWeatherSymbol: {
+    width: 30,
+    height: 30,
+  },
+
+  headerWeatherTemperature: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '800',
   },
 
   subtitle: {
@@ -875,16 +1038,15 @@ clubGold: {
 
   planCarouselImage: {
     width: '100%',
-    height: '100%',
-    position: 'absolute',
+    height: 190,
     backgroundColor: '#1A1A1A',
   },
 
   planCarouselOverlay: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     padding: 18,
-    backgroundColor: 'rgba(0,0,0,0.44)',
+    backgroundColor: COLORS.card,
   },
 
   planCarouselDate: {
@@ -911,6 +1073,33 @@ clubGold: {
   homeNewsImageFallback: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  carouselMoreCard: {
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#3A3115',
+    backgroundColor: COLORS.card,
+  },
+
+  carouselMoreIcon: {
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 28,
+    backgroundColor: COLORS.gold,
+  },
+
+  carouselMoreText: {
+    marginTop: 12,
+    color: COLORS.gold,
+    fontSize: 14,
+    fontWeight: '800',
   },
 
   eventCard: {

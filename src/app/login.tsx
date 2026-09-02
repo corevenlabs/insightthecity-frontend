@@ -18,11 +18,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const GOLD = '#D4AF37';
 const BLACK = '#0A0A0A';
 
 export default function LoginScreen() {
+  const { t } = useLanguage();
   const {
     biometricAvailable,
     biometricEnabled,
@@ -50,7 +52,7 @@ export default function LoginScreen() {
     setError(null);
 
     if (!email.trim() || !password) {
-      setError('Ingresa tu correo y contraseña.');
+      setError(t('login.required'));
       return;
     }
 
@@ -59,12 +61,12 @@ export default function LoginScreen() {
       await signIn(email.trim(), password);
       if (biometricAvailable && !biometricEnabled) {
         Alert.alert(
-          `Activar ${biometricLabel}`,
-          `Podrás volver a ingresar con ${biometricLabel} después de dejar la app en segundo plano.`,
+          t('login.enableTitle', { biometric: biometricLabel }),
+          t('login.enableMessage', { biometric: biometricLabel }),
           [
-            { text: 'Ahora no', onPress: enterAuthenticatedApp },
+            { text: t('login.notNow'), onPress: enterAuthenticatedApp },
             {
-              text: 'Activar',
+              text: t('login.enable'),
               onPress: async () => {
                 await enableBiometric();
                 enterAuthenticatedApp();
@@ -76,7 +78,7 @@ export default function LoginScreen() {
         enterAuthenticatedApp();
       }
     } catch (err: any) {
-      setError(err?.message ?? 'No se pudo iniciar sesión.');
+      setError(err?.message ?? t('login.genericError'));
     } finally {
       setSubmitting(false);
     }
@@ -121,14 +123,14 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.content}>
-            <Text style={styles.eyebrow}>WELCOME BACK</Text>
-            <Text style={styles.title}>Inicia sesión y vuelve a la ciudad.</Text>
+            <Text style={styles.eyebrow}>{t('login.eyebrow')}</Text>
+            <Text style={styles.title}>{t('login.title')}</Text>
             <Text style={styles.subtitle}>
-              Guarda tus favoritos, recibe drops y accede a beneficios exclusivos.
+              {t('login.subtitle')}
             </Text>
 
             <View style={styles.form}>
-              <Text style={styles.label}>Correo electrónico</Text>
+              <Text style={styles.label}>{t('login.email')}</Text>
               <TextInput
                 value={email}
                 onChangeText={setEmail}
@@ -143,7 +145,7 @@ export default function LoginScreen() {
                 style={styles.input}
               />
 
-              <Text style={styles.label}>Contraseña</Text>
+              <Text style={styles.label}>{t('login.password')}</Text>
               <TextInput
                 ref={passwordRef}
                 value={password}
@@ -157,7 +159,7 @@ export default function LoginScreen() {
               />
 
               <Pressable>
-                <Text style={styles.forgotText}>Olvidé mi contraseña</Text>
+                <Text style={styles.forgotText}>{t('login.forgot')}</Text>
               </Pressable>
 
               {error && <Text style={styles.errorText}>{error}</Text>}
@@ -173,7 +175,7 @@ export default function LoginScreen() {
             {submitting ? (
               <ActivityIndicator color={BLACK} />
             ) : (
-              <Text style={styles.primaryText}>ENTRAR</Text>
+              <Text style={styles.primaryText}>{t('login.submit')}</Text>
             )}
           </TouchableOpacity>
 
@@ -181,7 +183,7 @@ export default function LoginScreen() {
               <>
                 <View style={styles.separatorRow}>
                   <View style={styles.separatorLine} />
-                  <Text style={styles.separatorText}>O</Text>
+                  <Text style={styles.separatorText}>{t('login.or')}</Text>
                   <View style={styles.separatorLine} />
                 </View>
                 <TouchableOpacity
@@ -194,7 +196,7 @@ export default function LoginScreen() {
                 >
                   <Ionicons name="scan-outline" size={22} color={GOLD} />
                   <Text style={styles.biometricText}>
-                    INGRESAR CON {biometricLabel.toUpperCase()}
+                    {t('login.biometric', { biometric: biometricLabel.toUpperCase() })}
                   </Text>
                 </TouchableOpacity>
               </>
@@ -202,7 +204,7 @@ export default function LoginScreen() {
 
             <Pressable onPress={() => router.push('/register' as any)}>
               <Text style={styles.switchText}>
-                ¿No tienes cuenta? <Text style={styles.switchAccent}>Crear cuenta</Text>
+                {t('login.noAccount')} <Text style={styles.switchAccent}>{t('login.createAccount')}</Text>
               </Text>
             </Pressable>
           </View>

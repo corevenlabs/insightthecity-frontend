@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 type EventType = {
   id: number;
@@ -179,6 +180,7 @@ const tabs = [
 export default function ExploreScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [selectedTab, setSelectedTab] = useState('Todos');
   const [search, setSearch] = useState('');
 
@@ -228,7 +230,7 @@ export default function ExploreScreen() {
             <Ionicons name="arrow-back" size={26} color="#D4AF37" />
           </TouchableOpacity>
 
-          <Text style={styles.title}>Explorar NYC</Text>
+          <Text style={styles.title}>{t('explore.title')}</Text>
 
           <View style={{ width: 26 }} />
         </View>
@@ -238,7 +240,7 @@ export default function ExploreScreen() {
           <Ionicons name="search" size={18} color="#999" />
 
           <TextInput
-            placeholder="Buscar eventos..."
+            placeholder={t('explore.search')}
             placeholderTextColor="#777"
             style={styles.input}
             value={search}
@@ -270,7 +272,7 @@ export default function ExploreScreen() {
         </ScrollView>
 
         <Text style={styles.results}>
-          {filteredEvents.length} eventos encontrados
+          {t('explore.results', { count: filteredEvents.length })}
         </Text>
 
         {/* EVENTS */}

@@ -11,6 +11,7 @@ import {
 } from '@expo-google-fonts/spline-sans';
 
 import { AuthProvider } from '../context/AuthContext';
+import { LanguageProvider } from '../context/LanguageContext';
 import { BiometricLockScreen } from '../components/BiometricLockScreen';
 
 export default function RootLayout() {
@@ -37,39 +38,41 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <Stack
-        initialRouteName="welcome"
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="welcome" />
-        <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-        <Stack.Screen
-          name="(tabs)"
-          options={{ gestureEnabled: false }}
-        />
-        <Stack.Screen name="club-form" />
-        <Stack.Screen name="chat" />
-        <Stack.Screen name="checkout" />
-        <Stack.Screen name="success" />
-        <Stack.Screen name="guides" />
-        <Stack.Screen name="que-hacer" />
-        <Stack.Screen name="ny-al-dia" />
-        <Stack.Screen name="news-detail" />
-        <Stack.Screen name="experience-detail" />
-      </Stack>
-
-      {!hideChatButton && (
-        <TouchableOpacity
-          onPress={() => router.push('/chat')}
-          style={styles.chatButton}
+      <LanguageProvider>
+        <Stack
+          initialRouteName="welcome"
+          screenOptions={{
+            headerShown: false,
+          }}
         >
-          <Ionicons name="chatbubble-ellipses" size={24} color="#000" />
-        </TouchableOpacity>
-      )}
-      <BiometricLockScreen />
+          <Stack.Screen name="welcome" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+          <Stack.Screen
+            name="(tabs)"
+            options={{ gestureEnabled: false }}
+          />
+          <Stack.Screen name="club-form" />
+          <Stack.Screen name="chat" />
+          <Stack.Screen name="checkout" />
+          <Stack.Screen name="success" />
+          <Stack.Screen name="guides" />
+          <Stack.Screen name="que-hacer" />
+          <Stack.Screen name="ny-al-dia" />
+          <Stack.Screen name="news-detail" />
+          <Stack.Screen name="experience-detail" />
+        </Stack>
+
+        {!hideChatButton && (
+          <TouchableOpacity
+            onPress={() => router.push('/chat')}
+            style={styles.chatButton}
+          >
+            <Ionicons name="chatbubble-ellipses" size={24} color="#000" />
+          </TouchableOpacity>
+        )}
+        <BiometricLockScreen />
+      </LanguageProvider>
     </AuthProvider>
   );
 }

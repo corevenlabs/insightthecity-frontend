@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 type MiniDropCardProps = { 
   id: string;
@@ -16,6 +17,7 @@ type MiniDropCardProps = {
 export default function DropsScreen() { 
   const router = useRouter(); 
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const openExperience = (id: string) => {
     router.push({
@@ -42,7 +44,7 @@ export default function DropsScreen() {
         </View> 
 
         <Text style={styles.subtitle}> 
-          Ofertas exclusivas por tiempo limitado 
+          {t('drops.subtitle')}
         </Text> 
 
         {/* DROP PRINCIPAL */}
@@ -55,7 +57,7 @@ export default function DropsScreen() {
             style={styles.heroImage} 
           /> 
           <View style={styles.overlay}> 
-            <Text style={styles.badge}> DESTACADO </Text> 
+            <Text style={styles.badge}> {t('drops.featured')} </Text>
             <Text style={styles.heroTitle}> SUMMIT NYC </Text> 
             <Text style={styles.heroDescription}> 
               Consigue entradas 2x1 para una de las mejores vistas de Nueva York. 
@@ -63,7 +65,7 @@ export default function DropsScreen() {
             <Text style={styles.location}> 
               📍 One Vanderbilt, Midtown Manhattan 
             </Text> 
-            <Text style={styles.endsIn}> Termina en </Text> 
+            <Text style={styles.endsIn}> {t('drops.endsIn')} </Text>
             <View style={styles.countdownContainer}> 
               <View style={styles.timeBox}> 
                 <Text style={styles.timeNumber}>23</Text> 
@@ -82,13 +84,13 @@ export default function DropsScreen() {
               style={styles.claimButton}
               onPress={() => openExperience('summit-nyc-2x1')}
             > 
-              <Text style={styles.claimButtonText}> VER DETALLE </Text> 
+              <Text style={styles.claimButtonText}> {t('drops.detail')} </Text>
             </TouchableOpacity> 
           </View> 
         </TouchableOpacity> 
 
         {/* PROXIMOS DROPS */}
-        <Text style={styles.sectionTitle}> Próximos Drops </Text> 
+        <Text style={styles.sectionTitle}> {t('drops.upcoming')} </Text>
 
         <MiniDropCard 
           id="broadway-week"
@@ -139,6 +141,7 @@ export default function DropsScreen() {
 
 function MiniDropCard({ id, image, title, subtitle, access, isPremiumMember }: MiniDropCardProps) {
   const router = useRouter();
+  const { t } = useLanguage();
 
   const openExperience = () => {
     router.push({
@@ -153,7 +156,7 @@ function MiniDropCard({ id, image, title, subtitle, access, isPremiumMember }: M
       <View style={styles.miniDropContent}> 
         <View style={[styles.accessPill, access === 'premium' && styles.premiumPill]}>
           <Text style={[styles.accessPillText, access === 'premium' && styles.premiumPillText]}>
-            {access === 'premium' ? isPremiumMember ? 'ITC CLUB' : 'PREMIUM' : 'GRATIS'}
+            {access === 'premium' ? isPremiumMember ? 'ITC CLUB' : 'PREMIUM' : t('common.free')}
           </Text>
         </View>
         <Text style={styles.miniDropTitle}> {title} </Text> 

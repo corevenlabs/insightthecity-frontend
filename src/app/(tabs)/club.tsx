@@ -6,8 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { experiences, type Experience } from '../../constants/experiences';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const GOLD = '#D4AF37';
+const ALL_CATEGORY = '__all__';
 const benefits = [
   ['pricetag', 'Ahorros y descuentos', 'en atracciones, restaurantes y más.'],
   ['gift', 'Experiencias exclusivas', 'y giveaways.'],
@@ -53,7 +55,8 @@ function PremiumCard({ experience }: { experience: Experience }) {
 export default function ClubScreen() {
   const router = useRouter();
   const { user, loading, refreshUser } = useAuth();
-  const [selectedCategory, setSelectedCategory] = useState('TODOS');
+  const { t } = useLanguage();
+  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY);
 
   useFocusEffect(useCallback(() => { void refreshUser(); }, [refreshUser]));
 
@@ -61,11 +64,11 @@ export default function ClubScreen() {
     () => experiences.filter((experience) => experience.access === 'premium'), []
   );
   const categories = useMemo(
-    () => ['TODOS', ...Array.from(new Set(premiumExperiences.map((item) => item.category)))],
+    () => [ALL_CATEGORY, ...Array.from(new Set(premiumExperiences.map((item) => item.category)))],
     [premiumExperiences]
   );
   const filteredExperiences = useMemo(
-    () => selectedCategory === 'TODOS'
+    () => selectedCategory === ALL_CATEGORY
       ? premiumExperiences
       : premiumExperiences.filter((item) => item.category === selectedCategory),
     [premiumExperiences, selectedCategory]
@@ -78,13 +81,13 @@ export default function ClubScreen() {
           <View style={styles.memberHeader}>
             <View style={styles.memberIcon}><Ionicons name="star" size={22} color="#050505" /></View>
             <View style={styles.memberHeaderText}>
-              <Text style={styles.memberEyebrow}>ITC CLUB · MIEMBRO ACTIVO</Text>
-              <Text style={styles.memberTitle}>Contenido exclusivo</Text>
-              <Text style={styles.memberSubtitle}>Beneficios, eventos y experiencias seleccionadas para ti.</Text>
+              <Text style={styles.memberEyebrow}>{t('club.active')}</Text>
+              <Text style={styles.memberTitle}>{t('club.exclusiveContent')}</Text>
+              <Text style={styles.memberSubtitle}>{t('club.memberSubtitle')}</Text>
             </View>
           </View>
 
-          <Text style={styles.filterLabel}>FILTRAR POR EVENTO</Text>
+          <Text style={styles.filterLabel}>{t('club.filter')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
             {categories.map((category) => {
               const active = selectedCategory === category;
@@ -96,14 +99,16 @@ export default function ClubScreen() {
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
                 >
-                  <Text style={[styles.filterText, active && styles.filterTextActive]}>{category}</Text>
+                  <Text style={[styles.filterText, active && styles.filterTextActive]}>
+                    {category === ALL_CATEGORY ? t('club.all') : category}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
           </ScrollView>
 
           <View style={styles.resultsHeader}>
-            <Text style={styles.resultsTitle}>{selectedCategory === 'TODOS' ? 'Todo para miembros' : selectedCategory}</Text>
+            <Text style={styles.resultsTitle}>{selectedCategory === ALL_CATEGORY ? t('club.allMembers') : selectedCategory}</Text>
             <Text style={styles.resultsCount}>{filteredExperiences.length}</Text>
           </View>
           {filteredExperiences.map((experience) => <PremiumCard key={experience.id} experience={experience} />)}
@@ -119,7 +124,7 @@ export default function ClubScreen() {
         style={styles.hero}
       >
         <Text style={styles.header}>ITC <Text style={styles.gold}>CLUB</Text></Text>
-        <Text style={styles.subtitle}>ACCESO EXCLUSIVO A{`\n`}LO MEJOR DE NYC Y NJ</Text>
+        <Text style={styles.subtitle}>{t('club.hero')}</Text>
       </ImageBackground>
       <View style={styles.card}>
         {benefits.map(([icon, title, subtitle], index) => (
@@ -132,10 +137,10 @@ export default function ClubScreen() {
           </View>
         ))}
         <TouchableOpacity style={styles.joinButton} onPress={() => router.push('/club-form')} accessibilityRole="button">
-          <Text style={styles.joinButtonText}>UNIRME AL CLUB</Text>
+          <Text style={styles.joinButtonText}>{t('club.join')}</Text>
         </TouchableOpacity>
-        <Text style={styles.price}>Desde <Text style={styles.priceBold}>$4.99</Text> / mes</Text>
-        <Text style={styles.cancel}>Cancela cuando quieras.</Text>
+        <Text style={styles.price}>{t('club.from')} <Text style={styles.priceBold}>$4.99</Text> {t('club.month')}</Text>
+        <Text style={styles.cancel}>{t('club.cancel')}</Text>
       </View>
     </ScrollView>
   );

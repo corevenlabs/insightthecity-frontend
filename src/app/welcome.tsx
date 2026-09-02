@@ -12,11 +12,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLanguage } from '../context/LanguageContext';
 
 const GOLD = '#D4AF37';
 const BLACK = '#050505';
 
 export default function WelcomeScreen() {
+  const { t } = useLanguage();
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [content] = useState(() => new Animated.Value(0));
 
@@ -67,7 +69,7 @@ export default function WelcomeScreen() {
           activeOpacity={0.86}
           onPress={() => router.push('/login' as any)}
         >
-          <Text style={styles.primaryText}>INICIAR SESIÓN</Text>
+          <Text style={styles.primaryText}>{t('welcome.signIn')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -75,7 +77,7 @@ export default function WelcomeScreen() {
           activeOpacity={0.86}
           onPress={() => router.push('/register' as any)}
         >
-          <Text style={styles.secondaryText}>CREAR CUENTA</Text>
+          <Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text>
         </TouchableOpacity>
 
         <Pressable
@@ -86,17 +88,16 @@ export default function WelcomeScreen() {
             {acceptedTerms && <Ionicons name="checkmark" size={14} color={BLACK} />}
           </View>
           <Text style={styles.termsText}>
-            Acepto términos y condiciones
+            {t('welcome.terms')}
           </Text>
         </Pressable>
 
         <Pressable onPress={() => router.replace('/home' as any)}>
-          <Text style={styles.guestText}>Continuar como invitado</Text>
+          <Text style={styles.guestText}>{t('welcome.guest')}</Text>
         </Pressable>
 
         <Text style={styles.subtitle}>
-          Eventos, drops, guías y experiencias seleccionadas para vivir la ciudad
-          con estilo.
+          {t('welcome.subtitle')}
         </Text>
       </Animated.View>
     </SafeAreaView>

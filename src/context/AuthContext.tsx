@@ -14,12 +14,14 @@ import {
 import { AppState, Platform } from 'react-native';
 
 import { API_URL } from '../constants/api';
+import type { AppLanguage } from './LanguageContext';
 
 export type User = {
   id: number;
   name: string | null;
   email: string;
   is_premium: boolean;
+  language?: AppLanguage;
   created_at?: string;
 };
 
@@ -34,7 +36,7 @@ type AuthContextValue = {
   biometricLocked: boolean;
   biometricLabel: string;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signUp: (name: string, email: string, password: string, language: AppLanguage) => Promise<void>;
   signOut: () => Promise<void>;
   enableBiometric: () => Promise<boolean>;
   unlockWithBiometrics: () => Promise<void>;
@@ -243,11 +245,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = useCallback(
-    async (name: string, email: string, password: string) => {
+    async (name: string, email: string, password: string, language: AppLanguage) => {
       const { token: t, user: u } = await postAuth('/api/users/register', {
         name,
         email,
         password,
+        language,
       });
       await persist(t, u);
       setToken(t);

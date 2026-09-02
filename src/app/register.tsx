@@ -17,12 +17,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../context/AuthContext';
+import { useLanguage, type AppLanguage } from '../context/LanguageContext';
 
 const GOLD = '#D4AF37';
 const BLACK = '#0A0A0A';
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,21 +40,21 @@ export default function RegisterScreen() {
     setError(null);
 
     if (!name.trim() || !email.trim() || !password) {
-      setError('Completa todos los campos.');
+      setError(t('register.required'));
       return;
     }
     if (password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres.');
+      setError(t('register.passwordError'));
       return;
     }
 
     setSubmitting(true);
     try {
-      await signUp(name.trim(), email.trim(), password);
+      await signUp(name.trim(), email.trim(), password, language);
       router.dismissAll();
       router.replace('/home' as any);
     } catch (err: any) {
-      setError(err?.message ?? 'No se pudo crear la cuenta.');
+      setError(err?.message ?? t('register.genericError'));
     } finally {
       setSubmitting(false);
     }
@@ -83,18 +85,18 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.content}>
-            <Text style={styles.eyebrow}>JOIN THE CITY</Text>
-            <Text style={styles.title}>Crea tu cuenta y empieza a explorar.</Text>
+            <Text style={styles.eyebrow}>{t('register.eyebrow')}</Text>
+            <Text style={styles.title}>{t('register.title')}</Text>
             <Text style={styles.subtitle}>
-              Tu acceso personal a eventos, lugares, guías y beneficios del club.
+              {t('register.subtitle')}
             </Text>
 
             <View style={styles.form}>
-              <Text style={styles.label}>Nombre completo</Text>
+              <Text style={styles.label}>{t('register.name')}</Text>
               <TextInput
                 value={name}
                 onChangeText={setName}
-                placeholder="Tu nombre"
+                placeholder={t('register.namePlaceholder')}
                 placeholderTextColor="#666"
                 autoCapitalize="words"
                 returnKeyType="next"
@@ -103,7 +105,7 @@ export default function RegisterScreen() {
                 style={styles.input}
               />
 
-              <Text style={styles.label}>Correo electrónico</Text>
+              <Text style={styles.label}>{t('register.email')}</Text>
               <TextInput
                 ref={emailRef}
                 value={email}
@@ -119,18 +121,54 @@ export default function RegisterScreen() {
                 style={styles.input}
               />
 
-              <Text style={styles.label}>Contraseña</Text>
+              <Text style={styles.label}>{t('register.password')}</Text>
               <TextInput
                 ref={passwordRef}
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Mínimo 8 caracteres"
+                placeholder={t('register.passwordPlaceholder')}
                 placeholderTextColor="#666"
                 secureTextEntry
                 returnKeyType="done"
                 onSubmitEditing={createAccount}
                 style={styles.input}
               />
+
+              <Text style={styles.label}>{t('register.language')}</Text>
+              <Text style={styles.languageHint}>{t('register.languageHint')}</Text>
+              <View style={styles.languageOptions} accessibilityRole="radiogroup">
+                {([
+                  ['es', 'language.spanish'],
+                  ['en', 'language.english'],
+                  ['pt', 'language.portuguese'],
+                ] as const).map(([code, labelKey]) => {
+                  const selected = language === code;
+                  return (
+                    <Pressable
+                      key={code}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected }}
+                      accessibilityLabel={t(labelKey)}
+                      onPress={() => void setLanguage(code as AppLanguage)}
+                      style={({ pressed }) => [
+                        styles.languageOption,
+                        selected && styles.languageOptionSelected,
+                        pressed && styles.languageOptionPressed,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.languageOptionText,
+                          selected && styles.languageOptionTextSelected,
+                        ]}
+                      >
+                        {t(labelKey)}
+                      </Text>
+                      {selected && <Ionicons name="checkmark-circle" size={18} color={BLACK} />}
+                    </Pressable>
+                  );
+                })}
+              </View>
 
               {error && <Text style={styles.errorText}>{error}</Text>}
             </View>
@@ -145,13 +183,13 @@ export default function RegisterScreen() {
               {submitting ? (
                 <ActivityIndicator color={BLACK} />
               ) : (
-                <Text style={styles.primaryText}>CREAR CUENTA</Text>
+                <Text style={styles.primaryText}>{t('register.submit')}</Text>
               )}
             </TouchableOpacity>
 
             <Pressable onPress={() => router.push('/login' as any)}>
               <Text style={styles.switchText}>
-                ¿Ya tienes cuenta? <Text style={styles.switchAccent}>Iniciar sesión</Text>
+                {t('register.hasAccount')} <Text style={styles.switchAccent}>{t('register.signIn')}</Text>
               </Text>
             </Pressable>
           </View>
@@ -225,7 +263,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   form: {
-    marginTop: 34,
+    marginTop: 28,
   },
   label: {
     color: '#EAEAEA',
@@ -242,6 +280,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 15,
     marginBottom: 16,
+  },
+  languageHint: {
+    color: '#8F8F8F',
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: -2,
+    marginBottom: 10,
+  },
+  languageOptions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  languageOption: {
+    minHeight: 48,
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#2B2B2B',
+    backgroundColor: '#171717',
+  },
+  languageOptionSelected: {
+    borderColor: GOLD,
+    backgroundColor: GOLD,
+  },
+  languageOptionPressed: {
+    opacity: 0.72,
+  },
+  languageOptionText: {
+    color: '#D6D6D6',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  languageOptionTextSelected: {
+    color: BLACK,
   },
   footer: {
     paddingTop: 24,

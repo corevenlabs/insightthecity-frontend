@@ -1,0 +1,344 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+
+import { useAuth } from './AuthContext';
+
+export type AppLanguage = 'es' | 'en' | 'pt';
+type TranslationParams = Record<string, string | number>;
+
+const LANGUAGE_KEY = 'itc_language';
+
+const translations = {
+  es: {
+    'language.spanish': 'Español',
+    'language.english': 'English',
+    'language.portuguese': 'Português',
+    'register.eyebrow': 'ÚNETE A LA CIUDAD',
+    'register.title': 'Crea tu cuenta y empieza a explorar.',
+    'register.subtitle': 'Tu acceso personal a eventos, lugares, guías y beneficios del club.',
+    'register.name': 'Nombre completo',
+    'register.namePlaceholder': 'Tu nombre',
+    'register.email': 'Correo electrónico',
+    'register.password': 'Contraseña',
+    'register.passwordPlaceholder': 'Mínimo 8 caracteres',
+    'register.language': 'Idioma de la aplicación',
+    'register.languageHint': 'Podrás disfrutar la app en el idioma que elijas.',
+    'register.submit': 'CREAR CUENTA',
+    'register.hasAccount': '¿Ya tienes cuenta?',
+    'register.signIn': 'Iniciar sesión',
+    'register.required': 'Completa todos los campos.',
+    'register.passwordError': 'La contraseña debe tener al menos 8 caracteres.',
+    'register.genericError': 'No se pudo crear la cuenta.',
+    'welcome.signIn': 'INICIAR SESIÓN',
+    'welcome.createAccount': 'CREAR CUENTA',
+    'welcome.terms': 'Acepto términos y condiciones',
+    'welcome.guest': 'Continuar como invitado',
+    'welcome.subtitle': 'Eventos, drops, guías y experiencias seleccionadas para vivir la ciudad con estilo.',
+    'login.eyebrow': 'BIENVENIDO DE NUEVO',
+    'login.title': 'Inicia sesión y vuelve a la ciudad.',
+    'login.subtitle': 'Guarda tus favoritos, recibe drops y accede a beneficios exclusivos.',
+    'login.email': 'Correo electrónico',
+    'login.password': 'Contraseña',
+    'login.forgot': 'Olvidé mi contraseña',
+    'login.required': 'Ingresa tu correo y contraseña.',
+    'login.genericError': 'No se pudo iniciar sesión.',
+    'login.submit': 'ENTRAR',
+    'login.or': 'O',
+    'login.biometric': 'INGRESAR CON {biometric}',
+    'login.noAccount': '¿No tienes cuenta?',
+    'login.createAccount': 'Crear cuenta',
+    'login.enableTitle': 'Activar {biometric}',
+    'login.enableMessage': 'Podrás volver a ingresar con {biometric} después de dejar la app en segundo plano.',
+    'login.notNow': 'Ahora no',
+    'login.enable': 'Activar',
+    'profile.signedOut': 'No has iniciado sesión',
+    'profile.signedOutSubtitle': 'Inicia sesión para guardar tus favoritos y acceder a los beneficios del club.',
+    'profile.member': 'Miembro Club',
+    'profile.freeAccount': 'Cuenta gratuita',
+    'profile.information': 'Información',
+    'profile.name': 'Nombre',
+    'profile.email': 'Correo',
+    'profile.membership': 'Membresía',
+    'profile.free': 'Gratuita',
+    'profile.joinClub': 'Únete al Club',
+    'profile.joinClubSubtitle': 'Accede a drops y beneficios exclusivos.',
+    'profile.signOut': 'Cerrar sesión',
+    'explore.title': 'Explorar NYC',
+    'explore.search': 'Buscar eventos...',
+    'explore.results': '{count} eventos encontrados',
+    'drops.subtitle': 'Ofertas exclusivas por tiempo limitado',
+    'drops.featured': 'DESTACADO',
+    'drops.endsIn': 'Termina en',
+    'drops.detail': 'VER DETALLE',
+    'drops.upcoming': 'Próximos Drops',
+    'common.free': 'GRATIS',
+    'club.active': 'ITC CLUB · MIEMBRO ACTIVO',
+    'club.exclusiveContent': 'Contenido exclusivo',
+    'club.memberSubtitle': 'Beneficios, eventos y experiencias seleccionadas para ti.',
+    'club.filter': 'FILTRAR POR EVENTO',
+    'club.all': 'TODOS',
+    'club.allMembers': 'Todo para miembros',
+    'club.hero': 'ACCESO EXCLUSIVO A\nLO MEJOR DE NYC Y NJ',
+    'club.join': 'UNIRME AL CLUB',
+    'club.from': 'Desde',
+    'club.month': '/ mes',
+    'club.cancel': 'Cancela cuando quieras.',
+    'tabs.home': 'Inicio',
+    'tabs.explore': 'Explorar',
+    'tabs.drops': 'Drops',
+    'tabs.club': 'Club',
+    'tabs.profile': 'Perfil',
+    'home.hello': 'Hola, {name} 👋',
+    'home.helloGuest': 'Hola 👋',
+    'home.subtitle': '¿Qué pasa hoy en NYC?',
+    'home.topToday': 'Top de hoy',
+    'home.guides': 'Guías',
+    'common.seeAll': 'Ver todo',
+    'common.retry': 'REINTENTAR',
+    'weather.loading': 'Cargando clima actual',
+    'weather.degrees': '{description}, {temperature} grados',
+  },
+  en: {
+    'language.spanish': 'Español',
+    'language.english': 'English',
+    'language.portuguese': 'Português',
+    'register.eyebrow': 'JOIN THE CITY',
+    'register.title': 'Create your account and start exploring.',
+    'register.subtitle': 'Your personal access to events, places, guides, and club benefits.',
+    'register.name': 'Full name',
+    'register.namePlaceholder': 'Your name',
+    'register.email': 'Email address',
+    'register.password': 'Password',
+    'register.passwordPlaceholder': 'At least 8 characters',
+    'register.language': 'App language',
+    'register.languageHint': 'Enjoy the app in the language you choose.',
+    'register.submit': 'CREATE ACCOUNT',
+    'register.hasAccount': 'Already have an account?',
+    'register.signIn': 'Sign in',
+    'register.required': 'Complete all fields.',
+    'register.passwordError': 'Your password must contain at least 8 characters.',
+    'register.genericError': 'We could not create your account.',
+    'welcome.signIn': 'SIGN IN',
+    'welcome.createAccount': 'CREATE ACCOUNT',
+    'welcome.terms': 'I accept the terms and conditions',
+    'welcome.guest': 'Continue as a guest',
+    'welcome.subtitle': 'Curated events, drops, guides, and experiences for enjoying the city in style.',
+    'login.eyebrow': 'WELCOME BACK',
+    'login.title': 'Sign in and get back to the city.',
+    'login.subtitle': 'Save favorites, receive drops, and access exclusive benefits.',
+    'login.email': 'Email address',
+    'login.password': 'Password',
+    'login.forgot': 'Forgot my password',
+    'login.required': 'Enter your email and password.',
+    'login.genericError': 'We could not sign you in.',
+    'login.submit': 'SIGN IN',
+    'login.or': 'OR',
+    'login.biometric': 'SIGN IN WITH {biometric}',
+    'login.noAccount': "Don't have an account?",
+    'login.createAccount': 'Create account',
+    'login.enableTitle': 'Enable {biometric}',
+    'login.enableMessage': 'You can use {biometric} to return after leaving the app in the background.',
+    'login.notNow': 'Not now',
+    'login.enable': 'Enable',
+    'profile.signedOut': 'You are not signed in',
+    'profile.signedOutSubtitle': 'Sign in to save favorites and access club benefits.',
+    'profile.member': 'Club member',
+    'profile.freeAccount': 'Free account',
+    'profile.information': 'Information',
+    'profile.name': 'Name',
+    'profile.email': 'Email',
+    'profile.membership': 'Membership',
+    'profile.free': 'Free',
+    'profile.joinClub': 'Join the Club',
+    'profile.joinClubSubtitle': 'Access exclusive drops and benefits.',
+    'profile.signOut': 'Sign out',
+    'explore.title': 'Explore NYC',
+    'explore.search': 'Search events...',
+    'explore.results': '{count} events found',
+    'drops.subtitle': 'Limited-time exclusive offers',
+    'drops.featured': 'FEATURED',
+    'drops.endsIn': 'Ends in',
+    'drops.detail': 'VIEW DETAILS',
+    'drops.upcoming': 'Upcoming Drops',
+    'common.free': 'FREE',
+    'club.active': 'ITC CLUB · ACTIVE MEMBER',
+    'club.exclusiveContent': 'Exclusive content',
+    'club.memberSubtitle': 'Benefits, events, and experiences selected for you.',
+    'club.filter': 'FILTER BY EVENT',
+    'club.all': 'ALL',
+    'club.allMembers': 'Everything for members',
+    'club.hero': 'EXCLUSIVE ACCESS TO\nTHE BEST OF NYC AND NJ',
+    'club.join': 'JOIN THE CLUB',
+    'club.from': 'From',
+    'club.month': '/ month',
+    'club.cancel': 'Cancel anytime.',
+    'tabs.home': 'Home',
+    'tabs.explore': 'Explore',
+    'tabs.drops': 'Drops',
+    'tabs.club': 'Club',
+    'tabs.profile': 'Profile',
+    'home.hello': 'Hi, {name} 👋',
+    'home.helloGuest': 'Hi 👋',
+    'home.subtitle': "What's happening in NYC today?",
+    'home.topToday': "Today's top picks",
+    'home.guides': 'Guides',
+    'common.seeAll': 'See all',
+    'common.retry': 'TRY AGAIN',
+    'weather.loading': 'Loading current weather',
+    'weather.degrees': '{description}, {temperature} degrees',
+  },
+  pt: {
+    'language.spanish': 'Español',
+    'language.english': 'English',
+    'language.portuguese': 'Português',
+    'register.eyebrow': 'JUNTE-SE À CIDADE',
+    'register.title': 'Crie sua conta e comece a explorar.',
+    'register.subtitle': 'Seu acesso pessoal a eventos, lugares, guias e benefícios do clube.',
+    'register.name': 'Nome completo',
+    'register.namePlaceholder': 'Seu nome',
+    'register.email': 'E-mail',
+    'register.password': 'Senha',
+    'register.passwordPlaceholder': 'No mínimo 8 caracteres',
+    'register.language': 'Idioma do aplicativo',
+    'register.languageHint': 'Aproveite o app no idioma que você escolher.',
+    'register.submit': 'CRIAR CONTA',
+    'register.hasAccount': 'Já tem uma conta?',
+    'register.signIn': 'Entrar',
+    'register.required': 'Preencha todos os campos.',
+    'register.passwordError': 'A senha deve ter pelo menos 8 caracteres.',
+    'register.genericError': 'Não foi possível criar sua conta.',
+    'welcome.signIn': 'ENTRAR',
+    'welcome.createAccount': 'CRIAR CONTA',
+    'welcome.terms': 'Aceito os termos e condições',
+    'welcome.guest': 'Continuar como visitante',
+    'welcome.subtitle': 'Eventos, drops, guias e experiências selecionadas para viver a cidade com estilo.',
+    'login.eyebrow': 'BEM-VINDO DE VOLTA',
+    'login.title': 'Entre e volte a curtir a cidade.',
+    'login.subtitle': 'Salve seus favoritos, receba drops e acesse benefícios exclusivos.',
+    'login.email': 'E-mail',
+    'login.password': 'Senha',
+    'login.forgot': 'Esqueci minha senha',
+    'login.required': 'Digite seu e-mail e sua senha.',
+    'login.genericError': 'Não foi possível entrar.',
+    'login.submit': 'ENTRAR',
+    'login.or': 'OU',
+    'login.biometric': 'ENTRAR COM {biometric}',
+    'login.noAccount': 'Não tem uma conta?',
+    'login.createAccount': 'Criar conta',
+    'login.enableTitle': 'Ativar {biometric}',
+    'login.enableMessage': 'Você poderá usar {biometric} ao retornar depois de deixar o app em segundo plano.',
+    'login.notNow': 'Agora não',
+    'login.enable': 'Ativar',
+    'profile.signedOut': 'Você não iniciou sessão',
+    'profile.signedOutSubtitle': 'Entre para salvar seus favoritos e acessar os benefícios do clube.',
+    'profile.member': 'Membro do Clube',
+    'profile.freeAccount': 'Conta gratuita',
+    'profile.information': 'Informações',
+    'profile.name': 'Nome',
+    'profile.email': 'E-mail',
+    'profile.membership': 'Assinatura',
+    'profile.free': 'Gratuita',
+    'profile.joinClub': 'Entre para o Clube',
+    'profile.joinClubSubtitle': 'Acesse drops e benefícios exclusivos.',
+    'profile.signOut': 'Sair',
+    'explore.title': 'Explorar NYC',
+    'explore.search': 'Buscar eventos...',
+    'explore.results': '{count} eventos encontrados',
+    'drops.subtitle': 'Ofertas exclusivas por tempo limitado',
+    'drops.featured': 'DESTAQUE',
+    'drops.endsIn': 'Termina em',
+    'drops.detail': 'VER DETALHES',
+    'drops.upcoming': 'Próximos Drops',
+    'common.free': 'GRÁTIS',
+    'club.active': 'ITC CLUB · MEMBRO ATIVO',
+    'club.exclusiveContent': 'Conteúdo exclusivo',
+    'club.memberSubtitle': 'Benefícios, eventos e experiências selecionadas para você.',
+    'club.filter': 'FILTRAR POR EVENTO',
+    'club.all': 'TODOS',
+    'club.allMembers': 'Tudo para membros',
+    'club.hero': 'ACESSO EXCLUSIVO AO\nMELHOR DE NYC E NJ',
+    'club.join': 'ENTRAR PARA O CLUBE',
+    'club.from': 'A partir de',
+    'club.month': '/ mês',
+    'club.cancel': 'Cancele quando quiser.',
+    'tabs.home': 'Início',
+    'tabs.explore': 'Explorar',
+    'tabs.drops': 'Drops',
+    'tabs.club': 'Clube',
+    'tabs.profile': 'Perfil',
+    'home.hello': 'Olá, {name} 👋',
+    'home.helloGuest': 'Olá 👋',
+    'home.subtitle': 'O que está acontecendo hoje em NYC?',
+    'home.topToday': 'Destaques de hoje',
+    'home.guides': 'Guias',
+    'common.seeAll': 'Ver tudo',
+    'common.retry': 'TENTAR NOVAMENTE',
+    'weather.loading': 'Carregando o clima atual',
+    'weather.degrees': '{description}, {temperature} graus',
+  },
+} as const;
+
+export type TranslationKey = keyof typeof translations.es;
+
+type LanguageContextValue = {
+  language: AppLanguage;
+  setLanguage: (language: AppLanguage) => Promise<void>;
+  t: (key: TranslationKey, params?: TranslationParams) => string;
+};
+
+const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
+
+function isAppLanguage(value: unknown): value is AppLanguage {
+  return value === 'es' || value === 'en' || value === 'pt';
+}
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const [savedLanguage, setSavedLanguage] = useState<AppLanguage>('es');
+  const language = isAppLanguage(user?.language) ? user.language : savedLanguage;
+
+  useEffect(() => {
+    if (isAppLanguage(user?.language)) {
+      void AsyncStorage.setItem(LANGUAGE_KEY, user.language);
+      return;
+    }
+    void AsyncStorage.getItem(LANGUAGE_KEY).then((saved) => {
+      if (isAppLanguage(saved)) setSavedLanguage(saved);
+    });
+  }, [user?.language]);
+
+  const setLanguage = useCallback(async (nextLanguage: AppLanguage) => {
+    setSavedLanguage(nextLanguage);
+    await AsyncStorage.setItem(LANGUAGE_KEY, nextLanguage);
+  }, []);
+
+  const t = useCallback(
+    (key: TranslationKey, params?: TranslationParams) => {
+      let value: string = translations[language][key] ?? translations.es[key];
+      if (!params) return value;
+      Object.entries(params).forEach(([name, replacement]) => {
+        value = value.replaceAll(`{${name}}`, String(replacement));
+      });
+      return value;
+    },
+    [language],
+  );
+
+  const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
+
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (!context) throw new Error('useLanguage debe usarse dentro de <LanguageProvider>');
+  return context;
+}
