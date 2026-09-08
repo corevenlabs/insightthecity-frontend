@@ -5,16 +5,9 @@ import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TextInput, Touc
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import type { Experience, ExperienceRegion } from '../../constants/experiences';
+import type { Experience } from '../../constants/experiences';
+import { EXPERIENCE_FILTERS, matchesExperienceFilter, type ExperienceFilter } from '../../lib/experienceFilters';
 import { fetchExperiences } from '../../lib/experiences';
-
-type RegionFilter = 'ALL' | ExperienceRegion;
-
-const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
-  { id: 'ALL', label: 'TODOS' },
-  { id: 'NY', label: 'NY' },
-  { id: 'NJ', label: 'NJ' },
-];
 
 const CONTENT_SECTIONS = new Set(['ny_al_dia', 'que_hacer', 'guias']);
 
@@ -23,7 +16,7 @@ export default function ExploreScreen() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [items, setItems] = useState<Experience[]>([]);
-  const [selectedRegion, setSelectedRegion] = useState<RegionFilter>('ALL');
+  const [selectedFilter, setSelectedFilter] = useState<ExperienceFilter>('Todos');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -42,12 +35,11 @@ export default function ExploreScreen() {
   const filteredEvents = useMemo(() => {
     const term = search.trim().toLowerCase();
     return items.filter((event) => {
-      const matchesRegion = selectedRegion === 'ALL' || (event.region ?? 'NY') === selectedRegion;
       const matchesSearch = !term || [event.title, event.location, event.category]
         .some((value) => value?.toLowerCase().includes(term));
-      return matchesRegion && matchesSearch;
+      return matchesExperienceFilter(event, selectedFilter) && matchesSearch;
     });
-  }, [items, search, selectedRegion]);
+  }, [items, search, selectedFilter]);
 
   const openExperience = (id: string) => {
     router.push({ pathname: '/experience-detail', params: { id } } as any);
@@ -76,22 +68,27 @@ export default function ExploreScreen() {
           />
         </View>
 
-        <View style={styles.regionFilters} accessibilityRole="tablist">
-          {REGION_FILTERS.map((filter) => {
-            const selected = selectedRegion === filter.id;
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabsContainer}
+          contentContainerStyle={styles.tabsContent}
+        >
+          {EXPERIENCE_FILTERS.map((filter) => {
+            const selected = selectedFilter === filter;
             return (
               <TouchableOpacity
-                key={filter.id}
-                style={[styles.regionFilter, selected && styles.activeRegionFilter]}
-                onPress={() => setSelectedRegion(filter.id)}
+                key={filter}
+                style={[styles.tab, selected && styles.activeTab]}
+                onPress={() => setSelectedFilter(filter)}
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}
               >
-                <Text style={[styles.regionFilterText, selected && styles.activeRegionFilterText]}>{filter.label}</Text>
+                <Text style={[styles.tabText, selected && styles.activeTabText]}>{filter}</Text>
               </TouchableOpacity>
             );
           })}
-        </View>
+        </ScrollView>
 
         <Text style={styles.results}>{t('explore.results', { count: filteredEvents.length })}</Text>
 
@@ -148,11 +145,12 @@ const styles = StyleSheet.create({
   title: { color: '#FFF', fontSize: 32, fontWeight: '700' },
   searchBox: { minHeight: 48, flexDirection: 'row', alignItems: 'center', backgroundColor: '#141414', borderRadius: 14, paddingHorizontal: 14, marginTop: 20, marginBottom: 16 },
   input: { flex: 1, color: '#FFF', paddingVertical: 14, marginLeft: 10, fontSize: 16 },
-  regionFilters: { flexDirection: 'row', gap: 8, marginBottom: 18 },
-  regionFilter: { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 24, backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#292929' },
-  activeRegionFilter: { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
-  regionFilterText: { color: '#AAA', fontSize: 13, fontWeight: '800' },
-  activeRegionFilterText: { color: '#050505' },
+  tabsContainer: { marginBottom: 15 },
+  tabsContent: { paddingRight: 10 },
+  tab: { minHeight: 44, justifyContent: 'center', backgroundColor: '#1A1A1A', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, marginRight: 10 },
+  activeTab: { backgroundColor: '#D4AF37' },
+  tabText: { color: '#AAA', fontWeight: '600' },
+  activeTabText: { color: '#000' },
   results: { color: '#888', marginBottom: 15 },
   state: { minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 12 },
   emptyText: { color: '#A6A6A6', fontSize: 15 },

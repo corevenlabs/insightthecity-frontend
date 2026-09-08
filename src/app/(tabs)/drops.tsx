@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import type { Experience } from '../../constants/experiences';
+import { EXPERIENCE_FILTERS, matchesExperienceFilter, type ExperienceFilter } from '../../lib/experienceFilters';
 import { fetchExperiences } from '../../lib/experiences';
 
 type MiniDropCardProps = { 
@@ -18,28 +19,20 @@ type MiniDropCardProps = {
   region: 'NY' | 'NJ';
 };
 
-type RegionFilter = 'ALL' | 'NY' | 'NJ';
-
-const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
-  { id: 'ALL', label: 'TODOS' },
-  { id: 'NY', label: 'NY' },
-  { id: 'NJ', label: 'NJ' },
-];
-
 export default function DropsScreen() { 
   const router = useRouter(); 
   const { user } = useAuth();
   const { t } = useLanguage();
   const [items, setItems] = useState<Experience[]>([]);
-  const [selectedRegion, setSelectedRegion] = useState<RegionFilter>('ALL');
+  const [selectedFilter, setSelectedFilter] = useState<ExperienceFilter>('Todos');
 
   useFocusEffect(useCallback(() => {
     void fetchExperiences('drops').then(setItems).catch(() => undefined);
   }, []));
 
   const filteredItems = useMemo(
-    () => selectedRegion === 'ALL' ? items : items.filter((item) => (item.region ?? 'NY') === selectedRegion),
-    [items, selectedRegion],
+    () => items.filter((item) => matchesExperienceFilter(item, selectedFilter)),
+    [items, selectedFilter],
   );
   const [featured, ...upcoming] = filteredItems;
 
@@ -71,22 +64,27 @@ export default function DropsScreen() {
           {t('drops.subtitle')}
         </Text> 
 
-        <View style={styles.regionFilters}>
-          {REGION_FILTERS.map((filter) => {
-            const selected = selectedRegion === filter.id;
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabsContainer}
+          contentContainerStyle={styles.tabsContent}
+        >
+          {EXPERIENCE_FILTERS.map((filter) => {
+            const selected = selectedFilter === filter;
             return (
               <TouchableOpacity
-                key={filter.id}
-                style={[styles.regionFilter, selected && styles.activeRegionFilter]}
-                onPress={() => setSelectedRegion(filter.id)}
+                key={filter}
+                style={[styles.tab, selected && styles.activeTab]}
+                onPress={() => setSelectedFilter(filter)}
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}
               >
-                <Text style={[styles.regionFilterText, selected && styles.activeRegionFilterText]}>{filter.label}</Text>
+                <Text style={[styles.tabText, selected && styles.activeTabText]}>{filter}</Text>
               </TouchableOpacity>
             );
           })}
-        </View>
+        </ScrollView>
 
         {/* DROP PRINCIPAL */}
         {featured && <TouchableOpacity
@@ -220,24 +218,12 @@ const styles = StyleSheet.create({
     marginTop: 10, 
     marginBottom: 25, 
   },
-  regionFilters: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 24,
-  },
-  regionFilter: {
-    flex: 1,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 24,
-    backgroundColor: '#1A1A1A',
-    borderWidth: 1,
-    borderColor: '#292929',
-  },
-  activeRegionFilter: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
-  regionFilterText: { color: COLORS.secondary, fontSize: 13, fontWeight: '800' },
-  activeRegionFilterText: { color: COLORS.background },
+  tabsContainer: { marginBottom: 24 },
+  tabsContent: { paddingRight: 10 },
+  tab: { minHeight: 44, justifyContent: 'center', backgroundColor: '#1A1A1A', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, marginRight: 10 },
+  activeTab: { backgroundColor: COLORS.gold },
+  tabText: { color: COLORS.secondary, fontWeight: '600' },
+  activeTabText: { color: COLORS.background },
   heroCard: { 
     height: 400, 
     borderRadius: 24, 
