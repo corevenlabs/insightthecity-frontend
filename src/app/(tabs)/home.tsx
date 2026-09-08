@@ -339,6 +339,9 @@ function DropCard({ experience }: DropCardProps) {
       />
 
       <View style={styles.dropOverlay}>
+        <View style={styles.regionBadge}>
+          <Text style={styles.regionBadgeText}>{experience.region ?? 'NY'}</Text>
+        </View>
         <Text style={styles.dropTitle}>
           {experience.title}
         </Text>
@@ -608,7 +611,7 @@ function EventCard({ experience, isPremiumMember }: EventCardProps) {
       />
 
       <Text style={styles.category}>
-        {experience.category}
+        {experience.region ?? 'NY'} · {experience.category}
       </Text>
 
       <Text style={styles.eventTitle}>
@@ -1237,6 +1240,23 @@ clubGold: {
     justifyContent: 'flex-end',
     padding: 16,
     backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+
+  regionBadge: {
+    alignSelf: 'flex-start',
+    minWidth: 36,
+    marginBottom: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: COLORS.gold,
+  },
+
+  regionBadgeText: {
+    color: COLORS.background,
+    fontSize: 11,
+    fontWeight: '900',
+    textAlign: 'center',
   },
 
   dropTitle: {

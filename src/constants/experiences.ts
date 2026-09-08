@@ -1,4 +1,5 @@
 export type ExperienceAccess = 'free' | 'premium';
+export type ExperienceRegion = 'NY' | 'NJ';
 
 export type Experience = {
   id: string;
@@ -7,6 +8,7 @@ export type Experience = {
   image: string;
   date: string;
   location: string;
+  region?: ExperienceRegion;
   access: ExperienceAccess;
   description: string;
   includes: string[];
@@ -14,6 +16,7 @@ export type Experience = {
   isPaidEvent?: boolean;
   ticketUrl?: string | null;
   ticketCta?: string | null;
+  section?: string | null;
 };
 
 export const experiences: Experience[] = [

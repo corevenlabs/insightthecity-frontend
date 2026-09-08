@@ -1,308 +1,135 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import type { Experience, ExperienceRegion } from '../../constants/experiences';
+import { fetchExperiences } from '../../lib/experiences';
 
-type EventType = {
-  id: number;
-  experienceId: string;
-  title: string;
-  location: string;
-  time: string;
-  category: string;
-  filter: string;
-  free: boolean;
-  image: string;
-};
+type RegionFilter = 'ALL' | ExperienceRegion;
 
-const events: EventType[] = [
-  {
-    id: 1,
-    experienceId: 'central-park-concert',
-    title: 'Concierto en Central Park',
-    location: 'Central Park',
-    time: 'Hoy · 7:00 PM',
-    category: 'Música',
-    filter: 'Hoy',
-    free: true,
-    image:
-      'https://images.unsplash.com/photo-1501386761578-eac5c94b800a',
-  },
-  {
-    id: 2,
-    experienceId: 'broadway-week',
-    title: 'Broadway Week',
-    location: 'Times Square',
-    time: 'Este fin de semana',
-    category: 'Broadway',
-    filter: 'Este fin de semana',
-    free: false,
-    image:
-      'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba',
-  },
-  {
-    id: 3,
-    experienceId: 'restaurant-week-nyc',
-    title: 'Restaurant Week NYC',
-    location: 'Manhattan',
-    time: 'Todo el mes',
-    category: 'Food',
-    filter: 'Todos',
-    free: false,
-    image:
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
-  },
-  {
-    id: 4,
-    experienceId: 'jazz-night-brooklyn',
-    title: 'Jazz Night Brooklyn',
-    location: 'Brooklyn',
-    time: 'Hoy · 9 PM',
-    category: 'Música',
-    filter: 'Hoy',
-    free: true,
-    image:
-      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f',
-  },
-  {
-    id: 5,
-    experienceId: 'summit-nyc-2x1',
-    title: 'SUMMIT NYC 2x1',
-    location: 'Midtown',
-    time: '48 horas',
-    category: 'Arte',
-    filter: 'Todos',
-    free: false,
-    image:
-      'https://images.unsplash.com/photo-1518391846015-55a9cc003b25',
-  },
-  {
-    id: 6,
-    experienceId: 'moma-late-fridays',
-    title: 'MoMA Late Fridays',
-    location: 'MoMA',
-    time: 'Viernes',
-    category: 'Arte',
-    filter: 'Este fin de semana',
-    free: true,
-    image:
-      'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b',
-  },
-  {
-    id: 7,
-    experienceId: 'comedy-cellar',
-    title: 'Comedy Cellar',
-    location: 'Greenwich Village',
-    time: '8:30 PM',
-    category: 'Nightlife',
-    filter: 'Hoy',
-    free: false,
-    image:
-      'https://images.unsplash.com/photo-1527224857830-43a7acc85260',
-  },
-  {
-    id: 8,
-    experienceId: 'hamilton-broadway',
-    title: 'Hamilton',
-    location: 'Broadway',
-    time: '7 PM',
-    category: 'Broadway',
-    filter: 'Todos',
-    free: false,
-    image:
-      'https://images.unsplash.com/photo-1503095396549-807759245b35',
-  },
-  {
-    id: 9,
-    experienceId: 'lion-king-broadway',
-    title: 'The Lion King',
-    location: 'Broadway',
-    time: '8 PM',
-    category: 'Broadway',
-    filter: 'Todos',
-    free: false,
-    image:
-      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee',
-  },
-  {
-    id: 10,
-    experienceId: 'brooklyn-flea',
-    title: 'Brooklyn Flea',
-    location: 'Brooklyn',
-    time: 'Sábado',
-    category: 'Food',
-    filter: 'Este fin de semana',
-    free: true,
-    image:
-      'https://images.unsplash.com/photo-1488459716781-31db52582fe9',
-  },
-  {
-    id: 11,
-    experienceId: 'rooftop-sunset-party',
-    title: 'Rooftop Sunset Party',
-    location: 'Manhattan',
-    time: '6 PM',
-    category: 'Nightlife',
-    filter: 'Hoy',
-    free: false,
-    image:
-      'https://images.unsplash.com/photo-1514565131-fce0801e5785',
-  },
-  {
-    id: 12,
-    experienceId: 'chelsea-market-tour',
-    title: 'Chelsea Market Tour',
-    location: 'Chelsea',
-    time: '12 PM',
-    category: 'Food',
-    filter: 'Todos',
-    free: false,
-    image:
-      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5',
-  },
+const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
+  { id: 'ALL', label: 'TODOS' },
+  { id: 'NY', label: 'NY' },
+  { id: 'NJ', label: 'NJ' },
 ];
 
-const tabs = [
-  'Todos',
-  'Hoy',
-  'Este fin de semana',
-  'Gratis',
-  'Música',
-  'Broadway',
-  'Food',
-  'Arte',
-  'Nightlife',
-];
+const CONTENT_SECTIONS = new Set(['ny_al_dia', 'que_hacer', 'guias']);
 
 export default function ExploreScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [selectedTab, setSelectedTab] = useState('Todos');
+  const [items, setItems] = useState<Experience[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<RegionFilter>('ALL');
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const openExperience = (id: string) => {
-    router.push({
-      pathname: '/experience-detail',
-      params: { id },
-    } as any);
-  };
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    setLoading(true);
+    void fetchExperiences()
+      .then((records) => {
+        if (active) setItems(records.filter((item) => !item.section || !CONTENT_SECTIONS.has(item.section)));
+      })
+      .catch(() => undefined)
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []));
 
   const filteredEvents = useMemo(() => {
-    return events.filter((event) => {
-      const matchesSearch =
-        event.title
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
-        event.location
-          .toLowerCase()
-          .includes(search.toLowerCase());
-
-      if (!matchesSearch) return false;
-
-      if (selectedTab === 'Todos') return true;
-
-      if (selectedTab === 'Gratis') {
-        return event.free;
-      }
-
-      if (
-        selectedTab === 'Hoy' ||
-        selectedTab === 'Este fin de semana'
-      ) {
-        return event.filter === selectedTab;
-      }
-
-      return event.category === selectedTab;
+    const term = search.trim().toLowerCase();
+    return items.filter((event) => {
+      const matchesRegion = selectedRegion === 'ALL' || (event.region ?? 'NY') === selectedRegion;
+      const matchesSearch = !term || [event.title, event.location, event.category]
+        .some((value) => value?.toLowerCase().includes(term));
+      return matchesRegion && matchesSearch;
     });
-  }, [selectedTab, search]);
+  }, [items, search, selectedRegion]);
+
+  const openExperience = (id: string) => {
+    router.push({ pathname: '/experience-detail', params: { id } } as any);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* HEADER CON BACK */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={26} color="#D4AF37" />
+          <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Volver">
+            <Ionicons name="arrow-back" size={24} color="#D4AF37" />
           </TouchableOpacity>
-
           <Text style={styles.title}>{t('explore.title')}</Text>
-
-          <View style={{ width: 26 }} />
+          <View style={styles.iconButton} />
         </View>
 
-        {/* SEARCH */}
         <View style={styles.searchBox}>
           <Ionicons name="search" size={18} color="#999" />
-
           <TextInput
             placeholder={t('explore.search')}
             placeholderTextColor="#777"
             style={styles.input}
             value={search}
             onChangeText={setSearch}
+            returnKeyType="search"
           />
         </View>
 
-        {/* TABS */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsContainer}>
-          {tabs.map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              style={[
-                styles.tab,
-                selectedTab === tab && styles.activeTab,
-              ]}
-              onPress={() => setSelectedTab(tab)}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  selectedTab === tab && styles.activeTabText,
-                ]}
+        <View style={styles.regionFilters} accessibilityRole="tablist">
+          {REGION_FILTERS.map((filter) => {
+            const selected = selectedRegion === filter.id;
+            return (
+              <TouchableOpacity
+                key={filter.id}
+                style={[styles.regionFilter, selected && styles.activeRegionFilter]}
+                onPress={() => setSelectedRegion(filter.id)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected }}
               >
-                {tab}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <Text style={[styles.regionFilterText, selected && styles.activeRegionFilterText]}>{filter.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
-        <Text style={styles.results}>
-          {t('explore.results', { count: filteredEvents.length })}
-        </Text>
+        <Text style={styles.results}>{t('explore.results', { count: filteredEvents.length })}</Text>
 
-        {/* EVENTS */}
-        {filteredEvents.map((event) => (
+        {loading ? (
+          <View style={styles.state}><ActivityIndicator color="#D4AF37" /></View>
+        ) : filteredEvents.length === 0 ? (
+          <View style={styles.state}>
+            <Ionicons name="location-outline" size={30} color="#777" />
+            <Text style={styles.emptyText}>No hay eventos para este filtro.</Text>
+          </View>
+        ) : filteredEvents.map((event) => (
           <TouchableOpacity
             key={event.id}
             style={styles.card}
-            onPress={() => openExperience(event.experienceId)}
+            onPress={() => openExperience(event.id)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={`${event.title}, ${event.region ?? 'NY'}, ${event.location}`}
           >
             <Image source={{ uri: event.image }} style={styles.image} />
-
             <View style={styles.cardContent}>
               <View style={styles.topRow}>
-                <Text style={styles.category}>{event.category}</Text>
-
-                <View
-                  style={[
-                    styles.badge,
-                    event.free ? styles.freeBadge : styles.premiumBadge,
-                  ]}
-                >
-                  <Text style={[styles.badgeText, !event.free && styles.premiumBadgeText]}>
-                    {event.free ? 'GRATIS' : user?.is_premium ? 'ITC CLUB' : 'PREMIUM'}
+                <View style={styles.categoryRow}>
+                  <View style={styles.regionBadge}><Text style={styles.regionBadgeText}>{event.region ?? 'NY'}</Text></View>
+                  <Text style={styles.category}>{event.category}</Text>
+                </View>
+                <View style={[styles.badge, event.access === 'premium' ? styles.premiumBadge : styles.freeBadge]}>
+                  <Text style={[styles.badgeText, event.access === 'premium' && styles.premiumBadgeText]}>
+                    {event.access === 'premium' ? user?.is_premium ? 'ITC CLUB' : 'PREMIUM' : 'GRATIS'}
                   </Text>
                 </View>
               </View>
-
               <Text style={styles.eventTitle}>{event.title}</Text>
-              <Text style={styles.location}>📍 {event.location}</Text>
-              <Text style={styles.time}>{event.time}</Text>
+              <View style={styles.locationRow}>
+                <Ionicons name="location-outline" size={15} color="#A6A6A6" />
+                <Text style={styles.location}>{event.location}</Text>
+              </View>
+              <Text style={styles.time}>{event.date}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -314,138 +141,36 @@ export default function ExploreScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#050505',
-    paddingHorizontal: 20,
-  },
-
-  header: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginTop: 10,
-},
-
-title: {
-  color: '#FFF',
-  fontSize: 32,
-  fontWeight: '700',
-},
-
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#141414',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    marginTop: 20,
-    marginBottom: 20,
-  },
-
-  input: {
-    flex: 1,
-    color: '#FFF',
-    paddingVertical: 14,
-    marginLeft: 10,
-  },
-
-  tabsContainer: {
-    marginBottom: 15,
-  },
-
-  tab: {
-    backgroundColor: '#1A1A1A',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-
-  activeTab: {
-    backgroundColor: '#D4AF37',
-  },
-
-  tabText: {
-    color: '#AAA',
-    fontWeight: '600',
-  },
-
-  activeTabText: {
-    color: '#000',
-  },
-
-  results: {
-    color: '#888',
-    marginBottom: 15,
-  },
-
-  card: {
-    backgroundColor: '#121212',
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 18,
-  },
-
-  image: {
-    width: '100%',
-    height: 180,
-  },
-
-  cardContent: {
-    padding: 16,
-  },
-
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-
-  category: {
-    color: '#D4AF37',
-    fontWeight: '700',
-  },
-
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-
-  freeBadge: {
-    backgroundColor: '#D4AF37',
-  },
-
-  premiumBadge: {
-    backgroundColor: '#303030',
-    borderWidth: 1,
-    borderColor: '#D4AF37',
-  },
-
-  badgeText: {
-    color: '#000',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-
-  premiumBadgeText: {
-    color: '#D4AF37',
-  },
-
-  eventTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 10,
-  },
-
-  location: {
-    color: '#AAA',
-    marginTop: 8,
-  },
-
-  time: {
-    color: '#AAA',
-    marginTop: 4,
-  },
+  container: { flex: 1, backgroundColor: '#050505' },
+  content: { paddingHorizontal: 20 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
+  iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  title: { color: '#FFF', fontSize: 32, fontWeight: '700' },
+  searchBox: { minHeight: 48, flexDirection: 'row', alignItems: 'center', backgroundColor: '#141414', borderRadius: 14, paddingHorizontal: 14, marginTop: 20, marginBottom: 16 },
+  input: { flex: 1, color: '#FFF', paddingVertical: 14, marginLeft: 10, fontSize: 16 },
+  regionFilters: { flexDirection: 'row', gap: 8, marginBottom: 18 },
+  regionFilter: { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 24, backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#292929' },
+  activeRegionFilter: { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
+  regionFilterText: { color: '#AAA', fontSize: 13, fontWeight: '800' },
+  activeRegionFilterText: { color: '#050505' },
+  results: { color: '#888', marginBottom: 15 },
+  state: { minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  emptyText: { color: '#A6A6A6', fontSize: 15 },
+  card: { backgroundColor: '#121212', borderRadius: 20, overflow: 'hidden', marginBottom: 18 },
+  image: { width: '100%', height: 180, backgroundColor: '#1A1A1A' },
+  cardContent: { padding: 16 },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  categoryRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  category: { flexShrink: 1, color: '#D4AF37', fontWeight: '700' },
+  regionBadge: { minWidth: 38, paddingHorizontal: 9, paddingVertical: 5, alignItems: 'center', borderRadius: 999, backgroundColor: '#D4AF37' },
+  regionBadgeText: { color: '#050505', fontSize: 11, fontWeight: '900' },
+  badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  freeBadge: { backgroundColor: '#D4AF37' },
+  premiumBadge: { backgroundColor: '#303030', borderWidth: 1, borderColor: '#D4AF37' },
+  badgeText: { color: '#000', fontSize: 11, fontWeight: '700' },
+  premiumBadgeText: { color: '#D4AF37' },
+  eventTitle: { color: '#FFF', fontSize: 18, fontWeight: '700', marginTop: 12 },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8 },
+  location: { flex: 1, color: '#AAA' },
+  time: { color: '#AAA', marginTop: 4 },
 });

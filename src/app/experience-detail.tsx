@@ -66,6 +66,9 @@ export default function ExperienceDetailScreen() {
         </View>
 
         <View style={styles.metaRow}>
+          <View style={styles.regionMetaPill}>
+            <Text style={styles.regionMetaText}>{experience.region ?? 'NY'}</Text>
+          </View>
           <View style={styles.metaPill}>
             <Ionicons name="calendar-outline" size={15} color="#D4AF37" />
             <Text style={styles.metaText}>{experience.date}</Text>
@@ -217,6 +220,20 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderWidth: 1,
     borderColor: '#222',
+  },
+  regionMetaPill: {
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    backgroundColor: COLORS.gold,
+  },
+  regionMetaText: {
+    color: COLORS.background,
+    fontSize: 12,
+    fontWeight: '900',
   },
   metaText: {
     color: COLORS.white,

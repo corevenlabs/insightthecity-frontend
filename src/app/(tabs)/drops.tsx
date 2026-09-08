@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
@@ -15,19 +15,33 @@ type MiniDropCardProps = {
   subtitle: string; 
   access: 'free' | 'premium';
   isPremiumMember: boolean;
+  region: 'NY' | 'NJ';
 };
+
+type RegionFilter = 'ALL' | 'NY' | 'NJ';
+
+const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
+  { id: 'ALL', label: 'TODOS' },
+  { id: 'NY', label: 'NY' },
+  { id: 'NJ', label: 'NJ' },
+];
 
 export default function DropsScreen() { 
   const router = useRouter(); 
   const { user } = useAuth();
   const { t } = useLanguage();
   const [items, setItems] = useState<Experience[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<RegionFilter>('ALL');
 
   useFocusEffect(useCallback(() => {
     void fetchExperiences('drops').then(setItems).catch(() => undefined);
   }, []));
 
-  const [featured, ...upcoming] = items;
+  const filteredItems = useMemo(
+    () => selectedRegion === 'ALL' ? items : items.filter((item) => (item.region ?? 'NY') === selectedRegion),
+    [items, selectedRegion],
+  );
+  const [featured, ...upcoming] = filteredItems;
 
   const openExperience = (id: string) => {
     router.push({
@@ -57,6 +71,23 @@ export default function DropsScreen() {
           {t('drops.subtitle')}
         </Text> 
 
+        <View style={styles.regionFilters}>
+          {REGION_FILTERS.map((filter) => {
+            const selected = selectedRegion === filter.id;
+            return (
+              <TouchableOpacity
+                key={filter.id}
+                style={[styles.regionFilter, selected && styles.activeRegionFilter]}
+                onPress={() => setSelectedRegion(filter.id)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected }}
+              >
+                <Text style={[styles.regionFilterText, selected && styles.activeRegionFilterText]}>{filter.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
         {/* DROP PRINCIPAL */}
         {featured && <TouchableOpacity
           style={styles.heroCard}
@@ -67,7 +98,10 @@ export default function DropsScreen() {
             style={styles.heroImage} 
           /> 
           <View style={styles.overlay}> 
-            <Text style={styles.badge}> {t('drops.featured')} </Text>
+            <View style={styles.heroTopline}>
+              <Text style={styles.badge}> {t('drops.featured')} </Text>
+              <View style={styles.regionBadge}><Text style={styles.regionBadgeText}>{featured.region ?? 'NY'}</Text></View>
+            </View>
             <Text style={styles.heroTitle}> {featured.title} </Text>
             <Text style={styles.heroDescription}> 
               {featured.description}
@@ -105,6 +139,7 @@ export default function DropsScreen() {
         {upcoming.map((item) => (
           <MiniDropCard key={item.id} id={item.id} image={item.image} title={item.title}
             subtitle={item.date || item.description} access={item.access}
+            region={item.region ?? 'NY'}
             isPremiumMember={Boolean(user?.is_premium)} />
         ))}
 
@@ -114,7 +149,7 @@ export default function DropsScreen() {
   ); 
 } 
 
-function MiniDropCard({ id, image, title, subtitle, access, isPremiumMember }: MiniDropCardProps) {
+function MiniDropCard({ id, image, title, subtitle, access, region, isPremiumMember }: MiniDropCardProps) {
   const router = useRouter();
   const { t } = useLanguage();
 
@@ -129,10 +164,13 @@ function MiniDropCard({ id, image, title, subtitle, access, isPremiumMember }: M
     <TouchableOpacity style={styles.miniDropCard} onPress={openExperience}> 
       <Image source={{ uri: image }} style={styles.miniDropImage} /> 
       <View style={styles.miniDropContent}> 
-        <View style={[styles.accessPill, access === 'premium' && styles.premiumPill]}>
-          <Text style={[styles.accessPillText, access === 'premium' && styles.premiumPillText]}>
-            {access === 'premium' ? isPremiumMember ? 'ITC CLUB' : 'PREMIUM' : t('common.free')}
-          </Text>
+        <View style={styles.miniTopline}>
+          <View style={styles.regionBadge}><Text style={styles.regionBadgeText}>{region}</Text></View>
+          <View style={[styles.accessPill, access === 'premium' && styles.premiumPill]}>
+            <Text style={[styles.accessPillText, access === 'premium' && styles.premiumPillText]}>
+              {access === 'premium' ? isPremiumMember ? 'ITC CLUB' : 'PREMIUM' : t('common.free')}
+            </Text>
+          </View>
         </View>
         <Text style={styles.miniDropTitle}> {title} </Text> 
         <Text style={styles.miniDropSubtitle}> {subtitle} </Text> 
@@ -181,7 +219,25 @@ const styles = StyleSheet.create({
     textAlign: 'center', 
     marginTop: 10, 
     marginBottom: 25, 
-  }, 
+  },
+  regionFilters: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 24,
+  },
+  regionFilter: {
+    flex: 1,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 24,
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#292929',
+  },
+  activeRegionFilter: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
+  regionFilterText: { color: COLORS.secondary, fontSize: 13, fontWeight: '800' },
+  activeRegionFilterText: { color: COLORS.background },
   heroCard: { 
     height: 400, 
     borderRadius: 24, 
@@ -205,8 +261,22 @@ const styles = StyleSheet.create({
   badge: { 
     color: COLORS.gold, 
     fontWeight: '700', 
-    marginBottom: 10, 
-  }, 
+  },
+  heroTopline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  regionBadge: {
+    minWidth: 38,
+    alignItems: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: COLORS.gold,
+  },
+  regionBadgeText: { color: COLORS.background, fontSize: 11, fontWeight: '900' },
   heroTitle: { 
     color: COLORS.white, 
     fontSize: 32, 
@@ -284,14 +354,20 @@ const styles = StyleSheet.create({
   }, 
   miniDropContent: { 
     padding: 16, 
-  }, 
+  },
+  miniTopline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 9,
+  },
   accessPill: {
     alignSelf: 'flex-start',
     backgroundColor: COLORS.gold,
     borderRadius: 8,
     paddingHorizontal: 9,
     paddingVertical: 4,
-    marginBottom: 9,
   },
   premiumPill: {
     backgroundColor: '#222222',
