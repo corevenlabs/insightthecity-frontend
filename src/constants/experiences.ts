@@ -13,6 +13,8 @@ export type Experience = {
   access: ExperienceAccess;
   description: string;
   includes: string[];
+  showBenefitOnCard?: boolean;
+  cardBenefit?: string | null;
   memberBenefit?: string | null;
   memberBenefitDetails?: string | null;
   recommendation: string;

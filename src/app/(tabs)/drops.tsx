@@ -20,7 +20,8 @@ type MiniDropCardProps = {
   subtitle: string;
   tags: string[];
   access: 'free' | 'premium';
-  memberBenefit?: string | null;
+  showBenefitOnCard?: boolean;
+  cardBenefit?: string | null;
   isPremiumMember: boolean;
   region: 'NY' | 'NJ';
 };
@@ -124,7 +125,7 @@ export default function DropsScreen() {
 
         {upcoming.map((item) => (
           <MiniDropCard key={item.id} id={item.id} image={item.image} title={item.title}
-            subtitle={item.date || item.description} tags={getExperienceTags(item)} access={item.access} memberBenefit={item.memberBenefit}
+            subtitle={item.date || item.description} tags={getExperienceTags(item)} access={item.access} showBenefitOnCard={item.showBenefitOnCard} cardBenefit={item.cardBenefit}
             region={item.region ?? 'NY'}
             isPremiumMember={Boolean(user?.is_premium)} />
         ))}
@@ -135,7 +136,7 @@ export default function DropsScreen() {
   ); 
 } 
 
-function MiniDropCard({ id, image, title, subtitle, tags, access, memberBenefit, region, isPremiumMember }: MiniDropCardProps) {
+function MiniDropCard({ id, image, title, subtitle, tags, access, showBenefitOnCard, cardBenefit, region, isPremiumMember }: MiniDropCardProps) {
   const router = useRouter();
   const { t } = useLanguage();
 
@@ -160,7 +161,7 @@ function MiniDropCard({ id, image, title, subtitle, tags, access, memberBenefit,
         </View>
         <ExperienceTags tags={tags} />
         <Text style={styles.miniDropTitle}> {title} </Text>
-        <MemberBenefitSummary experience={{ access, memberBenefit }} />
+        <MemberBenefitSummary experience={{ access, showBenefitOnCard, cardBenefit }} />
         <Text style={styles.miniDropSubtitle}> {subtitle} </Text> 
       </View> 
     </TouchableOpacity> 
