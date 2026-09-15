@@ -12,5 +12,5 @@ export function MemberBenefitSummary({ experience, color = '#D4AF37' }: {
 }
 
 const styles = StyleSheet.create({
-  benefit: { color: '#D4AF37', fontSize: 13, fontWeight: '700', lineHeight: 19, marginTop: 6, marginBottom: 8 },
+  benefit: { color: '#D4AF37', fontSize: 18, fontWeight: '800', lineHeight: 23, marginTop: 4, marginBottom: 6 },
 });

@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   benefitCard: { marginHorizontal: 20, marginTop: 20, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: COLORS.gold, backgroundColor: COLORS.card },
   benefitHeading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   benefitLabel: { color: COLORS.gold, fontSize: 12, fontWeight: '900' },
-  benefitTitle: { color: COLORS.white, fontSize: 20, lineHeight: 27, fontWeight: '800', marginTop: 10 },
+  benefitTitle: { color: '#D4AF37', fontSize: 23, lineHeight: 29, fontWeight: '800', marginTop: 10 },
   benefitDetails: { color: COLORS.secondary, fontSize: 14, lineHeight: 21, marginTop: 8 },
   addressCard: { marginHorizontal: 20, marginTop: 20 },
   addressTitle: { color: COLORS.white, fontSize: 20, fontWeight: '800', marginBottom: 10 },

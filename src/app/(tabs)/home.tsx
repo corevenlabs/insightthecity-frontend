@@ -524,7 +524,7 @@ export default function HomeScreen() {
           ))}
           <CarouselMoreCard
             width={eventCardWidth}
-            height={eventCardWidth * 0.625 + 130}
+            height={(eventCardWidth - 28) / 1.6 + 112}
             label="Top de hoy"
             stretch
             onPress={() => router.push('/explore')}
@@ -1129,14 +1129,13 @@ clubGold: {
   eventBody: { flex: 1 },
   eventMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   eventTag: { flexShrink: 1, color: COLORS.gold, fontSize: 11, fontWeight: '700', borderLeftWidth: 1, borderLeftColor: '#3A3115', paddingLeft: 10 },
-  eventAccessBadge: { marginTop: 'auto' },
+  eventAccessBadge: { marginTop: 8 },
   eventTitle: {
     color: COLORS.white,
     fontSize: 18,
     lineHeight: 24,
     fontWeight: '700',
-    minHeight: 48,
-    marginBottom: 10,
+    marginBottom: 0,
   },
 
   freeBadge: {
