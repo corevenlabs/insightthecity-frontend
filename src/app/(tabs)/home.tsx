@@ -46,8 +46,11 @@ type EventCardProps = {
   experience: Experience;
   isPremiumMember: boolean;
   width: number;
-  minHeight: number;
-  gold?: boolean;
+};
+
+type DropCardProps = {
+  experience: Experience;
+  width: number;
 };
 
 type FeatureCardProps = {
@@ -331,10 +334,37 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
   );
 }
 
+function DropCard({ experience, width }: DropCardProps) {
+  const primaryTag = getExperienceTags(experience)[0];
+  return (
+    <TouchableOpacity
+      style={[styles.dropCard, { width }]}
+      activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={`Abrir ${experience.title}`}
+      onPress={() => openExperience(experience.id)}
+    >
+      <View style={styles.dropImageContainer}>
+        <Image source={{ uri: experience.image }} style={styles.dropImage} />
+        <View style={styles.dropBadge}>
+          <Text style={styles.dropBadgeText}>DROP</Text>
+        </View>
+      </View>
+      <View style={styles.dropContent}>
+        <Text style={styles.dropMeta} numberOfLines={1}>
+          {experience.region ?? 'NY'}{primaryTag ? ` · ${primaryTag.toUpperCase()}` : ''}
+        </Text>
+        <Text style={styles.dropTitle} numberOfLines={2}>{experience.title}</Text>
+        <MemberBenefitSummary experience={experience} />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export default function HomeScreen() {
   const { width: windowWidth } = useWindowDimensions();
-  const eventCardWidth = Math.min(340, Math.max(260, windowWidth * 0.82));
-  const eventCardHeight = (eventCardWidth - 28) / 1.6 + 188;
+  const dropBannerWidth = Math.min(600, Math.max(260, windowWidth - 48));
+  const eventCardWidth = Math.min(320, Math.max(240, windowWidth * 0.78));
   const { user, refreshUser } = useAuth();
   const { t } = useLanguage();
   const name = firstName(user?.name ?? null, user?.email);
@@ -489,13 +519,12 @@ export default function HomeScreen() {
               key={experience.id}
               experience={experience}
               width={eventCardWidth}
-              minHeight={eventCardHeight}
               isPremiumMember={Boolean(user?.is_premium)}
             />
           ))}
           <CarouselMoreCard
             width={eventCardWidth}
-            height={eventCardHeight}
+            height={eventCardWidth * 0.625 + 130}
             label="Top de hoy"
             stretch
             onPress={() => router.push('/explore')}
@@ -523,18 +552,11 @@ export default function HomeScreen() {
           showsHorizontalScrollIndicator={false}
         >
           {homeDrops.map((experience) => (
-            <EventCard
-              key={experience.id}
-              experience={experience}
-              width={eventCardWidth}
-              minHeight={eventCardHeight}
-              isPremiumMember={Boolean(user?.is_premium)}
-              gold
-            />
+            <DropCard key={experience.id} experience={experience} width={dropBannerWidth} />
           ))}
           <CarouselMoreCard
-            width={eventCardWidth}
-            height={eventCardHeight}
+            width={dropBannerWidth}
+            height={dropBannerWidth / 2.35 + 110}
             stretch
             label="Drops"
             onPress={() => router.push('/drops')}
@@ -583,10 +605,10 @@ export default function HomeScreen() {
   );
 }
 
-function EventCard({ experience, isPremiumMember, width, minHeight, gold = false }: EventCardProps) {
-  const primaryTag = gold ? 'DROP' : getExperienceTags(experience)[0];
+function EventCard({ experience, isPremiumMember, width }: EventCardProps) {
+  const primaryTag = getExperienceTags(experience)[0];
   return (
-    <TouchableOpacity style={[styles.eventCard, { width, minHeight }, gold && styles.eventCardGold]} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Abrir ${experience.title}`} onPress={() => openExperience(experience.id)}>
+    <TouchableOpacity style={[styles.eventCard, { width }]} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Abrir ${experience.title}`} onPress={() => openExperience(experience.id)}>
       <Image
         source={{
           uri: experience.image,
@@ -596,17 +618,17 @@ function EventCard({ experience, isPremiumMember, width, minHeight, gold = false
 
       <View style={styles.eventBody}>
         <View style={styles.eventMetaRow}>
-          <Text style={[styles.category, gold && styles.eventBlackText]}>{experience.region ?? 'NY'}</Text>
-          {!!primaryTag && <Text style={[styles.eventTag, gold && styles.eventTagGold]} numberOfLines={1}>{primaryTag}</Text>}
+          <Text style={styles.category}>{experience.region ?? 'NY'}</Text>
+          {!!primaryTag && <Text style={styles.eventTag} numberOfLines={1}>{primaryTag}</Text>}
         </View>
 
-        <Text style={[styles.eventTitle, gold && styles.eventBlackText]} numberOfLines={2}>
+        <Text style={styles.eventTitle} numberOfLines={2}>
           {experience.title}
         </Text>
-        <MemberBenefitSummary experience={experience} color={gold ? '#000000' : '#D4AF37'} />
+        <MemberBenefitSummary experience={experience} />
 
-        <View style={[styles.freeBadge, styles.eventAccessBadge, gold && styles.eventBadgeGold]}>
-          <Text style={[styles.freeText, gold && styles.eventBadgeGoldText]}>
+        <View style={[styles.freeBadge, styles.eventAccessBadge, experience.access === 'premium' && styles.premiumSmallBadge]}>
+          <Text style={[styles.freeText, experience.access === 'premium' && styles.premiumSmallText]}>
             {experience.access === 'premium'
               ? isPremiumMember ? 'ITC CLUB' : 'PREMIUM'
               : 'GRATIS'}
@@ -1099,14 +1121,14 @@ clubGold: {
   },
 
   category: {
-    color: '#D4AF37',
+    color: COLORS.gold,
     fontSize: 11,
     fontWeight: '700',
   },
 
   eventBody: { flex: 1 },
   eventMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  eventTag: { flexShrink: 1, color: '#D4AF37', fontSize: 11, fontWeight: '700', borderLeftWidth: 1, borderLeftColor: '#3A3115', paddingLeft: 10 },
+  eventTag: { flexShrink: 1, color: COLORS.gold, fontSize: 11, fontWeight: '700', borderLeftWidth: 1, borderLeftColor: '#3A3115', paddingLeft: 10 },
   eventAccessBadge: { marginTop: 'auto' },
   eventTitle: {
     color: COLORS.white,
@@ -1118,12 +1140,18 @@ clubGold: {
   },
 
   freeBadge: {
-    backgroundColor: '#D4AF37',
+    backgroundColor: COLORS.gold,
     alignSelf: 'flex-start',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 999,
+    borderRadius: 6,
     marginTop: 10,
+  },
+
+  premiumSmallBadge: {
+    backgroundColor: '#222222',
+    borderWidth: 1,
+    borderColor: COLORS.gold,
   },
 
   freeText: {
@@ -1132,11 +1160,9 @@ clubGold: {
     fontWeight: '700',
   },
 
-  eventCardGold: { backgroundColor: '#D4AF37' },
-  eventBlackText: { color: '#000000' },
-  eventTagGold: { color: '#000000', borderLeftColor: 'rgba(0,0,0,0.3)' },
-  eventBadgeGold: { backgroundColor: '#000000' },
-  eventBadgeGoldText: { color: '#D4AF37' },
+  premiumSmallText: {
+    color: COLORS.gold,
+  },
 
   guideCard: {
     backgroundColor: COLORS.card,
@@ -1201,4 +1227,15 @@ clubGold: {
     lineHeight: 20,
   },
 
+  dropCard: {
+    marginRight: 14,
+    paddingBottom: 14,
+  },
+  dropImageContainer: { width: '100%', aspectRatio: 2.35, borderRadius: 14, overflow: 'hidden' },
+  dropImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  dropContent: { paddingTop: 12 },
+  dropMeta: { color: '#D4AF37', fontSize: 11, fontWeight: '600', marginBottom: 6 },
+  dropTitle: { color: COLORS.white, fontSize: 23, lineHeight: 28, fontWeight: '700' },
+  dropBadge: { position: 'absolute', top: 10, left: 10, backgroundColor: '#D4AF37', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  dropBadgeText: { color: '#000000', fontSize: 11, fontWeight: '800' },
 });
