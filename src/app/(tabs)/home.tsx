@@ -1,3 +1,6 @@
+import { ExperienceTags } from '@/components/ExperienceTags';
+import { getExperienceTags } from '@/lib/experienceFilters';
+import { ExpandableText } from '@/components/ExpandableContent';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -475,9 +478,7 @@ export default function HomeScreen() {
                 {partnership.title}
               </Text>
               {!!partnership.description && (
-                <Text style={styles.partnershipDescription} numberOfLines={2}>
-                  {partnership.description}
-                </Text>
+                <ExpandableText key={partnership.description} text={partnership.description} style={styles.partnershipDescription} />
               )}
               {!!partnership.ctaLabel && (
                 <View style={styles.partnershipCta}>
@@ -610,9 +611,8 @@ function EventCard({ experience, isPremiumMember }: EventCardProps) {
         style={styles.eventImage}
       />
 
-      <Text style={styles.category}>
-        {experience.region ?? 'NY'} · {experience.category}
-      </Text>
+      <Text style={styles.category}>{experience.region ?? 'NY'}</Text>
+      <ExperienceTags tags={getExperienceTags(experience)} />
 
       <Text style={styles.eventTitle}>
         {experience.title}
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
   },
 
   partnershipCard: {
-    height: 238,
+    minHeight: 238,
     marginTop: 16,
     overflow: 'hidden',
     borderRadius: 24,

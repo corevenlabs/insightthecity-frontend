@@ -1,19 +1,21 @@
+import { ExperienceTags } from '@/components/ExperienceTags';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Definimos el tipo aquí mismo
 type EventCardProps = {
   title: string;
   category: string;
+  tags?: string[];
 };
 
-export function EventCard({ title, category }: EventCardProps) {
+export function EventCard({ title, category, tags }: EventCardProps) {
   return (
     <TouchableOpacity style={styles.eventCard}>
       <Image
         source={{ uri: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a' }}
         style={styles.eventImage}
       />
-      <Text style={styles.category}>{category}</Text>
+      <ExperienceTags tags={tags?.length ? tags : [category]} />
       <Text style={styles.eventTitle}>{title}</Text>
       <Text style={styles.eventTime}>Hoy · 7:00 PM</Text>
       <View style={styles.freeBadge}>

@@ -5,6 +5,7 @@ export type Experience = {
   id: string;
   title: string;
   category: string;
+  tags?: string[];
   image: string;
   date: string;
   location: string;

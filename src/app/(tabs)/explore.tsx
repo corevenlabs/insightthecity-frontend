@@ -1,3 +1,5 @@
+import { ExperienceTags } from '@/components/ExperienceTags';
+import { TagFilter } from '@/components/TagFilter';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
@@ -6,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import type { Experience } from '../../constants/experiences';
-import { EXPERIENCE_FILTERS, matchesExperienceFilter, type ExperienceFilter } from '../../lib/experienceFilters';
+import { getExperienceTags, matchesExperienceTags } from '../../lib/experienceFilters';
 import { fetchExperiences } from '../../lib/experiences';
 
 const CONTENT_SECTIONS = new Set(['ny_al_dia', 'que_hacer', 'guias']);
@@ -16,7 +18,7 @@ export default function ExploreScreen() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [items, setItems] = useState<Experience[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState<ExperienceFilter>('Todos');
+  const [selectedFilter, setSelectedFilter] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -32,14 +34,15 @@ export default function ExploreScreen() {
     return () => { active = false; };
   }, []));
 
-  const filteredEvents = useMemo(() => {
+  const searchResults = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return items.filter((event) => {
-      const matchesSearch = !term || [event.title, event.location, event.category]
-        .some((value) => value?.toLowerCase().includes(term));
-      return matchesExperienceFilter(event, selectedFilter) && matchesSearch;
-    });
-  }, [items, search, selectedFilter]);
+    return items.filter((event) => !term || [event.title, event.location, ...getExperienceTags(event)]
+      .some((value) => value?.toLowerCase().includes(term)));
+  }, [items, search]);
+  const filteredEvents = useMemo(
+    () => searchResults.filter((event) => matchesExperienceTags(event, selectedFilter)),
+    [searchResults, selectedFilter],
+  );
 
   const openExperience = (id: string) => {
     router.push({ pathname: '/experience-detail', params: { id } } as any);
@@ -68,27 +71,7 @@ export default function ExploreScreen() {
           />
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.tabsContainer}
-          contentContainerStyle={styles.tabsContent}
-        >
-          {EXPERIENCE_FILTERS.map((filter) => {
-            const selected = selectedFilter === filter;
-            return (
-              <TouchableOpacity
-                key={filter}
-                style={[styles.tab, selected && styles.activeTab]}
-                onPress={() => setSelectedFilter(filter)}
-                accessibilityRole="tab"
-                accessibilityState={{ selected }}
-              >
-                <Text style={[styles.tabText, selected && styles.activeTabText]}>{filter}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+        <TagFilter items={searchResults} selected={selectedFilter} onChange={setSelectedFilter} />
 
         <Text style={styles.results}>{t('explore.results', { count: filteredEvents.length })}</Text>
 
@@ -113,7 +96,7 @@ export default function ExploreScreen() {
               <View style={styles.topRow}>
                 <View style={styles.categoryRow}>
                   <View style={styles.regionBadge}><Text style={styles.regionBadgeText}>{event.region ?? 'NY'}</Text></View>
-                  <Text style={styles.category}>{event.category}</Text>
+                  <ExperienceTags tags={getExperienceTags(event)} />
                 </View>
                 <View style={[styles.badge, event.access === 'premium' ? styles.premiumBadge : styles.freeBadge]}>
                   <Text style={[styles.badgeText, event.access === 'premium' && styles.premiumBadgeText]}>
@@ -158,7 +141,7 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: 180, backgroundColor: '#1A1A1A' },
   cardContent: { padding: 16 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  categoryRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  categoryRow: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   category: { flexShrink: 1, color: '#D4AF37', fontWeight: '700' },
   regionBadge: { minWidth: 38, paddingHorizontal: 9, paddingVertical: 5, alignItems: 'center', borderRadius: 999, backgroundColor: '#D4AF37' },
   regionBadgeText: { color: '#050505', fontSize: 11, fontWeight: '900' },

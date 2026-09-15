@@ -1,3 +1,6 @@
+import { ExperienceTags } from '@/components/ExperienceTags';
+import { TagFilter } from '@/components/TagFilter';
+import { getExperienceTags, matchesExperienceTags } from '@/lib/experienceFilters';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
@@ -10,7 +13,6 @@ import { useLanguage } from '../../context/LanguageContext';
 import { fetchExperiences } from '../../lib/experiences';
 
 const GOLD = '#D4AF37';
-const ALL_CATEGORY = '__all__';
 const benefits = [
   ['pricetag', 'Ahorros y descuentos', 'en atracciones, restaurantes y más.'],
   ['gift', 'Experiencias exclusivas', 'y giveaways.'],
@@ -33,7 +35,7 @@ function PremiumCard({ experience }: { experience: Experience }) {
       <Image source={{ uri: experience.image }} style={styles.experienceImage} />
       <View style={styles.experienceBody}>
         <View style={styles.experienceTopline}>
-          <Text style={styles.category}>{experience.category}</Text>
+          <ExperienceTags tags={getExperienceTags(experience)} />
           <View style={styles.memberBadge}>
             <Ionicons name="star" size={11} color="#050505" />
             <Text style={styles.memberBadgeText}>CLUB</Text>
@@ -57,7 +59,7 @@ export default function ClubScreen() {
   const router = useRouter();
   const { user, loading, refreshUser } = useAuth();
   const { t } = useLanguage();
-  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY);
+  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
 
   useFocusEffect(useCallback(() => {
@@ -68,14 +70,8 @@ export default function ClubScreen() {
   const premiumExperiences = useMemo(
     () => experiences.filter((experience) => experience.access === 'premium'), [experiences]
   );
-  const categories = useMemo(
-    () => [ALL_CATEGORY, ...Array.from(new Set(premiumExperiences.map((item) => item.category)))],
-    [premiumExperiences]
-  );
   const filteredExperiences = useMemo(
-    () => selectedCategory === ALL_CATEGORY
-      ? premiumExperiences
-      : premiumExperiences.filter((item) => item.category === selectedCategory),
+    () => premiumExperiences.filter((item) => matchesExperienceTags(item, selectedCategory)),
     [premiumExperiences, selectedCategory]
   );
 
@@ -92,30 +88,13 @@ export default function ClubScreen() {
             </View>
           </View>
 
-          <Text style={styles.filterLabel}>{t('club.filter')}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
-            {categories.map((category) => {
-              const active = selectedCategory === category;
-              return (
-                <TouchableOpacity
-                  key={category}
-                  style={[styles.filterChip, active && styles.filterChipActive]}
-                  onPress={() => setSelectedCategory(category)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                >
-                  <Text style={[styles.filterText, active && styles.filterTextActive]}>
-                    {category === ALL_CATEGORY ? t('club.all') : category}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          <TagFilter items={premiumExperiences} selected={selectedCategory} onChange={setSelectedCategory} />
 
           <View style={styles.resultsHeader}>
-            <Text style={styles.resultsTitle}>{selectedCategory === ALL_CATEGORY ? t('club.allMembers') : selectedCategory}</Text>
+            <Text style={styles.resultsTitle}>{selectedCategory.length === 0 ? t('club.allMembers') : selectedCategory.join(' · ')}</Text>
             <Text style={styles.resultsCount}>{filteredExperiences.length}</Text>
           </View>
+          {filteredExperiences.length === 0 && <Text style={styles.memberSubtitle}>No hay contenidos con estas etiquetas.</Text>}
           {filteredExperiences.map((experience) => <PremiumCard key={experience.id} experience={experience} />)}
         </ScrollView>
       </SafeAreaView>

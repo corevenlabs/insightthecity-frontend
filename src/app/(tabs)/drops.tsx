@@ -1,3 +1,6 @@
+import { ExperienceTags } from '@/components/ExperienceTags';
+import { TagFilter } from '@/components/TagFilter';
+import { ExpandableText } from '@/components/ExpandableContent';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
@@ -6,14 +9,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import type { Experience } from '../../constants/experiences';
-import { EXPERIENCE_FILTERS, matchesExperienceFilter, type ExperienceFilter } from '../../lib/experienceFilters';
+import { getExperienceTags, matchesExperienceTags } from '../../lib/experienceFilters';
 import { fetchExperiences } from '../../lib/experiences';
 
 type MiniDropCardProps = { 
   id: string;
   image: string; 
   title: string; 
-  subtitle: string; 
+  subtitle: string;
+  tags: string[];
   access: 'free' | 'premium';
   isPremiumMember: boolean;
   region: 'NY' | 'NJ';
@@ -24,14 +28,14 @@ export default function DropsScreen() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [items, setItems] = useState<Experience[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState<ExperienceFilter>('Todos');
+  const [selectedFilter, setSelectedFilter] = useState<string[]>([]);
 
   useFocusEffect(useCallback(() => {
     void fetchExperiences('drops').then(setItems).catch(() => undefined);
   }, []));
 
   const filteredItems = useMemo(
-    () => items.filter((item) => matchesExperienceFilter(item, selectedFilter)),
+    () => items.filter((item) => matchesExperienceTags(item, selectedFilter)),
     [items, selectedFilter],
   );
   const [featured, ...upcoming] = filteredItems;
@@ -51,7 +55,7 @@ export default function DropsScreen() {
       > 
         <View style={styles.header}> 
           <TouchableOpacity onPress={() => router.back()}> 
-            <Ionicons name="arrow-back" size={26} color="#D4A017" /> 
+            <Ionicons name="arrow-back" size={26} color="#D4AF37" />
           </TouchableOpacity> 
           <Text style={styles.headerTitle}> 
             <Text style={styles.city}>CITY </Text> 
@@ -64,27 +68,9 @@ export default function DropsScreen() {
           {t('drops.subtitle')}
         </Text> 
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.tabsContainer}
-          contentContainerStyle={styles.tabsContent}
-        >
-          {EXPERIENCE_FILTERS.map((filter) => {
-            const selected = selectedFilter === filter;
-            return (
-              <TouchableOpacity
-                key={filter}
-                style={[styles.tab, selected && styles.activeTab]}
-                onPress={() => setSelectedFilter(filter)}
-                accessibilityRole="tab"
-                accessibilityState={{ selected }}
-              >
-                <Text style={[styles.tabText, selected && styles.activeTabText]}>{filter}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+        <TagFilter items={items} selected={selectedFilter} onChange={setSelectedFilter} />
+
+        {filteredItems.length === 0 && <Text style={styles.subtitle}>No hay contenidos con estas etiquetas.</Text>}
 
         {/* DROP PRINCIPAL */}
         {featured && <TouchableOpacity
@@ -100,10 +86,9 @@ export default function DropsScreen() {
               <Text style={styles.badge}> {t('drops.featured')} </Text>
               <View style={styles.regionBadge}><Text style={styles.regionBadgeText}>{featured.region ?? 'NY'}</Text></View>
             </View>
+            <ExperienceTags tags={getExperienceTags(featured)} />
             <Text style={styles.heroTitle}> {featured.title} </Text>
-            <Text style={styles.heroDescription}> 
-              {featured.description}
-            </Text> 
+            <ExpandableText key={featured.id} text={featured.description} style={styles.heroDescription} color="#D4A017" />
             <Text style={styles.location}> 
               {featured.location}
             </Text> 
@@ -136,7 +121,7 @@ export default function DropsScreen() {
 
         {upcoming.map((item) => (
           <MiniDropCard key={item.id} id={item.id} image={item.image} title={item.title}
-            subtitle={item.date || item.description} access={item.access}
+            subtitle={item.date || item.description} tags={getExperienceTags(item)} access={item.access}
             region={item.region ?? 'NY'}
             isPremiumMember={Boolean(user?.is_premium)} />
         ))}
@@ -147,7 +132,7 @@ export default function DropsScreen() {
   ); 
 } 
 
-function MiniDropCard({ id, image, title, subtitle, access, region, isPremiumMember }: MiniDropCardProps) {
+function MiniDropCard({ id, image, title, subtitle, tags, access, region, isPremiumMember }: MiniDropCardProps) {
   const router = useRouter();
   const { t } = useLanguage();
 
@@ -170,6 +155,7 @@ function MiniDropCard({ id, image, title, subtitle, access, region, isPremiumMem
             </Text>
           </View>
         </View>
+        <ExperienceTags tags={tags} />
         <Text style={styles.miniDropTitle}> {title} </Text> 
         <Text style={styles.miniDropSubtitle}> {subtitle} </Text> 
       </View> 
@@ -225,7 +211,7 @@ const styles = StyleSheet.create({
   tabText: { color: COLORS.secondary, fontWeight: '600' },
   activeTabText: { color: COLORS.background },
   heroCard: { 
-    height: 400, 
+    minHeight: 400,
     borderRadius: 24, 
     overflow: 'hidden', 
     backgroundColor: COLORS.card, 

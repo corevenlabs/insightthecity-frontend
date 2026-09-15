@@ -1,3 +1,6 @@
+import { ExperienceTags } from '@/components/ExperienceTags';
+import { getExperienceTags } from '@/lib/experienceFilters';
+import { ExpandableSection } from '@/components/ExpandableContent';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -55,11 +58,11 @@ export default function ExperienceDetailScreen() {
           <Image source={{ uri: experience.image }} style={styles.heroImage} />
           <View style={styles.heroOverlay}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+              <Ionicons name="arrow-back" size={22} color="#D4AF37" />
             </TouchableOpacity>
 
             <View style={styles.heroText}>
-              <Text style={styles.category}>{experience.category}</Text>
+              <ExperienceTags tags={getExperienceTags(experience)} />
               <Text style={styles.title}>{experience.title}</Text>
             </View>
           </View>
@@ -96,16 +99,18 @@ export default function ExperienceDetailScreen() {
           </Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Descripción</Text>
-        <Text style={styles.description}>{experience.description}</Text>
+        <ExpandableSection key={`${experience.id}-description`} title="Descripción">
+          <Text style={styles.description}>{experience.description}</Text>
+        </ExpandableSection>
 
-        <Text style={styles.sectionTitle}>Qué incluye</Text>
+        <ExpandableSection key={`${experience.id}-includes`} title="Qué incluye">
         {experience.includes.map((item) => (
           <View key={item} style={styles.includeRow}>
             <Ionicons name="checkmark-circle" size={18} color="#D4AF37" />
             <Text style={styles.includeText}>{item}</Text>
           </View>
         ))}
+        </ExpandableSection>
 
         <View style={styles.recommendationCard}>
           <Text style={styles.recommendationLabel}>Recomendación ITC</Text>
@@ -266,14 +271,6 @@ const styles = StyleSheet.create({
   },
   premiumText: {
     color: COLORS.gold,
-  },
-  sectionTitle: {
-    color: COLORS.white,
-    fontSize: 20,
-    fontWeight: '800',
-    marginHorizontal: 20,
-    marginTop: 26,
-    marginBottom: 10,
   },
   description: {
     color: COLORS.secondary,

@@ -1,3 +1,4 @@
+import { TagFilter } from '@/components/TagFilter';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -22,7 +23,6 @@ export default function GuidesScreen() {
     const router = useRouter();
 
     const categories = [
-        'Todos',
         'Gratis',
         'Comida',
         'Miradores',
@@ -30,7 +30,7 @@ export default function GuidesScreen() {
         'Noche',
     ];
 
-    const [selectedCategory, setSelectedCategory] = useState('Todos');
+    const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
     const [search, setSearch] = useState('');
 
     const guides = [
@@ -75,8 +75,8 @@ export default function GuidesScreen() {
     const filteredGuides = useMemo(() => {
         return guides.filter((g) => {
             const matchCategory =
-                selectedCategory === 'Todos' ||
-                g.category === selectedCategory;
+                selectedCategory.length === 0 ||
+                selectedCategory.includes(g.category);
 
             const matchSearch =
                 g.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -119,39 +119,14 @@ export default function GuidesScreen() {
                     />
                 </View>
 
-                {/* CATEGORIES */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.categoriesContainer}
-                >
-                    {categories.map((item) => (
-                        <TouchableOpacity
-                            key={item}
-                            style={[
-                                styles.categoryButton,
-                                selectedCategory === item && styles.categoryActive,
-                            ]}
-                            onPress={() => setSelectedCategory(item)}
-                        >
-                            <Text
-                                style={[
-                                    styles.categoryText,
-                                    selectedCategory === item && styles.categoryTextActive,
-                                ]}
-                            >
-                                {item}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
+                <TagFilter options={categories} selected={selectedCategory} onChange={setSelectedCategory} countResults={(tags) => guides.filter((guide) => (tags.length === 0 || tags.includes(guide.category)) && (guide.title.toLowerCase().includes(search.toLowerCase()) || guide.subtitle.toLowerCase().includes(search.toLowerCase()))).length} />
 
                 {/* FEATURED */}
                 <Text style={styles.sectionTitle}>
                     Destacada de la semana
                 </Text>
 
-                <TouchableOpacity style={styles.featuredCard}>
+                {(selectedCategory.length === 0 || selectedCategory.includes('Gratis')) && '50 cosas gratis para hacer en NYC'.toLowerCase().includes(search.toLowerCase()) && <TouchableOpacity style={styles.featuredCard}>
                     <Image
                         source={{
                             uri: 'https://images.unsplash.com/photo-1522083165195-3424ed129620',
@@ -167,7 +142,7 @@ export default function GuidesScreen() {
                             Museos, parques, miradores y experiencias sin gastar dinero.
                         </Text>
                     </View>
-                </TouchableOpacity>
+                </TouchableOpacity>}
 
                 {/* GUIDES */}
                 <Text style={styles.sectionTitle}>Más guías</Text>

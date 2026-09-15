@@ -156,7 +156,7 @@ export default function ChatScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
         <View style={styles.header}>
           <Pressable accessibilityRole="button" accessibilityLabel="Volver" hitSlop={8} onPress={() => router.back()} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.gold} />
+            <Ionicons name="arrow-back" size={24} color="#D4AF37" />
           </Pressable>
           <View style={styles.identity}>
             <View style={styles.avatar}><Ionicons name="sparkles" size={21} color={COLORS.black} /><View style={styles.onlineDot} /></View>

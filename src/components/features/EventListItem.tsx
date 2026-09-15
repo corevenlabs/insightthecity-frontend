@@ -1,3 +1,5 @@
+import { ExperienceTags } from '@/components/ExperienceTags';
+import { getExperienceTags } from '@/lib/experienceFilters';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Definimos la interfaz del evento para que TypeScript esté feliz
@@ -12,7 +14,7 @@ export function EventListItem({ event }: EventListItemProps) {
 
       <View style={styles.cardContent}>
         <View style={styles.topRow}>
-          <Text style={styles.category}>{event.category}</Text>
+          <ExperienceTags tags={getExperienceTags(event)} />
           <View style={[styles.badge, event.free ? styles.freeBadge : styles.premiumBadge]}>
             <Text style={styles.badgeText}>{event.free ? 'GRATIS' : 'PREMIUM'}</Text>
           </View>

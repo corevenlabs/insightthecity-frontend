@@ -114,7 +114,7 @@ export default function LoginScreen() {
         >
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={22} color={GOLD} />
+              <Ionicons name="arrow-back" size={22} color="#D4AF37" />
             </TouchableOpacity>
 
             <View style={styles.logoPill}>
