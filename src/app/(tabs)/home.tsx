@@ -46,10 +46,8 @@ type EventCardProps = {
   experience: Experience;
   isPremiumMember: boolean;
   width: number;
-};
-
-type DropCardProps = {
-  experience: Experience;
+  minHeight: number;
+  gold?: boolean;
 };
 
 type FeatureCardProps = {
@@ -333,41 +331,10 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
   );
 }
 
-function DropCard({ experience }: DropCardProps) {
-  return (
-    <TouchableOpacity style={styles.dropCard} onPress={() => openExperience(experience.id)}>
-      <Image
-        source={{
-          uri: experience.image,
-        }}
-        style={styles.dropImage}
-      />
-
-      <View style={styles.dropOverlay}>
-        <View style={styles.regionBadge}>
-          <Text style={styles.regionBadgeText}>{experience.region ?? 'NY'}</Text>
-        </View>
-        <Text style={styles.dropTitle}>
-          {experience.title}
-        </Text>
-
-        <Text style={styles.dropOffer}>
-          {experience.access === 'premium' ? 'Beneficio ITC Club' : 'Beneficio gratis'}
-        </Text>
-
-        <View style={styles.dropBadge}>
-          <Text style={styles.dropBadgeText}>
-            {experience.date}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
 export default function HomeScreen() {
   const { width: windowWidth } = useWindowDimensions();
-  const eventCardWidth = Math.min(320, Math.max(240, windowWidth * 0.78));
+  const eventCardWidth = Math.min(340, Math.max(260, windowWidth * 0.82));
+  const eventCardHeight = (eventCardWidth - 28) / 1.6 + 188;
   const { user, refreshUser } = useAuth();
   const { t } = useLanguage();
   const name = firstName(user?.name ?? null, user?.email);
@@ -522,12 +489,13 @@ export default function HomeScreen() {
               key={experience.id}
               experience={experience}
               width={eventCardWidth}
+              minHeight={eventCardHeight}
               isPremiumMember={Boolean(user?.is_premium)}
             />
           ))}
           <CarouselMoreCard
             width={eventCardWidth}
-            height={eventCardWidth * 0.625 + 130}
+            height={eventCardHeight}
             label="Top de hoy"
             stretch
             onPress={() => router.push('/explore')}
@@ -555,11 +523,19 @@ export default function HomeScreen() {
           showsHorizontalScrollIndicator={false}
         >
           {homeDrops.map((experience) => (
-            <DropCard key={experience.id} experience={experience} />
+            <EventCard
+              key={experience.id}
+              experience={experience}
+              width={eventCardWidth}
+              minHeight={eventCardHeight}
+              isPremiumMember={Boolean(user?.is_premium)}
+              gold
+            />
           ))}
           <CarouselMoreCard
-            width={180}
-            height={160}
+            width={eventCardWidth}
+            height={eventCardHeight}
+            stretch
             label="Drops"
             onPress={() => router.push('/drops')}
           />
@@ -607,10 +583,10 @@ export default function HomeScreen() {
   );
 }
 
-function EventCard({ experience, isPremiumMember, width }: EventCardProps) {
-  const primaryTag = getExperienceTags(experience)[0];
+function EventCard({ experience, isPremiumMember, width, minHeight, gold = false }: EventCardProps) {
+  const primaryTag = gold ? 'DROP' : getExperienceTags(experience)[0];
   return (
-    <TouchableOpacity style={[styles.eventCard, { width }]} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Abrir ${experience.title}`} onPress={() => openExperience(experience.id)}>
+    <TouchableOpacity style={[styles.eventCard, { width, minHeight }, gold && styles.eventCardGold]} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Abrir ${experience.title}`} onPress={() => openExperience(experience.id)}>
       <Image
         source={{
           uri: experience.image,
@@ -620,17 +596,17 @@ function EventCard({ experience, isPremiumMember, width }: EventCardProps) {
 
       <View style={styles.eventBody}>
         <View style={styles.eventMetaRow}>
-          <Text style={styles.category}>{experience.region ?? 'NY'}</Text>
-          {!!primaryTag && <Text style={styles.eventTag} numberOfLines={1}>{primaryTag}</Text>}
+          <Text style={[styles.category, gold && styles.eventBlackText]}>{experience.region ?? 'NY'}</Text>
+          {!!primaryTag && <Text style={[styles.eventTag, gold && styles.eventTagGold]} numberOfLines={1}>{primaryTag}</Text>}
         </View>
 
-        <Text style={styles.eventTitle} numberOfLines={2}>
+        <Text style={[styles.eventTitle, gold && styles.eventBlackText]} numberOfLines={2}>
           {experience.title}
         </Text>
-        <MemberBenefitSummary experience={experience} />
+        <MemberBenefitSummary experience={experience} color={gold ? '#000000' : '#D4AF37'} />
 
-        <View style={[styles.freeBadge, styles.eventAccessBadge, experience.access === 'premium' && styles.premiumSmallBadge]}>
-          <Text style={[styles.freeText, experience.access === 'premium' && styles.premiumSmallText]}>
+        <View style={[styles.freeBadge, styles.eventAccessBadge, gold && styles.eventBadgeGold]}>
+          <Text style={[styles.freeText, gold && styles.eventBadgeGoldText]}>
             {experience.access === 'premium'
               ? isPremiumMember ? 'ITC CLUB' : 'PREMIUM'
               : 'GRATIS'}
@@ -1123,14 +1099,14 @@ clubGold: {
   },
 
   category: {
-    color: COLORS.gold,
+    color: '#D4AF37',
     fontSize: 11,
     fontWeight: '700',
   },
 
   eventBody: { flex: 1 },
   eventMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  eventTag: { flexShrink: 1, color: COLORS.gold, fontSize: 11, fontWeight: '700', borderLeftWidth: 1, borderLeftColor: '#3A3115', paddingLeft: 10 },
+  eventTag: { flexShrink: 1, color: '#D4AF37', fontSize: 11, fontWeight: '700', borderLeftWidth: 1, borderLeftColor: '#3A3115', paddingLeft: 10 },
   eventAccessBadge: { marginTop: 'auto' },
   eventTitle: {
     color: COLORS.white,
@@ -1142,18 +1118,12 @@ clubGold: {
   },
 
   freeBadge: {
-    backgroundColor: COLORS.gold,
+    backgroundColor: '#D4AF37',
     alignSelf: 'flex-start',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 999,
     marginTop: 10,
-  },
-
-  premiumSmallBadge: {
-    backgroundColor: '#222222',
-    borderWidth: 1,
-    borderColor: COLORS.gold,
   },
 
   freeText: {
@@ -1162,9 +1132,11 @@ clubGold: {
     fontWeight: '700',
   },
 
-  premiumSmallText: {
-    color: COLORS.gold,
-  },
+  eventCardGold: { backgroundColor: '#D4AF37' },
+  eventBlackText: { color: '#000000' },
+  eventTagGold: { color: '#000000', borderLeftColor: 'rgba(0,0,0,0.3)' },
+  eventBadgeGold: { backgroundColor: '#000000' },
+  eventBadgeGoldText: { color: '#D4AF37' },
 
   guideCard: {
     backgroundColor: COLORS.card,
@@ -1229,68 +1201,4 @@ clubGold: {
     lineHeight: 20,
   },
 
-  dropCard: {
-    width: 260,
-    height: 160,
-    borderRadius: 18,
-    overflow: 'hidden',
-    marginRight: 14,
-    backgroundColor: COLORS.card,
-  },
-
-  dropImage: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-  },
-
-  dropOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    padding: 16,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-  },
-
-  regionBadge: {
-    alignSelf: 'flex-start',
-    minWidth: 36,
-    marginBottom: 8,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 999,
-    backgroundColor: COLORS.gold,
-  },
-
-  regionBadgeText: {
-    color: COLORS.background,
-    fontSize: 11,
-    fontWeight: '900',
-    textAlign: 'center',
-  },
-
-  dropTitle: {
-    color: COLORS.white,
-    fontSize: 20,
-    fontWeight: '700',
-  },
-
-  dropOffer: {
-    color: COLORS.white,
-    marginTop: 4,
-  },
-
-  dropBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.gold,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-
-  dropBadgeText: {
-    color: '#000',
-    fontSize: 11,
-    fontWeight: '700',
-  },
 });
