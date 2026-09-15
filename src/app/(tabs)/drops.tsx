@@ -1,3 +1,4 @@
+import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { TagFilter } from '@/components/TagFilter';
 import { ExpandableText } from '@/components/ExpandableContent';
@@ -19,6 +20,7 @@ type MiniDropCardProps = {
   subtitle: string;
   tags: string[];
   access: 'free' | 'premium';
+  memberBenefit?: string | null;
   isPremiumMember: boolean;
   region: 'NY' | 'NJ';
 };
@@ -88,6 +90,7 @@ export default function DropsScreen() {
             </View>
             <ExperienceTags tags={getExperienceTags(featured)} />
             <Text style={styles.heroTitle}> {featured.title} </Text>
+            <MemberBenefitSummary experience={featured} />
             <ExpandableText key={featured.id} text={featured.description} style={styles.heroDescription} color="#D4A017" />
             <Text style={styles.location}> 
               {featured.location}
@@ -121,7 +124,7 @@ export default function DropsScreen() {
 
         {upcoming.map((item) => (
           <MiniDropCard key={item.id} id={item.id} image={item.image} title={item.title}
-            subtitle={item.date || item.description} tags={getExperienceTags(item)} access={item.access}
+            subtitle={item.date || item.description} tags={getExperienceTags(item)} access={item.access} memberBenefit={item.memberBenefit}
             region={item.region ?? 'NY'}
             isPremiumMember={Boolean(user?.is_premium)} />
         ))}
@@ -132,7 +135,7 @@ export default function DropsScreen() {
   ); 
 } 
 
-function MiniDropCard({ id, image, title, subtitle, tags, access, region, isPremiumMember }: MiniDropCardProps) {
+function MiniDropCard({ id, image, title, subtitle, tags, access, memberBenefit, region, isPremiumMember }: MiniDropCardProps) {
   const router = useRouter();
   const { t } = useLanguage();
 
@@ -156,7 +159,8 @@ function MiniDropCard({ id, image, title, subtitle, tags, access, region, isPrem
           </View>
         </View>
         <ExperienceTags tags={tags} />
-        <Text style={styles.miniDropTitle}> {title} </Text> 
+        <Text style={styles.miniDropTitle}> {title} </Text>
+        <MemberBenefitSummary experience={{ access, memberBenefit }} />
         <Text style={styles.miniDropSubtitle}> {subtitle} </Text> 
       </View> 
     </TouchableOpacity> 

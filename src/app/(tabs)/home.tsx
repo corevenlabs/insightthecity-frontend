@@ -1,3 +1,4 @@
+import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { getExperienceTags } from '@/lib/experienceFilters';
 import { ExpandableText } from '@/components/ExpandableContent';
@@ -617,6 +618,7 @@ function EventCard({ experience, isPremiumMember }: EventCardProps) {
       <Text style={styles.eventTitle}>
         {experience.title}
       </Text>
+      <MemberBenefitSummary experience={experience} />
 
       <Text style={styles.eventTime}>
         {experience.date}

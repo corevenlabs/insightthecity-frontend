@@ -13,6 +13,8 @@ export type Experience = {
   access: ExperienceAccess;
   description: string;
   includes: string[];
+  memberBenefit?: string | null;
+  memberBenefitDetails?: string | null;
   recommendation: string;
   isPaidEvent?: boolean;
   ticketUrl?: string | null;

@@ -1,6 +1,6 @@
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { getExperienceTags } from '@/lib/experienceFilters';
-import { ExpandableSection } from '@/components/ExpandableContent';
+import { ExpandableSection, ExpandableText } from '@/components/ExpandableContent';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -76,10 +76,6 @@ export default function ExperienceDetailScreen() {
             <Ionicons name="calendar-outline" size={15} color="#D4AF37" />
             <Text style={styles.metaText}>{experience.date}</Text>
           </View>
-          <View style={styles.metaPill}>
-            <Ionicons name="location-outline" size={15} color="#D4AF37" />
-            <Text style={styles.metaText}>{experience.location}</Text>
-          </View>
         </View>
 
         <View style={[styles.accessBadge, !isPaidEvent && isLocked ? styles.premiumBadge : styles.freeBadge]}>
@@ -94,10 +90,21 @@ export default function ExperienceDetailScreen() {
               : isLocked
               ? 'Premium ITC Club'
               : requiresPremium
-                ? 'Incluido en tu membresía'
+                ? 'Beneficio para miembros ITC Club'
                 : 'Beneficio gratis'}
           </Text>
         </View>
+
+        {requiresPremium && experience.memberBenefit && (
+          <View style={styles.benefitCard}>
+            <View style={styles.benefitHeading}>
+              <Ionicons name="gift-outline" size={20} color={COLORS.gold} />
+              <Text style={styles.benefitLabel}>BENEFICIO ITC CLUB</Text>
+            </View>
+            <Text style={styles.benefitTitle}>{experience.memberBenefit}</Text>
+            {!!experience.memberBenefitDetails && <ExpandableText text={experience.memberBenefitDetails} style={styles.benefitDetails} />}
+          </View>
+        )}
 
         <ExpandableSection key={`${experience.id}-description`} title="Descripción">
           <Text style={styles.description}>{experience.description}</Text>
@@ -111,6 +118,14 @@ export default function ExperienceDetailScreen() {
           </View>
         ))}
         </ExpandableSection>
+
+        {!!experience.location && <View style={styles.addressCard}>
+          <Text style={styles.addressTitle}>Dirección</Text>
+          <View style={styles.addressRow}>
+            <Ionicons name="location-outline" size={20} color={COLORS.gold} />
+            <Text style={styles.addressText}>{experience.location}</Text>
+          </View>
+        </View>}
 
         <View style={styles.recommendationCard}>
           <Text style={styles.recommendationLabel}>Recomendación ITC</Text>
@@ -272,6 +287,15 @@ const styles = StyleSheet.create({
   premiumText: {
     color: COLORS.gold,
   },
+  benefitCard: { marginHorizontal: 20, marginTop: 20, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: COLORS.gold, backgroundColor: COLORS.card },
+  benefitHeading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  benefitLabel: { color: COLORS.gold, fontSize: 12, fontWeight: '900' },
+  benefitTitle: { color: COLORS.white, fontSize: 20, lineHeight: 27, fontWeight: '800', marginTop: 10 },
+  benefitDetails: { color: COLORS.secondary, fontSize: 14, lineHeight: 21, marginTop: 8 },
+  addressCard: { marginHorizontal: 20, marginTop: 20 },
+  addressTitle: { color: COLORS.white, fontSize: 20, fontWeight: '800', marginBottom: 10 },
+  addressRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  addressText: { flex: 1, color: COLORS.secondary, fontSize: 15, lineHeight: 23 },
   description: {
     color: COLORS.secondary,
     fontSize: 15,

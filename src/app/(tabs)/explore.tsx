@@ -1,3 +1,4 @@
+import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { TagFilter } from '@/components/TagFilter';
 import { Ionicons } from '@expo/vector-icons';
@@ -105,6 +106,7 @@ export default function ExploreScreen() {
                 </View>
               </View>
               <Text style={styles.eventTitle}>{event.title}</Text>
+              <MemberBenefitSummary experience={event} />
               <View style={styles.locationRow}>
                 <Ionicons name="location-outline" size={15} color="#A6A6A6" />
                 <Text style={styles.location}>{event.location}</Text>

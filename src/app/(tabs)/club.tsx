@@ -1,3 +1,4 @@
+import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { TagFilter } from '@/components/TagFilter';
 import { getExperienceTags, matchesExperienceTags } from '@/lib/experienceFilters';
@@ -42,6 +43,7 @@ function PremiumCard({ experience }: { experience: Experience }) {
           </View>
         </View>
         <Text style={styles.experienceTitle}>{experience.title}</Text>
+        <MemberBenefitSummary experience={experience} />
         <View style={styles.metaRow}>
           <Ionicons name="calendar-outline" size={15} color={GOLD} />
           <Text style={styles.metaText}>{experience.date}</Text>
