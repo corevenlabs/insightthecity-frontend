@@ -45,7 +45,7 @@ type AuthContextValue = {
   unlockWithBiometrics: () => Promise<void>;
   refreshUser: () => Promise<User | null>;
   updateProfile: (data: { name: string; language: AppLanguage; home_area: string; interests: string[] }) => Promise<void>;
-  uploadAvatar: (file: { uri: string; mimeType?: string | null; fileName?: string | null; file?: File }) => Promise<void>;
+  uploadAvatar: (file: { uri: string; mimeType?: string | null; fileName?: string | null; file?: File; base64?: string | null }) => Promise<void>;
   activatePremiumForDevelopment: () => Promise<User | null>;
 };
 
@@ -404,14 +404,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }));
   }, [token, saveProfileResponse]);
 
-  const uploadAvatar = useCallback(async (file: { uri: string; mimeType?: string | null; fileName?: string | null; file?: File }) => {
+  const uploadAvatar = useCallback(async (file: { uri: string; mimeType?: string | null; fileName?: string | null; file?: File; base64?: string | null }) => {
     if (!token) throw new Error('Inicia sesión para editar tu perfil');
     const form = new FormData();
     if (Platform.OS === 'web') {
       const blob = file.file || await (await fetch(file.uri)).blob();
       form.append('file', blob, file.fileName || 'avatar.jpg');
     } else {
-      form.append('file', { uri: file.uri, type: file.mimeType || 'image/jpeg', name: file.fileName || 'avatar.jpg' } as any);
+      if (!file.base64) throw new Error('No se pudo leer la foto seleccionada');
+      // Expo 56 no admite partes FormData con { uri, name, type }.
+      form.append('jpegBase64', file.base64);
     }
     await saveProfileResponse(await fetch(`${API_URL}/api/users/me/avatar`, {
       method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form,

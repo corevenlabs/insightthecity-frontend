@@ -53,10 +53,11 @@ export default function ProfileScreen() {
         throw new Error(language === 'es' ? 'Para cambiar tu foto necesitas la nueva versión de la app. Puedes seguir editando los demás datos.' : language === 'en' ? 'Changing your photo requires the new app version. You can still edit your other information.' : 'Para alterar a foto, instale a nova versão do app. Você pode editar os demais dados.');
       }
       const ImagePicker = require('expo-image-picker') as typeof import('expo-image-picker');
-      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.75 });
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.75, base64: Platform.OS !== 'web' });
       if (result.canceled) return;
       const asset = result.assets[0];
-      if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) throw new Error(c.size);
+      if (Platform.OS !== 'web' && (!asset.base64 || asset.base64.length > 7 * 1024 * 1024)) throw new Error(c.size);
+      if (Platform.OS === 'web' && asset.fileSize && asset.fileSize > 5 * 1024 * 1024) throw new Error(c.size);
       await uploadAvatar(asset);
     } catch (err) { setError(err instanceof Error ? err.message : c.photoError); }
     finally { setPhotoBusy(false); }
