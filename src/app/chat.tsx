@@ -56,9 +56,7 @@ export default function ChatScreen() {
       const data = await response.json();
       if (!response.ok || !data?.success) throw new Error(data?.message);
       // El historial del servidor es memoria, no conversación visible de esta apertura.
-      const history: Message[] = [];
-      if (data.greeting) history.push({ id: 'greeting', from: 'bot', text: data.greeting });
-      if (sessionRef.current === session) setMessages(history);
+      if (sessionRef.current === session) setMessages([]);
     } catch {
       if (sessionRef.current === session) setMessages([{ id: 'history-error', from: 'bot', text: t('chat.error') }]);
     } finally { if (sessionRef.current === session) setLoading(false); }
