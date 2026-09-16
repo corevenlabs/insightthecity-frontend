@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -249,7 +248,7 @@ export default function ChatScreen() {
             <Ionicons name="arrow-back" size={24} color="#D4AF37" />
           </Pressable>
           <View style={styles.identity}>
-            <View style={styles.avatar}><Image source={require('@/assets/images/chat-logo-loop.gif')} style={styles.chatLogo} contentFit="cover" autoplay transition={0} accessibilityLabel="Logo de Insight The City" /></View>
+            <Text style={styles.assistantName}>YORK<Text style={styles.brandI}>i</Text></Text>
             <Text style={styles.subtitle}>{t('chat.subtitle')}</Text>
           </View>
           <View style={styles.iconButton} />
@@ -286,9 +285,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1 }, container: { flex: 1, backgroundColor: COLORS.background }, center: { flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' },
   header: { minHeight: 88, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border },
   iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }, identity: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  subtitle: { color: COLORS.muted, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 4, marginBottom: 8 },
-  chatLogo: { width: 72, height: 72 },
-  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' },
+  assistantName: { color: COLORS.text, fontSize: 29, lineHeight: 35, fontWeight: '800', letterSpacing: 1 },
+  brandI: { color: COLORS.black, backgroundColor: COLORS.gold },
+  subtitle: { color: COLORS.muted, fontSize: 11, lineHeight: 15, marginTop: 2, textAlign: 'center' },
   chat: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 16, flexGrow: 1 }, messageGroup: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginBottom: 16, maxWidth: '94%' }, userGroup: { alignSelf: 'flex-end' },
   messageContent: { flexShrink: 1 }, message: { paddingHorizontal: 14, paddingVertical: 11, borderRadius: 18 }, userMessage: { backgroundColor: COLORS.gold, borderBottomRightRadius: 5 }, botMessage: { backgroundColor: COLORS.surface, paddingHorizontal: 14, paddingVertical: 11, borderRadius: 18 },
   userText: { color: COLORS.black, fontSize: 15, lineHeight: 21, fontWeight: '600' }, botText: { color: COLORS.text, fontSize: 15, lineHeight: 22 }, places: { marginTop: 10, gap: 10 },
