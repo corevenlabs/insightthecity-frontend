@@ -23,6 +23,9 @@ export type User = {
   is_premium: boolean;
   language?: AppLanguage;
   created_at?: string;
+  avatar_url?: string | null;
+  home_area?: string;
+  interests?: string[];
 };
 
 type AuthContextValue = {
@@ -41,6 +44,8 @@ type AuthContextValue = {
   enableBiometric: () => Promise<boolean>;
   unlockWithBiometrics: () => Promise<void>;
   refreshUser: () => Promise<User | null>;
+  updateProfile: (data: { name: string; language: AppLanguage; home_area: string; interests: string[] }) => Promise<void>;
+  uploadAvatar: (file: { uri: string; mimeType?: string | null; fileName?: string | null; file?: File }) => Promise<void>;
   activatePremiumForDevelopment: () => Promise<User | null>;
 };
 
@@ -385,6 +390,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
+  const saveProfileResponse = useCallback(async (response: Response) => {
+    const data = await response.json();
+    if (!response.ok || !data?.success || !data?.user) throw new Error(data?.message || 'No se pudo actualizar el perfil');
+    setUser(data.user);
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  }, []);
+
+  const updateProfile = useCallback(async (data: { name: string; language: AppLanguage; home_area: string; interests: string[] }) => {
+    if (!token) throw new Error('Inicia sesión para editar tu perfil');
+    await saveProfileResponse(await fetch(`${API_URL}/api/users/me`, {
+      method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+    }));
+  }, [token, saveProfileResponse]);
+
+  const uploadAvatar = useCallback(async (file: { uri: string; mimeType?: string | null; fileName?: string | null; file?: File }) => {
+    if (!token) throw new Error('Inicia sesión para editar tu perfil');
+    const form = new FormData();
+    if (Platform.OS === 'web') {
+      const blob = file.file || await (await fetch(file.uri)).blob();
+      form.append('file', blob, file.fileName || 'avatar.jpg');
+    } else {
+      form.append('file', { uri: file.uri, type: file.mimeType || 'image/jpeg', name: file.fileName || 'avatar.jpg' } as any);
+    }
+    await saveProfileResponse(await fetch(`${API_URL}/api/users/me/avatar`, {
+      method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form,
+    }));
+  }, [token, saveProfileResponse]);
+
   const value = useMemo(
     () => ({
       user,
@@ -401,6 +434,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       enableBiometric,
       unlockWithBiometrics,
       refreshUser,
+      updateProfile,
+      uploadAvatar,
       activatePremiumForDevelopment,
     }),
     [
@@ -417,6 +452,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       enableBiometric,
       unlockWithBiometrics,
       refreshUser,
+      updateProfile,
+      uploadAvatar,
       activatePremiumForDevelopment,
     ]
   );

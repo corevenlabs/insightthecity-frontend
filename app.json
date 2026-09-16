@@ -2,7 +2,7 @@
   "expo": {
     "name": "ITC Club",
     "slug": "itc-club",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "itcclub",
@@ -51,6 +51,14 @@
         "expo-local-authentication",
         {
           "faceIDPermission": "Permite que ITC Club use Face ID para proteger y desbloquear tu sesión."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permite que Insight The City use una foto que elijas para tu perfil.",
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ]
     ],
