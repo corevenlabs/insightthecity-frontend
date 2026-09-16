@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -43,28 +43,41 @@ export default function ChatScreen() {
   const { user, token, loading: authLoading } = useAuth();
   const { t } = useLanguage();
   const listRef = useRef<FlatList<Message>>(null);
+  const sessionRef = useRef(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
-  const loadHistory = useCallback(async () => {
+  const loadHistory = useCallback(async (session: number) => {
     if (!token) { setLoading(false); return; }
     try {
       const response = await fetch(`${API_URL}/api/chat`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await response.json();
       if (!response.ok || !data?.success) throw new Error(data?.message);
-      const history: Message[] = (data.messages || []).map((item: any) => ({
-        id: String(item.id), from: item.role === 'assistant' ? 'bot' : 'user', text: item.message,
-      }));
+      // El historial del servidor es memoria, no conversación visible de esta apertura.
+      const history: Message[] = [];
       if (data.greeting) history.push({ id: 'greeting', from: 'bot', text: data.greeting });
-      setMessages(history);
+      if (sessionRef.current === session) setMessages(history);
     } catch {
-      setMessages([{ id: 'history-error', from: 'bot', text: t('chat.error') }]);
-    } finally { setLoading(false); }
+      if (sessionRef.current === session) setMessages([{ id: 'history-error', from: 'bot', text: t('chat.error') }]);
+    } finally { if (sessionRef.current === session) setLoading(false); }
   }, [t, token]);
 
-  useEffect(() => { void loadHistory(); }, [loadHistory]);
+  useFocusEffect(useCallback(() => {
+    const session = ++sessionRef.current;
+    setMessages([]);
+    setInput('');
+    setSending(false);
+    setLoading(true);
+    void loadHistory(session);
+    return () => {
+      sessionRef.current += 1;
+      setMessages([]);
+      setInput('');
+      setSending(false);
+    };
+  }, [loadHistory]));
   useEffect(() => {
     if (messages.length) requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
   }, [messages, sending]);
@@ -72,13 +85,17 @@ export default function ChatScreen() {
   const sendMessage = async (suggestion?: string) => {
     const userText = (suggestion ?? input).trim();
     if (!userText || !token || sending) return;
+    const session = sessionRef.current;
     const localId = `user-${Date.now()}`;
     setMessages((current) => [...current, { id: localId, from: 'user', text: userText }]);
     setInput('');
     setSending(true);
     try {
       let location: { lat: number; lng: number } | null = null;
-      try { location = await getLocation(); } catch { location = null; }
+      if (/cerca|nearby|near me|perto/i.test(userText)) {
+        try { location = await getLocation(); } catch { location = null; }
+      }
+      if (sessionRef.current !== session) return;
       const response = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -86,12 +103,14 @@ export default function ChatScreen() {
       });
       const data = await response.json();
       if (!response.ok || !data?.success) throw new Error(data?.message);
+      if (sessionRef.current !== session) return;
       setMessages((current) => [...current, {
         id: String(data.messageId || `bot-${Date.now()}`), from: 'bot', text: data.reply, places: data.places || [],
       }]);
     } catch {
+      if (sessionRef.current !== session) return;
       setMessages((current) => [...current, { id: `error-${Date.now()}`, from: 'bot', text: t('chat.error') }]);
-    } finally { setSending(false); }
+    } finally { if (sessionRef.current === session) setSending(false); }
   };
 
   const openMaps = (place: Place) => {
