@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
   KeyboardAvoidingView,
   Linking,
@@ -37,6 +38,23 @@ type Place = {
 };
 
 type Message = { id: string; from: 'user' | 'bot'; text: string; places?: Place[] };
+
+function TypingDots({ label }: { label: string }) {
+  const dots = useRef([new Animated.Value(0.3), new Animated.Value(0.3), new Animated.Value(0.3)]).current;
+  useEffect(() => {
+    const animation = Animated.loop(Animated.stagger(140, dots.map((opacity) => Animated.sequence([
+      Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0.3, duration: 300, useNativeDriver: true }),
+    ]))));
+    animation.start();
+    return () => animation.stop();
+  }, [dots]);
+  return (
+    <View style={styles.typingDots} accessible accessibilityLabel={label}>
+      {dots.map((opacity, index) => <Animated.View key={index} style={[styles.typingDot, { opacity }]} />)}
+    </View>
+  );
+}
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -193,12 +211,12 @@ export default function ChatScreen() {
         ) : (
           <>
             <FlatList ref={listRef} data={messages} renderItem={renderMessage} keyExtractor={(item) => item.id} contentContainerStyle={styles.chat} keyboardShouldPersistTaps="handled" ListFooterComponent={sending ? (
-              <View style={styles.typingRow}><View style={styles.smallAvatar}><Ionicons name="sparkles" size={14} color={COLORS.black} /></View><View style={styles.typingBubble}><ActivityIndicator size="small" color={COLORS.gold} /><Text style={styles.typingText}>{t('chat.typing')}</Text></View></View>
+              <View style={styles.typingRow}><View style={styles.smallAvatar}><Ionicons name="sparkles" size={14} color={COLORS.black} /></View><View style={styles.typingBubble}><TypingDots label={t('chat.typing')} /></View></View>
             ) : null} />
             <View style={styles.inputBar}>
               <TextInput value={input} onChangeText={setInput} onSubmitEditing={() => void sendMessage()} editable={!sending} maxLength={800} returnKeyType="send" placeholder={t('chat.placeholder')} placeholderTextColor="#858585" style={styles.input} accessibilityLabel={t('chat.placeholder')} />
               <Pressable accessibilityRole="button" accessibilityLabel={t('chat.send')} disabled={sending || !input.trim()} onPress={() => void sendMessage()} style={({ pressed }) => [styles.sendButton, (!input.trim() || sending) && styles.sendDisabled, pressed && styles.pressed]}>
-                {sending ? <ActivityIndicator size="small" color={COLORS.black} /> : <Ionicons name="arrow-up" size={21} color={COLORS.black} />}
+                <Ionicons name="arrow-up" size={21} color={COLORS.black} />
               </Pressable>
             </View>
           </>
@@ -220,7 +238,7 @@ const styles = StyleSheet.create({
   placeCard: { backgroundColor: COLORS.surface, borderRadius: 16, borderWidth: 1, borderColor: COLORS.border, padding: 14 }, placeTitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 }, placeHeading: { flex: 1 }, placeTitle: { color: COLORS.text, fontSize: 16, lineHeight: 21, fontWeight: '700' }, placeType: { color: COLORS.goldSoft, fontSize: 12, marginTop: 2 },
   placeMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }, rating: { color: COLORS.goldSoft, fontSize: 12, fontWeight: '700' }, openStatus: { color: COLORS.text, fontSize: 12 }, placeAddress: { color: COLORS.muted, fontSize: 13, lineHeight: 18, marginTop: 8 }, actionsRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
   actionButton: { minHeight: 44, flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 12, borderWidth: 1, borderColor: COLORS.gold }, actionText: { color: COLORS.text, fontSize: 13, fontWeight: '700' },
-  typingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }, typingBubble: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: COLORS.raised, borderRadius: 16, paddingHorizontal: 14 }, typingText: { color: COLORS.muted, fontSize: 13 },
+  typingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }, typingBubble: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: COLORS.raised, borderRadius: 16, paddingHorizontal: 14 }, typingDots: { flexDirection: 'row', alignItems: 'center', gap: 5 }, typingDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.muted },
   inputBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingTop: 10, paddingBottom: Platform.OS === 'ios' ? 8 : 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLORS.border, backgroundColor: COLORS.background }, input: { flex: 1, minHeight: 48, maxHeight: 112, borderRadius: 24, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, paddingHorizontal: 17, color: COLORS.text, fontSize: 16 }, sendButton: { width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' }, sendDisabled: { opacity: 0.42 }, pressed: { opacity: 0.72 },
   guestState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }, guestIcon: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.gold }, guestTitle: { color: COLORS.text, fontSize: 23, lineHeight: 30, fontWeight: '800', textAlign: 'center', marginTop: 24 }, guestSubtitle: { color: COLORS.muted, fontSize: 15, lineHeight: 23, textAlign: 'center', marginTop: 10 }, loginButton: { minHeight: 48, minWidth: 210, borderRadius: 24, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, marginTop: 28 }, loginText: { color: COLORS.black, fontSize: 13, fontWeight: '900', letterSpacing: 1 },
 });
