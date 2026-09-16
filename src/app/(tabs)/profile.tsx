@@ -26,6 +26,8 @@ export default function ProfileScreen() {
   const c = COPY[language];
   const [editing, setEditing] = useState(false);
   const [help, setHelp] = useState(false);
+  const [membershipDetails, setMembershipDetails] = useState(false);
+  const [showCancellationInfo, setShowCancellationInfo] = useState(false);
   const [saving, setSaving] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [error, setError] = useState('');
@@ -80,6 +82,7 @@ export default function ProfileScreen() {
     </View>
   );
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={styles.pageHeader}><Text style={styles.pageTitle}>{c.title}</Text><Pressable accessibilityRole="button" accessibilityLabel={c.edit} onPress={openEditor} style={styles.settings}><Ionicons name="settings-outline" size={25} color={GOLD} /></Pressable></View>
       <View style={styles.header}>
@@ -108,7 +111,7 @@ export default function ProfileScreen() {
         <View style={styles.membershipHeading}><Text style={styles.sectionTitle}>{c.membership}</Text><Text style={styles.status}>{user.is_premium ? c.active : t('profile.free')}</Text></View>
         <Text style={styles.planTitle}>{user.is_premium ? 'ITC CLUB' : t('profile.freeAccount')}</Text>
         <Text style={styles.planDescription}>{user.is_premium ? c.plan : t('profile.joinClubSubtitle')}</Text>
-        <Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => router.push(user.is_premium ? '/(tabs)/club' : '/club-form')}><Text style={styles.primaryText}>{user.is_premium ? c.manage : t('profile.joinClub')}</Text></Pressable>
+        <Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => user.is_premium ? setMembershipDetails(true) : router.push('/club-form')}><Text style={styles.primaryText}>{user.is_premium ? c.manage : t('profile.joinClub')}</Text></Pressable>
       </View>
       <View style={styles.card}>
         {row('help-buoy-outline', c.help, '', () => setHelp(true))}
@@ -134,6 +137,32 @@ export default function ProfileScreen() {
         <View style={styles.modalBackdrop}><View style={styles.helpCard}><Text style={styles.sectionTitle}>{c.help}</Text><Text style={styles.helpText}>{c.helpBody}</Text><Pressable style={styles.primaryButton} onPress={() => { setHelp(false); router.push('/chat'); }}><Text style={styles.primaryText}>{c.chat}</Text></Pressable><Pressable style={styles.photoButton} onPress={() => setHelp(false)}><Text style={styles.secondaryText}>{c.cancel}</Text></Pressable></View></View>
       </Modal>
     </ScrollView>
+      <Modal visible={membershipDetails} animationType="slide" onRequestClose={() => setMembershipDetails(false)}>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.pageHeader}>
+            <Pressable accessibilityRole="button" accessibilityLabel={language === 'es' ? 'Volver al perfil' : language === 'en' ? 'Back to profile' : 'Voltar ao perfil'} hitSlop={12} onPress={() => setMembershipDetails(false)} style={styles.settings}><Ionicons name="arrow-back" size={25} color={GOLD} /></Pressable>
+            <Text style={styles.pageTitle}>{c.membership}</Text>
+            <View style={styles.settings} />
+          </View>
+          <ScrollView contentContainerStyle={styles.membershipDetailsContent}>
+            <View style={[styles.card, styles.membershipCard, styles.membershipDetailsCard]}>
+              <View style={styles.membershipBrand}><Text style={styles.membershipBrandItc}>ITC </Text><Text style={styles.membershipBrandClub}>CLUB</Text></View>
+              <Text style={styles.membershipDetailsStatus}>{c.active}</Text>
+              <Text style={styles.planDescription}>{language === 'es' ? 'Tu membresía y sus beneficios' : language === 'en' ? 'Your membership and benefits' : 'Sua assinatura e seus benefícios'}</Text>
+              {[
+                [language === 'es' ? 'Precio' : language === 'en' ? 'Price' : 'Preço', language === 'es' ? 'Pendiente de confirmar' : language === 'en' ? 'Pending confirmation' : 'Pendente de confirmação'],
+                [language === 'es' ? 'Duración' : language === 'en' ? 'Billing period' : 'Período', language === 'es' ? 'Pendiente de confirmar' : language === 'en' ? 'Pending confirmation' : 'Pendente de confirmação'],
+                [language === 'es' ? 'Próxima renovación' : language === 'en' ? 'Next renewal' : 'Próxima renovação', language === 'es' ? 'Pendiente de confirmar' : language === 'en' ? 'Pending confirmation' : 'Pendente de confirmação'],
+              ].map(([label, value]) => <View key={label} style={styles.membershipDetailRow}><Text style={styles.rowLabel}>{label}</Text><Text style={styles.membershipDetailValue}>{value}</Text></View>)}
+            </View>
+            <Text style={styles.membershipNote}>{language === 'es' ? 'El precio y las fechas se mostrarán cuando conectemos los datos de tu suscripción.' : language === 'en' ? 'Price and dates will appear once your subscription details are connected.' : 'O preço e as datas aparecerão quando conectarmos os dados da assinatura.'}</Text>
+            <View style={styles.membershipDetailsSpacer} />
+            <Pressable accessibilityRole="button" onPress={() => setShowCancellationInfo((current) => !current)} style={styles.cancelMembershipLink}><Text style={styles.cancelMembershipText}>{language === 'es' ? 'Cancelar membresía' : language === 'en' ? 'Cancel membership' : 'Cancelar assinatura'}</Text></Pressable>
+            {showCancellationInfo && <Text style={styles.membershipNote}>{language === 'es' ? 'Todavía no puedes cancelar desde esta pantalla. Activaremos esta opción al conectar la gestión de suscripciones.' : language === 'en' ? 'You cannot cancel from this screen yet. This option will be enabled when subscription management is connected.' : 'Ainda não é possível cancelar nesta tela. Esta opção será ativada quando conectarmos a gestão de assinaturas.'}</Text>}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+    </>
   );
 }
 
@@ -154,6 +183,18 @@ const styles = StyleSheet.create({
   membershipCard: { borderWidth: 1, borderColor: GOLD }, membershipHeading: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   status: { color: GOLD, fontSize: 12 }, planTitle: { color: '#FFF', fontSize: 22, fontWeight: '700', marginBottom: 6 },
   planDescription: { color: '#A6A6A6', lineHeight: 20, marginBottom: 16 },
+  membershipDetailsContent: { flexGrow: 1, padding: 20, paddingBottom: 32 },
+  membershipDetailsCard: { marginHorizontal: 0, padding: 26, minHeight: 350 },
+  membershipBrand: { flexDirection: 'row', alignSelf: 'center', alignItems: 'baseline', marginTop: 8 },
+  membershipBrandItc: { color: '#FFF', fontSize: 31, fontWeight: '800', letterSpacing: 4 },
+  membershipBrandClub: { color: GOLD, fontSize: 31, fontWeight: '800', letterSpacing: 4 },
+  membershipDetailsStatus: { color: GOLD, fontSize: 13, textAlign: 'center', marginTop: 8, marginBottom: 20 },
+  membershipDetailsSpacer: { flexGrow: 1, minHeight: 40 },
+  membershipDetailRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 16, paddingVertical: 15, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#333' },
+  membershipDetailValue: { color: '#FFF', fontSize: 14, textAlign: 'right', flexShrink: 1 },
+  membershipNote: { color: '#A6A6A6', fontSize: 13, lineHeight: 19, marginTop: 14 },
+  cancelMembershipLink: { alignSelf: 'center', minHeight: 48, justifyContent: 'center', paddingHorizontal: 12, marginTop: 22 },
+  cancelMembershipText: { color: GOLD, fontSize: 14 },
   form: { padding: 20, paddingBottom: 40 }, input: { color: '#FFF', backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#333', borderRadius: 12, padding: 14, fontSize: 16, marginTop: 8, marginBottom: 12 },
   photoButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
   photoHint: { color: '#A6A6A6', fontSize: 12, textAlign: 'center', marginBottom: 12 },
