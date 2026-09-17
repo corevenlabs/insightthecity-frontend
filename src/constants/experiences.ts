@@ -7,6 +7,7 @@ export type Experience = {
   category: string;
   tags?: string[];
   image: string;
+  images?: string[];
   date: string;
   location: string;
   region?: ExperienceRegion;

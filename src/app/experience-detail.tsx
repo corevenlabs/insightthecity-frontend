@@ -4,7 +4,7 @@ import { ExpandableSection, ExpandableText } from '@/components/ExpandableConten
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getExperienceById } from '@/constants/experiences';
@@ -17,6 +17,8 @@ export default function ExperienceDetailScreen() {
   const { user } = useAuth();
   const [experience, setExperience] = useState<Experience | undefined>(() => getExperienceById(id));
   const [loading, setLoading] = useState(true);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const { width: screenWidth } = useWindowDimensions();
 
   useEffect(() => {
     let active = true;
@@ -27,6 +29,8 @@ export default function ExperienceDetailScreen() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [id]);
+
+  useEffect(() => { setPhotoIndex(0); }, [id]);
 
   if (loading && !experience) {
     return <SafeAreaView style={styles.container}><View style={styles.emptyState}><Text style={styles.emptyTitle}>Actualizando contenido…</Text></View></SafeAreaView>;
@@ -50,18 +54,33 @@ export default function ExperienceDetailScreen() {
   const isPaidEvent = Boolean(experience.isPaidEvent && experience.ticketUrl);
   const ticketCta = experience.ticketCta?.trim() || 'COMPRAR BOLETOS';
   const isCtaEnabled = isPaidEvent || isLocked;
+  const photos = requiresPremium && experience.images?.length ? experience.images : [experience.image];
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.hero}>
-          <Image source={{ uri: experience.image }} style={styles.heroImage} />
-          <View style={styles.heroOverlay}>
+          <FlatList
+            data={photos}
+            horizontal
+            pagingEnabled
+            scrollEnabled={requiresPremium && photos.length > 1}
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(url, index) => `${index}-${url}`}
+            renderItem={({ item }) => <Image source={{ uri: item }} style={[styles.heroImage, { width: screenWidth }]} />}
+            onMomentumScrollEnd={(event) => setPhotoIndex(Math.round(event.nativeEvent.contentOffset.x / screenWidth))}
+          />
+          <View style={styles.heroShade} pointerEvents="none" />
+          <View style={styles.heroOverlay} pointerEvents="box-none">
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={22} color="#D4AF37" />
             </TouchableOpacity>
 
-            <View style={styles.heroText}>
+            {requiresPremium && photos.length > 1 && <View style={styles.photoCount}>
+              <Text style={styles.photoCountText}>{photoIndex + 1}/{photos.length}</Text>
+            </View>}
+
+            <View style={styles.heroText} pointerEvents="none">
               <ExperienceTags tags={getExperienceTags(experience)} />
               <Text style={styles.title}>{experience.title}</Text>
             </View>
@@ -190,16 +209,24 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.card,
   },
   heroImage: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
+    height: 360,
+  },
+  heroShade: {
+    position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
+    backgroundColor: 'rgba(0,0,0,0.34)',
   },
   heroOverlay: {
+    position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
     flex: 1,
     justifyContent: 'space-between',
     padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.52)',
   },
+  photoCount: {
+    position: 'absolute', top: 26, right: 20,
+    borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+  },
+  photoCountText: { color: COLORS.white, fontSize: 12, fontWeight: '800' },
   backButton: {
     width: 42,
     height: 42,
