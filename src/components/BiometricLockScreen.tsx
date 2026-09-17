@@ -25,6 +25,7 @@ export function BiometricLockScreen() {
     setError(null);
     try {
       await unlockWithBiometrics();
+      if (pathname === '/' || pathname === '/welcome') router.replace('/home' as any);
     } catch (err: any) {
       setError(err?.message ?? 'No se pudo desbloquear la sesión.');
     } finally {

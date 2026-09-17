@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   Animated,
@@ -13,12 +13,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const GOLD = '#D4AF37';
 const BLACK = '#050505';
 
 export default function WelcomeScreen() {
   const { t } = useLanguage();
+  const { loading, token } = useAuth();
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [content] = useState(() => new Animated.Value(0));
 
@@ -36,6 +38,9 @@ export default function WelcomeScreen() {
     inputRange: [0, 1],
     outputRange: [28, 0],
   });
+
+  if (loading) return null;
+  if (token) return <Redirect href="/home" />;
 
   return (
     <SafeAreaView style={styles.container}>

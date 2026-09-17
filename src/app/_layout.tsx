@@ -143,7 +143,7 @@ export default function RootLayout() {
     <AuthProvider>
       <LanguageProvider>
         <Stack
-          initialRouteName="welcome"
+          initialRouteName="index"
           screenOptions={{
             headerShown: false,
           }}

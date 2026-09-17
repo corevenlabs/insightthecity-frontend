@@ -127,6 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [biometricLocked, setBiometricLocked] = useState(false);
   const [biometricLabel, setBiometricLabel] = useState('Biometría');
   const backgroundedAt = useRef<number | null>(null);
+  const biometricPromptActive = useRef(false);
 
   // Restaura la sesión guardada al arrancar y la refresca contra /me.
   useEffect(() => {
@@ -192,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ]);
             setToken(null);
             setUser(null);
+            setBiometricLocked(false);
           } else if (res.ok) {
             const data = await res.json();
             if (data?.user) {
@@ -215,10 +217,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Bloquea una sesión protegida tras 30 minutos de inactividad.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
+      if (!token) return;
       if (nextState === 'active') {
         if (
-          token &&
           biometricEnabled &&
+          !biometricPromptActive.current &&
           backgroundedAt.current !== null &&
           Date.now() - backgroundedAt.current >= BACKGROUND_LOCK_DELAY_MS
         ) {
@@ -226,7 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         backgroundedAt.current = null;
         void AsyncStorage.setItem(LAST_BACKGROUND_AT_KEY, String(Date.now()));
-      } else if (backgroundedAt.current === null) {
+      } else if (nextState === 'background' && backgroundedAt.current === null) {
         const now = Date.now();
         backgroundedAt.current = now;
         void AsyncStorage.setItem(LAST_BACKGROUND_AT_KEY, String(now));
@@ -298,48 +301,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token || !biometricAvailable) {
       throw new Error(`${biometricLabel} no está disponible en este dispositivo.`);
     }
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: `Ingresar con ${biometricLabel}`,
-      cancelLabel: 'Cancelar',
-      fallbackLabel: 'Usar código del dispositivo',
-      biometricsSecurityLevel: 'strong',
-    });
-    if (!result.success) {
-      if (result.error === 'user_cancel' || result.error === 'system_cancel') {
-        throw new Error('Autenticación cancelada.');
-      }
-      throw new Error(`No pudimos verificar tu ${biometricLabel}.`);
-    }
-
-    // Face ID desbloquea localmente y el servidor conserva la última palabra.
+    biometricPromptActive.current = true;
     try {
-      const res = await fetch(`${API_URL}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: `Ingresar con ${biometricLabel}`,
+        cancelLabel: 'Cancelar',
+        fallbackLabel: 'Usar código del dispositivo',
+        biometricsSecurityLevel: 'strong',
       });
-      if (res.status === 401) {
-        await Promise.all([
-          deleteToken(),
-          AsyncStorage.removeItem(USER_KEY),
-        ]);
-        setToken(null);
-        setUser(null);
-        setBiometricLocked(false);
-        throw new Error('Tu sesión expiró. Ingresa nuevamente con tu contraseña.');
-      }
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.user) {
-          const restoredUser = await restoreSimulatedPremium(data.user);
-          setUser(restoredUser);
-          await AsyncStorage.setItem(USER_KEY, JSON.stringify(restoredUser));
+      if (!result.success) {
+        if (result.error === 'user_cancel' || result.error === 'system_cancel') {
+          throw new Error('Autenticación cancelada.');
         }
+        throw new Error(`No pudimos verificar tu ${biometricLabel}.`);
       }
-    } catch (error) {
-      if (error instanceof Error && error.message.startsWith('Tu sesión expiró')) throw error;
-      // Sin conexión conservamos el comportamiento offline que ya tenía la app.
+
+      // Face ID desbloquea localmente y el servidor conserva la última palabra.
+      try {
+        const res = await fetch(`${API_URL}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.status === 401) {
+          await Promise.all([
+            deleteToken(),
+            AsyncStorage.removeItem(USER_KEY),
+          ]);
+          setToken(null);
+          setUser(null);
+          setBiometricLocked(false);
+          throw new Error('Tu sesión expiró. Ingresa nuevamente con tu contraseña.');
+        }
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.user) {
+            const restoredUser = await restoreSimulatedPremium(data.user);
+            setUser(restoredUser);
+            await AsyncStorage.setItem(USER_KEY, JSON.stringify(restoredUser));
+          }
+        }
+      } catch (error) {
+        if (error instanceof Error && error.message.startsWith('Tu sesión expiró')) throw error;
+        // Sin conexión conservamos el comportamiento offline que ya tenía la app.
+      }
+      setBiometricLocked(false);
+      await AsyncStorage.setItem(LAST_BACKGROUND_AT_KEY, String(Date.now()));
+    } finally {
+      biometricPromptActive.current = false;
     }
-    setBiometricLocked(false);
-    await AsyncStorage.setItem(LAST_BACKGROUND_AT_KEY, String(Date.now()));
   }, [token, biometricAvailable, biometricLabel]);
 
   const refreshUser = useCallback(async () => {
@@ -355,6 +363,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ]);
         setToken(null);
         setUser(null);
+        setBiometricLocked(false);
         return null;
       }
       if (!res.ok) return null;
