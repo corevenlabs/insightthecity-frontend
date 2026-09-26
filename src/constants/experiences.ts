@@ -23,6 +23,17 @@ export type Experience = {
   benefitUrl?: string | null;
   benefitCta?: string | null;
   benefitInstructions?: string | null;
+  couponInventoryMode?: 'limited' | 'unlimited';
+  couponTotal?: number | null;
+  couponPerUser?: number;
+  couponLowStock?: number;
+  couponStartsAt?: string | null;
+  couponEndsAt?: string | null;
+  couponActive?: boolean;
+  couponReserved?: number;
+  couponRedeemed?: number;
+  couponAvailable?: number | null;
+  couponStatus?: 'available' | 'low_stock' | 'sold_out' | 'paused' | null;
   recommendation: string;
   isPaidEvent?: boolean;
   ticketUrl?: string | null;

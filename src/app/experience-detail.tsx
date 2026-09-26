@@ -60,7 +60,8 @@ export default function ExperienceDetailScreen() {
   const isPaidEvent = Boolean(experience.isPaidEvent && experience.ticketUrl);
   const ticketCta = ui(experience.ticketCta?.trim() || '') || ui("COMPRAR BOLETOS");
   const benefitAction = experience.benefitAction || 'none';
-  const hasBenefitAction = requiresPremium && !isLocked && (benefitAction === 'qr' || (benefitAction === 'external' && Boolean(experience.benefitUrl)));
+  const couponUnavailable = benefitAction === 'qr' && ['sold_out', 'paused'].includes(experience.couponStatus || '');
+  const hasBenefitAction = requiresPremium && !isLocked && !couponUnavailable && (benefitAction === 'qr' || (benefitAction === 'external' && Boolean(experience.benefitUrl)));
   const benefitCta = ui(experience.benefitCta?.trim() || '') || ui('OBTENER BENEFICIO');
   const isCtaEnabled = isPaidEvent || isLocked || hasBenefitAction;
   const photos = requiresPremium && experience.images?.length ? experience.images : [experience.image];
@@ -174,7 +175,7 @@ export default function ExperienceDetailScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.ctaButton, !isPaidEvent && isLocked && styles.lockedButton]}
+          style={[styles.ctaButton, !isPaidEvent && isLocked && styles.lockedButton, couponUnavailable && styles.disabledButton]}
           onPress={() => void handleCta()}
           disabled={!isCtaEnabled || benefitLoading}
           accessibilityRole="button"
@@ -192,6 +193,10 @@ export default function ExperienceDetailScreen() {
               ? ticketCta.toUpperCase()
               : isLocked
               ? ui("SUSCRÍBETE PARA DESBLOQUEAR")
+              : experience.couponStatus === 'sold_out'
+                ? ui('AGOTADO')
+              : experience.couponStatus === 'paused'
+                ? ui('NO DISPONIBLE')
               : hasBenefitAction
                 ? benefitCta.toUpperCase()
               : requiresPremium
@@ -415,6 +420,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.gold,
   },
+  disabledButton: { opacity: 0.5 },
   ctaText: {
     color: COLORS.background,
     fontSize: 14,
