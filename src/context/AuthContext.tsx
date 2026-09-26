@@ -85,9 +85,7 @@ async function persist(token: string, user: User) {
 }
 
 async function restoreSimulatedPremium(user: User): Promise<User> {
-  if (user.is_premium) return user;
-  const premiumUserId = await AsyncStorage.getItem(DEV_PREMIUM_USER_KEY);
-  return premiumUserId === String(user.id) ? { ...user, is_premium: true } : user;
+  return user;
 }
 
 // Lanza un Error con el mensaje del backend para mostrarlo en pantalla.
