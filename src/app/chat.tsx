@@ -61,7 +61,7 @@ function TypingDots({ label }: { label: string }) {
 export default function ChatScreen() {
   const router = useRouter();
   const { user, token, loading: authLoading } = useAuth();
-  const { t } = useLanguage();
+  const { t, ui } = useLanguage();
   const listRef = useRef<FlatList<Message>>(null);
   const sessionRef = useRef(0);
   const chatActiveRef = useRef(false);
@@ -197,10 +197,10 @@ export default function ChatScreen() {
       </View>
       {!!place.formattedAddress && <Text style={styles.placeAddress}>{place.formattedAddress}</Text>}
       <View style={styles.actionsRow}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Abrir en Google Maps" onPress={() => openMaps(place)} style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
+        <Pressable accessibilityRole="button" accessibilityLabel={ui("Abrir en Google Maps")} onPress={() => openMaps(place)} style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
           <Ionicons name="map-outline" size={18} color={COLORS.black} accessible={false} /><Text style={styles.actionText}>Maps</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Abrir en Waze" onPress={() => openWaze(place)} style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
+        <Pressable accessibilityRole="button" accessibilityLabel={ui("Abrir en Waze")} onPress={() => openWaze(place)} style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
           <Ionicons name="navigate-outline" size={18} color={COLORS.black} accessible={false} /><Text style={styles.actionText}>Waze</Text>
         </Pressable>
       </View>
@@ -218,7 +218,7 @@ export default function ChatScreen() {
             <Text style={styles.placeTitle}>{recommendation.title}</Text>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Abrir ${recommendation.title}`}
+              accessibilityLabel={ui('Abrir {title}', { title: recommendation.title })}
               onPress={() => {
                 openingRecommendationRef.current = true;
                 router.push(recommendation.kind === 'experience'
@@ -244,7 +244,7 @@ export default function ChatScreen() {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
         <View style={styles.header}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Volver" hitSlop={8} onPress={() => router.back()} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+          <Pressable accessibilityRole="button" accessibilityLabel={ui("Volver")} hitSlop={8} onPress={() => router.back()} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
             <Ionicons name="arrow-back" size={24} color="#D4AF37" />
           </Pressable>
           <View style={styles.identity}>

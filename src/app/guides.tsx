@@ -1,7 +1,8 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { TagFilter } from '@/components/TagFilter';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
     Image,
     ScrollView,
@@ -20,6 +21,7 @@ type GuideCardProps = {
 };
 
 export default function GuidesScreen() {
+  const { ui } = useLanguage();
     const router = useRouter();
 
     const categories = [
@@ -36,44 +38,43 @@ export default function GuidesScreen() {
     const guides = [
         {
             image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785',
-            title: 'Los mejores rooftops de NYC',
-            subtitle: '12 lugares con vistas increíbles',
+            title: ui("Los mejores rooftops de NYC"),
+            subtitle: ui("12 lugares con vistas increíbles"),
             category: 'Miradores',
         },
         {
             image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba',
-            title: 'Broadway para principiantes',
-            subtitle: 'Cómo conseguir entradas baratas',
+            title: ui("Broadway para principiantes"),
+            subtitle: ui("Cómo conseguir entradas baratas"),
             category: 'Noche',
         },
         {
             image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee',
-            title: 'Miradores imprescindibles',
-            subtitle: 'Top 10 vistas de Manhattan',
+            title: ui("Miradores imprescindibles"),
+            subtitle: ui("Top 10 vistas de Manhattan"),
             category: 'Miradores',
         },
         {
             image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
-            title: 'Dónde comer bien y barato',
-            subtitle: 'Restaurantes favoritos locales',
+            title: ui("Dónde comer bien y barato"),
+            subtitle: ui("Restaurantes favoritos locales"),
             category: 'Comida',
         },
         {
             image: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262',
-            title: 'Museos que debes visitar',
-            subtitle: 'Arte, historia y cultura',
+            title: ui("Museos que debes visitar"),
+            subtitle: ui("Arte, historia y cultura"),
             category: 'Museos',
         },
         {
             image: 'https://images.unsplash.com/photo-1518391846015-55a9cc003b25',
-            title: 'Los mejores lugares para fotos',
-            subtitle: 'Instagram spots en NYC',
+            title: ui("Los mejores lugares para fotos"),
+            subtitle: ui("Instagram spots en NYC"),
             category: 'Gratis',
         },
     ];
 
-    const filteredGuides = useMemo(() => {
-        return guides.filter((g) => {
+    const filteredGuides = guides.filter((g) => {
             const matchCategory =
                 selectedCategory.length === 0 ||
                 selectedCategory.includes(g.category);
@@ -84,7 +85,6 @@ export default function GuidesScreen() {
 
             return matchCategory && matchSearch;
         });
-    }, [selectedCategory, search]);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -98,20 +98,18 @@ export default function GuidesScreen() {
                         <Ionicons name="arrow-back" size={26} color="#D4AF37" />
                     </TouchableOpacity>
 
-                    <Text style={styles.title}>GUÍAS NYC</Text>
+                    <Text style={styles.title}>{ui("GUÍAS NYC")}</Text>
 
                     <View style={{ width: 26 }} />
                 </View>
 
-                <Text style={styles.subtitle}>
-                    Descubre lugares, experiencias y secretos de Nueva York.
-                </Text>
+                <Text style={styles.subtitle}>{ui("Descubre lugares, experiencias y secretos de Nueva York.")}</Text>
 
                 {/* SEARCH */}
                 <View style={styles.searchContainer}>
                     <Ionicons name="search" size={20} color="#888" />
                     <TextInput
-                        placeholder="Buscar guía..."
+                        placeholder={ui("Buscar guía...")}
                         placeholderTextColor="#888"
                         style={styles.searchInput}
                         value={search}
@@ -122,11 +120,9 @@ export default function GuidesScreen() {
                 <TagFilter options={categories} selected={selectedCategory} onChange={setSelectedCategory} countResults={(tags) => guides.filter((guide) => (tags.length === 0 || tags.includes(guide.category)) && (guide.title.toLowerCase().includes(search.toLowerCase()) || guide.subtitle.toLowerCase().includes(search.toLowerCase()))).length} />
 
                 {/* FEATURED */}
-                <Text style={styles.sectionTitle}>
-                    Destacada de la semana
-                </Text>
+                <Text style={styles.sectionTitle}>{ui("Destacada de la semana")}</Text>
 
-                {(selectedCategory.length === 0 || selectedCategory.includes('Gratis')) && '50 cosas gratis para hacer en NYC'.toLowerCase().includes(search.toLowerCase()) && <TouchableOpacity style={styles.featuredCard}>
+                {(selectedCategory.length === 0 || selectedCategory.includes('Gratis')) && ui("50 cosas gratis para hacer en NYC").toLowerCase().includes(search.toLowerCase()) && <TouchableOpacity style={styles.featuredCard}>
                     <Image
                         source={{
                             uri: 'https://images.unsplash.com/photo-1522083165195-3424ed129620',
@@ -134,18 +130,14 @@ export default function GuidesScreen() {
                         style={styles.featuredImage}
                     />
                     <View style={styles.featuredOverlay}>
-                        <Text style={styles.featuredBadge}>DESTACADA</Text>
-                        <Text style={styles.featuredTitle}>
-                            50 cosas gratis para hacer en NYC
-                        </Text>
-                        <Text style={styles.featuredDescription}>
-                            Museos, parques, miradores y experiencias sin gastar dinero.
-                        </Text>
+                        <Text style={styles.featuredBadge}>{ui("DESTACADA")}</Text>
+                        <Text style={styles.featuredTitle}>{ui("50 cosas gratis para hacer en NYC")}</Text>
+                        <Text style={styles.featuredDescription}>{ui("Museos, parques, miradores y experiencias sin gastar dinero.")}</Text>
                     </View>
                 </TouchableOpacity>}
 
                 {/* GUIDES */}
-                <Text style={styles.sectionTitle}>Más guías</Text>
+                <Text style={styles.sectionTitle}>{ui("Más guías")}</Text>
 
                 {filteredGuides.map((g, index) => (
                     <GuideCard

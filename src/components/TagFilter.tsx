@@ -1,3 +1,4 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -12,36 +13,37 @@ export function TagFilter({ items = [], options, countResults, selected, onChang
   selected: string[];
   onChange: (tags: string[]) => void;
 }) {
+  const { ui, tagLabel } = useLanguage();
   const [visible, setVisible] = useState(false);
   const [draft, setDraft] = useState<string[]>([]);
   const count = countResults ? countResults(draft) : items.filter((item) => matchesExperienceTags(item, draft)).length;
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.trigger} onPress={() => { setDraft([...selected]); setVisible(true); }} accessibilityRole="button" accessibilityLabel="Filtrar por etiquetas" accessibilityState={{ expanded: visible }}>
+      <TouchableOpacity style={styles.trigger} onPress={() => { setDraft([...selected]); setVisible(true); }} accessibilityRole="button" accessibilityLabel={ui("Filtrar por etiquetas")} accessibilityState={{ expanded: visible }}>
         <Ionicons name="options-outline" size={20} color="#D4AF37" accessible={false} />
-        <Text style={styles.triggerText}>Filtrar{selected.length ? ` (${selected.length})` : ''}</Text>
+        <Text style={styles.triggerText}>{ui('Filtrar')}{selected.length ? ` (${selected.length})` : ''}</Text>
       </TouchableOpacity>
-      {selected.length > 0 && <TouchableOpacity style={styles.clear} onPress={() => onChange([])} accessibilityRole="button"><Text style={styles.secondary}>Limpiar</Text></TouchableOpacity>}
+      {selected.length > 0 && <TouchableOpacity style={styles.clear} onPress={() => onChange([])} accessibilityRole="button"><Text style={styles.secondary}>{ui("Limpiar")}</Text></TouchableOpacity>}
       <Modal visible={visible} animationType="none" transparent onRequestClose={() => setVisible(false)}>
         <View style={styles.backdrop}>
           <SafeAreaView style={styles.sheet} edges={['top', 'bottom']}>
             <View style={styles.header}>
-              <Text style={styles.title}>Filtrar por etiquetas</Text>
-              <TouchableOpacity style={styles.close} onPress={() => setVisible(false)} accessibilityRole="button" accessibilityLabel="Cerrar filtros"><Ionicons name="close" size={24} color="#D4AF37" /></TouchableOpacity>
+              <Text style={styles.title}>{ui("Filtrar por etiquetas")}</Text>
+              <TouchableOpacity style={styles.close} onPress={() => setVisible(false)} accessibilityRole="button" accessibilityLabel={ui("Cerrar filtros")}><Ionicons name="close" size={24} color="#D4AF37" /></TouchableOpacity>
             </View>
-            <Text style={styles.hint}>Elige una o varias. Verás contenidos con cualquiera de las etiquetas seleccionadas.</Text>
+            <Text style={styles.hint}>{ui("Elige una o varias. Verás contenidos con cualquiera de las etiquetas seleccionadas.")}</Text>
             <ScrollView contentContainerStyle={styles.tags}>
               {(options ?? availableExperienceTags(items)).map((tag) => {
                 const checked = draft.includes(tag);
                 return <TouchableOpacity key={tag} style={[styles.tag, checked && styles.selected]} onPress={() => setDraft((current) => checked ? current.filter((value) => value !== tag) : [...current, tag])} accessibilityRole="checkbox" accessibilityState={{ checked }}>
-                  <Text style={[styles.tagText, checked && styles.selectedText]}>{tag}</Text>
+                  <Text style={[styles.tagText, checked && styles.selectedText]}>{tagLabel(tag)}</Text>
                   {checked && <Ionicons name="checkmark" size={16} color="#050505" accessible={false} />}
                 </TouchableOpacity>;
               })}
             </ScrollView>
             <View style={styles.footer}>
-              <TouchableOpacity style={styles.clear} onPress={() => setDraft([])} accessibilityRole="button"><Text style={styles.triggerText}>Limpiar</Text></TouchableOpacity>
-              <TouchableOpacity style={styles.apply} onPress={() => { onChange(draft); setVisible(false); }} accessibilityRole="button"><Text style={styles.applyText}>Ver resultados ({count})</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.clear} onPress={() => setDraft([])} accessibilityRole="button"><Text style={styles.triggerText}>{ui("Limpiar")}</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.apply} onPress={() => { onChange(draft); setVisible(false); }} accessibilityRole="button"><Text style={styles.applyText}>{ui('Ver resultados ({count})', { count })}</Text></TouchableOpacity>
             </View>
           </SafeAreaView>
         </View>

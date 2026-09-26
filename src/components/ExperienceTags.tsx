@@ -1,7 +1,9 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { StyleSheet, Text, View } from 'react-native';
 
 export function ExperienceTags({ tags }: { tags: string[] }) {
-  return <View style={styles.tags}>{tags.map((tag) => <View key={tag} style={styles.tag}><Text style={styles.text}>{tag}</Text></View>)}</View>;
+  const { tagLabel } = useLanguage();
+  return <View style={styles.tags}>{tags.map((tag) => <View key={tag} style={styles.tag}><Text style={styles.text}>{tagLabel(tag)}</Text></View>)}</View>;
 }
 
 const styles = StyleSheet.create({

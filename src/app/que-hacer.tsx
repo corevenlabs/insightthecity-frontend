@@ -1,3 +1,4 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import {
@@ -15,6 +16,7 @@ import { NewsImage } from '../components/NewsImage';
 import { formatDate, useNewsFeed, type NewsCard } from '../lib/news';
 
 export default function QueHacerScreen() {
+  const { ui, language } = useLanguage();
   const router = useRouter();
   const feed = useNewsFeed('que-hacer');
 
@@ -29,7 +31,7 @@ export default function QueHacerScreen() {
       <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
         <Ionicons name="arrow-back" size={26} color="#D4AF37" />
       </TouchableOpacity>
-      <Text style={styles.headerTitle}>¿Qué hacer en NY?</Text>
+      <Text style={styles.headerTitle}>{ui("¿Qué hacer en NY?")}</Text>
       <View style={{ width: 26 }} />
     </View>
   );
@@ -37,28 +39,26 @@ export default function QueHacerScreen() {
   const renderHeader = () => (
     <View>
       {backHeader}
-      <Text style={styles.subtitle}>
-        Planes, eventos y experiencias para vivir Nueva York con intención.
-      </Text>
+      <Text style={styles.subtitle}>{ui("Planes, eventos y experiencias para vivir Nueva York con intención.")}</Text>
 
       {featured && (
         <TouchableOpacity style={styles.heroCard} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
           <NewsImage
             uri={featured.image}
             style={styles.heroImage}
-            accessibilityLabel={`Imagen de ${featured.title}`}
+            accessibilityLabel={ui('Imagen de {title}', { title: featured.title })}
           />
           <View style={styles.heroOverlay}>
-            <Text style={styles.badge}>QUE HACER EN NY</Text>
+            <Text style={styles.badge}>{ui("QUE HACER EN NY")}</Text>
             <Text style={styles.heroTitle} numberOfLines={3}>
               {featured.title}
             </Text>
-            <Text style={styles.heroDate}>{formatDate(featured.date)}</Text>
+            <Text style={styles.heroDate}>{formatDate(featured.date, language)}</Text>
           </View>
         </TouchableOpacity>
       )}
 
-      {rest.length > 0 && <Text style={styles.sectionTitle}>Últimos planes</Text>}
+      {rest.length > 0 && <Text style={styles.sectionTitle}>{ui("Últimos planes")}</Text>}
     </View>
   );
 
@@ -67,10 +67,10 @@ export default function QueHacerScreen() {
       <NewsImage
         uri={item.image}
         style={styles.articleImage}
-        accessibilityLabel={`Imagen de ${item.title}`}
+        accessibilityLabel={ui('Imagen de {title}', { title: item.title })}
       />
       <View style={styles.articleContent}>
-        <Text style={styles.badge}>{formatDate(item.date)}</Text>
+        <Text style={styles.badge}>{formatDate(item.date, language)}</Text>
         <Text style={styles.articleTitle} numberOfLines={2}>
           {item.title}
         </Text>
@@ -100,9 +100,9 @@ export default function QueHacerScreen() {
         {backHeader}
         <View style={styles.center}>
           <Ionicons name="cloud-offline-outline" size={44} color="#555" />
-          <Text style={styles.errorText}>{feed.error}</Text>
+          <Text style={styles.errorText}>{ui('No se pudo cargar el contenido.')}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={feed.retry}>
-            <Text style={styles.retryText}>Reintentar</Text>
+            <Text style={styles.retryText}>{ui("Reintentar")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

@@ -133,6 +133,7 @@ export default function RootLayout() {
   const hideChatButton = [
     '/welcome',
     '/login',
+    '/forgot-password',
     '/register',
     '/chat',
     '/checkout',
@@ -150,6 +151,7 @@ export default function RootLayout() {
         >
           <Stack.Screen name="welcome" />
           <Stack.Screen name="login" />
+          <Stack.Screen name="forgot-password" />
           <Stack.Screen name="register" />
           <Stack.Screen
             name="(tabs)"

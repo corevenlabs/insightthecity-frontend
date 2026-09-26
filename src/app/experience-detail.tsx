@@ -1,23 +1,29 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { getExperienceTags } from '@/lib/experienceFilters';
 import { ExpandableSection, ExpandableText } from '@/components/ExpandableContent';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getExperienceById } from '@/constants/experiences';
 import { useAuth } from '../context/AuthContext';
 import type { Experience } from '../constants/experiences';
 import { fetchExperience } from '../lib/experiences';
+import { issueBenefitCode, type BenefitCode } from '../lib/benefits';
 
 export default function ExperienceDetailScreen() {
+  const { ui } = useLanguage();
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [experience, setExperience] = useState<Experience | undefined>(() => getExperienceById(id));
   const [loading, setLoading] = useState(true);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [benefitCode, setBenefitCode] = useState<BenefitCode | null>(null);
+  const [benefitLoading, setBenefitLoading] = useState(false);
+  const [benefitError, setBenefitError] = useState('');
   const { width: screenWidth } = useWindowDimensions();
 
   useEffect(() => {
@@ -33,16 +39,16 @@ export default function ExperienceDetailScreen() {
   useEffect(() => { setPhotoIndex(0); }, [id]);
 
   if (loading && !experience) {
-    return <SafeAreaView style={styles.container}><View style={styles.emptyState}><Text style={styles.emptyTitle}>Actualizando contenido…</Text></View></SafeAreaView>;
+    return <SafeAreaView style={styles.container}><View style={styles.emptyState}><Text style={styles.emptyTitle}>{ui("Actualizando contenido…")}</Text></View></SafeAreaView>;
   }
 
   if (!experience) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>Contenido no disponible</Text>
+          <Text style={styles.emptyTitle}>{ui("Contenido no disponible")}</Text>
           <TouchableOpacity style={styles.primaryButton} onPress={() => router.back()}>
-            <Text style={styles.primaryButtonText}>VOLVER</Text>
+            <Text style={styles.primaryButtonText}>{ui("VOLVER")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -52,9 +58,25 @@ export default function ExperienceDetailScreen() {
   const requiresPremium = experience.access === 'premium';
   const isLocked = requiresPremium && !user?.is_premium;
   const isPaidEvent = Boolean(experience.isPaidEvent && experience.ticketUrl);
-  const ticketCta = experience.ticketCta?.trim() || 'COMPRAR BOLETOS';
-  const isCtaEnabled = isPaidEvent || isLocked;
+  const ticketCta = ui(experience.ticketCta?.trim() || '') || ui("COMPRAR BOLETOS");
+  const benefitAction = experience.benefitAction || 'none';
+  const hasBenefitAction = requiresPremium && !isLocked && (benefitAction === 'qr' || (benefitAction === 'external' && Boolean(experience.benefitUrl)));
+  const benefitCta = ui(experience.benefitCta?.trim() || '') || ui('OBTENER BENEFICIO');
+  const isCtaEnabled = isPaidEvent || isLocked || hasBenefitAction;
   const photos = requiresPremium && experience.images?.length ? experience.images : [experience.image];
+
+  async function handleCta() {
+    if (isPaidEvent && experience?.ticketUrl) return void WebBrowser.openBrowserAsync(experience.ticketUrl);
+    if (isLocked) return router.push('/club-form');
+    if (benefitAction === 'external' && experience?.benefitUrl) return void WebBrowser.openBrowserAsync(experience.benefitUrl);
+    if (benefitAction === 'qr' && experience && token) {
+      setBenefitLoading(true);
+      setBenefitError('');
+      try { setBenefitCode(await issueBenefitCode(experience.id, token)); }
+      catch (error) { setBenefitError(error instanceof Error ? error.message : ui('No se pudo generar el código.')); }
+      finally { setBenefitLoading(false); }
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -105,12 +127,12 @@ export default function ExperienceDetailScreen() {
           />
           <Text style={[styles.accessText, !isPaidEvent && isLocked && styles.premiumText]}>
             {isPaidEvent
-              ? 'Evento con entrada de pago'
+              ? ui("Evento con entrada de pago")
               : isLocked
-              ? 'Premium ITC Club'
+              ? ui("Premium ITC Club")
               : requiresPremium
-                ? 'Beneficio para miembros ITC Club'
-                : 'Beneficio gratis'}
+                ? ui("Beneficio para miembros ITC Club")
+                : ui("Beneficio gratis")}
           </Text>
         </View>
 
@@ -118,18 +140,18 @@ export default function ExperienceDetailScreen() {
           <View style={styles.benefitCard}>
             <View style={styles.benefitHeading}>
               <Ionicons name="gift-outline" size={20} color={COLORS.gold} />
-              <Text style={styles.benefitLabel}>BENEFICIO ITC CLUB</Text>
+              <Text style={styles.benefitLabel}>{ui("BENEFICIO ITC CLUB")}</Text>
             </View>
             <Text style={styles.benefitTitle}>{experience.memberBenefit}</Text>
             {!!experience.memberBenefitDetails && <ExpandableText text={experience.memberBenefitDetails} style={styles.benefitDetails} />}
           </View>
         )}
 
-        <ExpandableSection key={`${experience.id}-description`} title="Descripción">
+        <ExpandableSection key={`${experience.id}-description`} title={ui("Descripción")}>
           <Text style={styles.description}>{experience.description}</Text>
         </ExpandableSection>
 
-        <ExpandableSection key={`${experience.id}-includes`} title="Qué incluye">
+        <ExpandableSection key={`${experience.id}-includes`} title={ui("Qué incluye")}>
         {experience.includes.map((item) => (
           <View key={item} style={styles.includeRow}>
             <Ionicons name="checkmark-circle" size={18} color="#D4AF37" />
@@ -139,7 +161,7 @@ export default function ExperienceDetailScreen() {
         </ExpandableSection>
 
         {!!experience.location && <View style={styles.addressCard}>
-          <Text style={styles.addressTitle}>Dirección</Text>
+          <Text style={styles.addressTitle}>{ui("Dirección")}</Text>
           <View style={styles.addressRow}>
             <Ionicons name="location-outline" size={20} color={COLORS.gold} />
             <Text style={styles.addressText}>{experience.location}</Text>
@@ -147,43 +169,60 @@ export default function ExperienceDetailScreen() {
         </View>}
 
         <View style={styles.recommendationCard}>
-          <Text style={styles.recommendationLabel}>Recomendación ITC</Text>
+          <Text style={styles.recommendationLabel}>{ui("Recomendación ITC")}</Text>
           <Text style={styles.recommendationText}>{experience.recommendation}</Text>
         </View>
 
         <TouchableOpacity
           style={[styles.ctaButton, !isPaidEvent && isLocked && styles.lockedButton]}
-          onPress={() => {
-            if (isPaidEvent && experience.ticketUrl) {
-              void WebBrowser.openBrowserAsync(experience.ticketUrl);
-            } else if (isLocked) {
-              router.push('/club-form');
-            }
-          }}
-          disabled={!isCtaEnabled}
+          onPress={() => void handleCta()}
+          disabled={!isCtaEnabled || benefitLoading}
           accessibilityRole="button"
-          accessibilityLabel={isPaidEvent ? `${ticketCta}: ${experience.title}` : undefined}
-          accessibilityHint={isPaidEvent ? 'Abre el sitio de compra de boletos' : undefined}
-          accessibilityState={{ disabled: !isCtaEnabled }}
+          accessibilityLabel={isPaidEvent ? `${ticketCta}: ${experience.title}` : isLocked ? ui('Suscríbete para desbloquear') : hasBenefitAction ? `${benefitCta}: ${experience.title}` : undefined}
+          accessibilityHint={benefitAction === 'qr' && hasBenefitAction ? ui('Genera un código QR válido durante 24 horas') : isPaidEvent || benefitAction === 'external' ? ui("Abre un sitio externo") : undefined}
+          accessibilityState={{ disabled: !isCtaEnabled || benefitLoading, busy: benefitLoading }}
         >
-          <Ionicons
+          {benefitLoading ? <ActivityIndicator color={COLORS.background} /> : <Ionicons
             name={isPaidEvent ? 'ticket-outline' : isLocked ? 'lock-closed' : requiresPremium ? 'checkmark-circle' : 'gift-outline'}
             size={18}
             color={!isPaidEvent && isLocked ? '#D4AF37' : '#050505'}
-          />
+          />}
           <Text style={[styles.ctaText, !isPaidEvent && isLocked && styles.lockedText]}>
             {isPaidEvent
               ? ticketCta.toUpperCase()
               : isLocked
-              ? 'SUSCRÍBETE PARA DESBLOQUEAR'
+              ? ui("SUSCRÍBETE PARA DESBLOQUEAR")
+              : hasBenefitAction
+                ? benefitCta.toUpperCase()
               : requiresPremium
-                ? 'BENEFICIO DESBLOQUEADO'
-                : 'BENEFICIO DISPONIBLE'}
+                ? ui("BENEFICIO DESBLOQUEADO")
+                : ui("BENEFICIO DISPONIBLE")}
           </Text>
         </TouchableOpacity>
 
+        {!!benefitError && <Text style={styles.ctaError} accessibilityRole="alert">{benefitError}</Text>}
+
         <View style={{ height: 70 }} />
       </ScrollView>
+      <Modal visible={Boolean(benefitCode)} transparent animationType="fade" onRequestClose={() => setBenefitCode(null)}>
+        <ScrollView style={styles.modalScrim} contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.qrModal} accessibilityViewIsModal>
+            <TouchableOpacity style={styles.modalClose} onPress={() => setBenefitCode(null)} accessibilityRole="button" accessibilityLabel={ui('Cerrar código QR')} hitSlop={8}>
+              <Ionicons name="close" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+            <Text style={styles.qrEyebrow}>ITC CLUB</Text>
+            <Text style={styles.qrTitle}>{ui('Tu beneficio está listo')}</Text>
+            <Text style={styles.qrSubtitle}>{benefitCode?.benefit || experience.memberBenefit}</Text>
+            {benefitCode?.qrDataUrl && <View style={styles.qrFrame}>
+              <Image source={{ uri: benefitCode.qrDataUrl }} style={styles.qrImage} accessibilityLabel={ui('Código QR para canjear el beneficio')} />
+            </View>}
+            <Text style={styles.qrInstruction}>{benefitCode?.instructions || ui('Muestra este código al personal para validar el beneficio.')}</Text>
+            <View style={styles.qrValidity}><Ionicons name="time-outline" size={18} color={COLORS.gold} /><Text style={styles.qrValidityText}>{ui('Válido por 24 horas · un solo uso')}</Text></View>
+            <Text style={styles.qrReference}>{benefitCode?.reference}</Text>
+            <TouchableOpacity style={styles.qrDoneButton} onPress={() => setBenefitCode(null)} accessibilityRole="button"><Text style={styles.qrDoneText}>{ui('LISTO')}</Text></TouchableOpacity>
+          </View>
+        </ScrollView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -384,6 +423,22 @@ const styles = StyleSheet.create({
   lockedText: {
     color: COLORS.gold,
   },
+  ctaError: { color: '#FFB4AB', marginHorizontal: 20, marginTop: 12, fontSize: 14, lineHeight: 20 },
+  modalScrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.84)' },
+  modalScrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20 },
+  qrModal: { backgroundColor: COLORS.card, borderRadius: 24, borderWidth: 1, borderColor: '#3B3219', paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24, alignItems: 'center', maxWidth: 480, width: '100%', alignSelf: 'center' },
+  modalClose: { position: 'absolute', top: 10, right: 10, width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 24 },
+  qrEyebrow: { color: COLORS.gold, fontWeight: '900', fontSize: 12, letterSpacing: 2, marginBottom: 10 },
+  qrTitle: { color: COLORS.white, fontSize: 24, lineHeight: 30, fontWeight: '900', textAlign: 'center' },
+  qrSubtitle: { color: COLORS.secondary, fontSize: 15, lineHeight: 22, textAlign: 'center', marginTop: 8 },
+  qrFrame: { backgroundColor: COLORS.white, borderRadius: 18, padding: 12, marginTop: 22 },
+  qrImage: { width: 232, height: 232 },
+  qrInstruction: { color: COLORS.white, fontSize: 14, lineHeight: 21, textAlign: 'center', marginTop: 18 },
+  qrValidity: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 },
+  qrValidityText: { color: COLORS.gold, fontSize: 13, fontWeight: '800' },
+  qrReference: { color: '#8E8E8E', fontSize: 12, marginTop: 10 },
+  qrDoneButton: { width: '100%', minHeight: 52, backgroundColor: COLORS.gold, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 22 },
+  qrDoneText: { color: COLORS.background, fontWeight: '900', fontSize: 14 },
   primaryButton: {
     backgroundColor: COLORS.gold,
     borderRadius: 14,

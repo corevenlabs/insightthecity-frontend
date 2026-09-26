@@ -1,5 +1,6 @@
 export type ExperienceAccess = 'free' | 'premium';
 export type ExperienceRegion = 'NY' | 'NJ';
+export type BenefitAction = 'none' | 'external' | 'qr';
 
 export type Experience = {
   id: string;
@@ -18,6 +19,10 @@ export type Experience = {
   cardBenefit?: string | null;
   memberBenefit?: string | null;
   memberBenefitDetails?: string | null;
+  benefitAction?: BenefitAction;
+  benefitUrl?: string | null;
+  benefitCta?: string | null;
+  benefitInstructions?: string | null;
   recommendation: string;
   isPaidEvent?: boolean;
   ticketUrl?: string | null;

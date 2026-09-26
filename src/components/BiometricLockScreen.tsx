@@ -1,3 +1,4 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, usePathname } from 'expo-router';
 import { useState } from 'react';
@@ -10,6 +11,7 @@ const GOLD = '#D4AF37';
 const BLACK = '#050505';
 
 export function BiometricLockScreen() {
+  const { ui } = useLanguage();
   const pathname = usePathname();
   const { biometricAvailable, biometricLabel, biometricLocked, loading, unlockWithBiometrics } =
     useAuth();
@@ -27,7 +29,7 @@ export function BiometricLockScreen() {
       await unlockWithBiometrics();
       if (pathname === '/' || pathname === '/welcome') router.replace('/home' as any);
     } catch (err: any) {
-      setError(err?.message ?? 'No se pudo desbloquear la sesión.');
+      setError(err?.message ?? ui("No se pudo desbloquear la sesión."));
     } finally {
       setUnlocking(false);
     }
@@ -39,12 +41,12 @@ export function BiometricLockScreen() {
         <View style={styles.iconCircle} accessible={false}>
           <Ionicons name="scan-outline" size={42} color={GOLD} />
         </View>
-        <Text style={styles.eyebrow}>SESIÓN PROTEGIDA</Text>
-        <Text style={styles.title}>Desbloquea Insight The City</Text>
+        <Text style={styles.eyebrow}>{ui("SESIÓN PROTEGIDA")}</Text>
+        <Text style={styles.title}>{ui("Desbloquea Insight The City")}</Text>
         <Text style={styles.subtitle}>
           {biometricAvailable
-            ? `Confirma tu identidad con ${biometricLabel} para continuar donde estabas.`
-            : 'La biometría no está disponible. Ingresa nuevamente con tu contraseña.'}
+            ? ui('Confirma tu identidad con {biometric} para continuar donde estabas.', { biometric: biometricLabel })
+            : ui("La biometría no está disponible. Ingresa nuevamente con tu contraseña.")}
         </Text>
 
         {error && (
@@ -55,7 +57,7 @@ export function BiometricLockScreen() {
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Ingresar con ${biometricLabel}`}
+          accessibilityLabel={ui('Ingresar con {biometric}', { biometric: biometricLabel })}
           disabled={unlocking || !biometricAvailable}
           onPress={unlock}
           style={({ pressed }) => [
@@ -69,7 +71,7 @@ export function BiometricLockScreen() {
           ) : (
             <>
               <Ionicons name="scan-outline" size={22} color={BLACK} />
-              <Text style={styles.primaryText}>INGRESAR CON {biometricLabel.toUpperCase()}</Text>
+              <Text style={styles.primaryText}>{ui('Ingresar con {biometric}', { biometric: biometricLabel }).toUpperCase()}</Text>
             </>
           )}
         </Pressable>
@@ -79,7 +81,7 @@ export function BiometricLockScreen() {
           onPress={() => router.replace('/login' as any)}
           style={({ pressed }) => [styles.passwordButton, pressed && styles.buttonPressed]}
         >
-          <Text style={styles.passwordText}>Usar correo y contraseña</Text>
+          <Text style={styles.passwordText}>{ui("Usar correo y contraseña")}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

@@ -1,10 +1,11 @@
+import { LanguagePicker } from '../../components/LanguagePicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { requireOptionalNativeModule } from 'expo';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, type AppLanguage } from '../../context/LanguageContext';
 
@@ -22,7 +23,7 @@ function initials(value: string) {
 }
 export default function ProfileScreen() {
   const { user, isAuthenticated, signOut, refreshUser, updateProfile, uploadAvatar } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, language, tagLabel } = useLanguage();
   const c = COPY[language];
   const [editing, setEditing] = useState(false);
   const [help, setHelp] = useState(false);
@@ -73,18 +74,19 @@ export default function ProfileScreen() {
     </Pressable>
   );
   if (!isAuthenticated || !user) return (
-    <View style={styles.guestContainer}>
+    <SafeAreaView style={styles.guestContainer} edges={['top', 'left', 'right']}>
+      <View style={{ width: '100%', marginBottom: 24 }}><LanguagePicker /></View>
       <View style={styles.guestAvatar}><Ionicons name="person-outline" size={44} color={GOLD} /></View>
       <Text style={styles.guestTitle}>{t('profile.signedOut')}</Text>
       <Text style={styles.guestSubtitle}>{t('profile.signedOutSubtitle')}</Text>
       <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/login')}><Text style={styles.primaryText}>{t('welcome.signIn')}</Text></TouchableOpacity>
       <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push('/register')}><Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text></TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
   return (
-    <>
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.pageHeader}><Text style={styles.pageTitle}>{c.title}</Text><Pressable accessibilityRole="button" accessibilityLabel={c.edit} onPress={openEditor} style={styles.settings}><Ionicons name="settings-outline" size={25} color={GOLD} /></Pressable></View>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={styles.header}>
         <Pressable onPress={openEditor} accessibilityRole="button" accessibilityLabel={c.edit} style={styles.avatar}>
           {user.avatar_url ? <Image source={{ uri: user.avatar_url }} style={styles.avatarPhoto} contentFit="cover" /> : <Text style={styles.avatarText}>{initials(user.name || user.email)}</Text>}
@@ -97,14 +99,14 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>{c.personal}</Text>
         {row('person-outline', t('profile.name'), user.name || '—', openEditor)}
         {row('mail-outline', t('profile.email'), user.email)}
-        {row('globe-outline', t('register.language'), ({ es: 'Español', en: 'English', pt: 'Português' })[user.language || language], openEditor)}
+        <LanguagePicker />
       </View>
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>{c.preferences}</Text>
         {row('location-outline', c.area, user.home_area || c.empty, openEditor)}
         <Pressable onPress={openEditor} accessibilityRole="button" style={styles.interestRow}>
           <View style={styles.interestHeading}><Ionicons name="heart-outline" size={21} color="#A6A6A6" /><Text style={styles.rowLabel}>{c.interests}</Text></View>
-          <View style={styles.tags}>{user.interests?.length ? user.interests.map((item) => <View style={styles.tag} key={item}><Text style={styles.tagText}>{item}</Text></View>) : <Text style={styles.rowValue}>{c.empty}</Text>}</View>
+          <View style={styles.tags}>{user.interests?.length ? user.interests.map((item) => <View style={styles.tag} key={item}><Text style={styles.tagText}>{tagLabel(item)}</Text></View>) : <Text style={styles.rowValue}>{c.empty}</Text>}</View>
         </Pressable>
       </View>
       <View style={[styles.card, styles.membershipCard]}>
@@ -117,8 +119,9 @@ export default function ProfileScreen() {
         {row('help-buoy-outline', c.help, '', () => setHelp(true))}
         <Pressable accessibilityRole="button" onPress={signOut} style={styles.infoRow}><Ionicons name="log-out-outline" size={21} color="#FF8080" /><Text style={styles.logoutText}>{t('profile.signOut')}</Text></Pressable>
       </View>
+    </ScrollView>
       <Modal visible={editing} animationType="slide" onRequestClose={() => { if (!saving && !photoBusy) setEditing(false); }}>
-        <SafeAreaView style={styles.container}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <SafeAreaProvider><SafeAreaView style={styles.container}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.pageHeader}><Text style={styles.pageTitle}>{c.edit}</Text><Pressable disabled={saving || photoBusy} onPress={() => setEditing(false)} accessibilityRole="button" accessibilityLabel={c.cancel} style={styles.settings}><Ionicons name="close" size={25} color={GOLD} /></Pressable></View>
           <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
             <Pressable onPress={pickPhoto} disabled={photoBusy || saving} accessibilityRole="button" style={styles.photoButton}>{photoBusy ? <ActivityIndicator color={GOLD} /> : <Ionicons name="camera-outline" size={22} color={GOLD} />}<Text style={styles.secondaryText}>{c.photo}</Text></Pressable>
@@ -127,21 +130,20 @@ export default function ProfileScreen() {
             <Text style={styles.label}>{t('profile.email')}</Text><Text style={styles.value}>{user.email}</Text>
             <Text style={styles.label}>{t('register.language')}</Text><View style={styles.tags}>{(['es', 'en', 'pt'] as const).map((item) => <Pressable key={item} onPress={() => setSelectedLanguage(item)} disabled={saving} accessibilityRole="button" accessibilityState={{ selected: selectedLanguage === item }} style={[styles.tag, selectedLanguage === item && styles.selectedTag]}><Text style={[styles.tagText, selectedLanguage === item && styles.selectedTagText]}>{({ es: 'Español', en: 'English', pt: 'Português' })[item]}</Text></Pressable>)}</View>
             <Text style={styles.label}>{c.area}</Text><TextInput value={area} onChangeText={setArea} maxLength={100} editable={!saving} style={styles.input} accessibilityLabel={c.area} placeholder="Manhattan, Brooklyn, New Jersey…" placeholderTextColor="#777" />
-            <Text style={styles.label}>{c.choose}</Text><View style={styles.tags}>{[...new Set([...INTERESTS, ...interests])].map((item) => <Pressable key={item} disabled={saving} onPress={() => setInterests((current) => current.includes(item) ? current.filter((value) => value !== item) : current.length < 12 ? [...current, item] : current)} accessibilityRole="button" accessibilityState={{ selected: interests.includes(item) }} style={[styles.tag, interests.includes(item) && styles.selectedTag]}><Text style={[styles.tagText, interests.includes(item) && styles.selectedTagText]}>{item}</Text></Pressable>)}</View>
+            <Text style={styles.label}>{c.choose}</Text><View style={styles.tags}>{[...new Set([...INTERESTS, ...interests])].map((item) => <Pressable key={item} disabled={saving} onPress={() => setInterests((current) => current.includes(item) ? current.filter((value) => value !== item) : current.length < 12 ? [...current, item] : current)} accessibilityRole="button" accessibilityState={{ selected: interests.includes(item) }} style={[styles.tag, interests.includes(item) && styles.selectedTag]}><Text style={[styles.tagText, interests.includes(item) && styles.selectedTagText]}>{tagLabel(item)}</Text></Pressable>)}</View>
             {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
             <Pressable disabled={saving || photoBusy || !name.trim()} accessibilityRole="button" onPress={save} style={[styles.primaryButton, { marginTop: 24, opacity: saving || photoBusy || !name.trim() ? 0.5 : 1 }]}><Text style={styles.primaryText}>{saving ? c.saving : c.save}</Text></Pressable>
           </ScrollView>
-        </KeyboardAvoidingView></SafeAreaView>
+        </KeyboardAvoidingView></SafeAreaView></SafeAreaProvider>
       </Modal>
       <Modal visible={help} transparent animationType="fade" onRequestClose={() => setHelp(false)}>
         <View style={styles.modalBackdrop}><View style={styles.helpCard}><Text style={styles.sectionTitle}>{c.help}</Text><Text style={styles.helpText}>{c.helpBody}</Text><Pressable style={styles.primaryButton} onPress={() => { setHelp(false); router.push('/chat'); }}><Text style={styles.primaryText}>{c.chat}</Text></Pressable><Pressable style={styles.photoButton} onPress={() => setHelp(false)}><Text style={styles.secondaryText}>{c.cancel}</Text></Pressable></View></View>
       </Modal>
-    </ScrollView>
       <Modal visible={membershipDetails} animationType="slide" onRequestClose={() => setMembershipDetails(false)}>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaProvider><SafeAreaView style={styles.container}>
           <View style={styles.pageHeader}>
             <Pressable accessibilityRole="button" accessibilityLabel={language === 'es' ? 'Volver al perfil' : language === 'en' ? 'Back to profile' : 'Voltar ao perfil'} hitSlop={12} onPress={() => setMembershipDetails(false)} style={styles.settings}><Ionicons name="arrow-back" size={25} color={GOLD} /></Pressable>
-            <Text style={styles.pageTitle}>{c.membership}</Text>
+            <Text style={[styles.pageTitle, styles.centeredTitle]}>{c.membership}</Text>
             <View style={styles.settings} />
           </View>
           <ScrollView contentContainerStyle={styles.membershipDetailsContent}>
@@ -160,16 +162,17 @@ export default function ProfileScreen() {
             <Pressable accessibilityRole="button" onPress={() => setShowCancellationInfo((current) => !current)} style={styles.cancelMembershipLink}><Text style={styles.cancelMembershipText}>{language === 'es' ? 'Cancelar membresía' : language === 'en' ? 'Cancel membership' : 'Cancelar assinatura'}</Text></Pressable>
             {showCancellationInfo && <Text style={styles.membershipNote}>{language === 'es' ? 'Todavía no puedes cancelar desde esta pantalla. Activaremos esta opción al conectar la gestión de suscripciones.' : language === 'en' ? 'You cannot cancel from this screen yet. This option will be enabled when subscription management is connected.' : 'Ainda não é possível cancelar nesta tela. Esta opção será ativada quando conectarmos a gestão de assinaturas.'}</Text>}
           </ScrollView>
-        </SafeAreaView>
+        </SafeAreaView></SafeAreaProvider>
       </Modal>
-    </>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  pageHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16 },
-  pageTitle: { color: '#FFF', fontSize: 26, fontWeight: '700' },
-  settings: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  pageHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, gap: 8 },
+  pageTitle: { color: '#FFF', fontSize: 26, fontWeight: '700', flex: 1, flexShrink: 1 },
+  centeredTitle: { textAlign: 'center' },
+  settings: { width: 48, height: 48, flexShrink: 0, alignItems: 'center', justifyContent: 'center' },
   avatarPhoto: { width: '100%', height: '100%', borderRadius: 55 },
   editButton: { borderWidth: 1, borderColor: GOLD, borderRadius: 24, paddingHorizontal: 24, paddingVertical: 12, marginTop: 18 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 56, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#333' },

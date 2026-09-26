@@ -1,3 +1,5 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -22,7 +24,7 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 20,
-        paddingTop: 40,
+        paddingTop: 12,
         paddingBottom: 150,
     },
     header: {
@@ -32,7 +34,10 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     backButton: {
-        padding: 8,
+        width: 48,
+        height: 48,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     headerTitle: {
         color: '#D4AF37',
@@ -131,6 +136,7 @@ const styles = StyleSheet.create({
 });
 
 export default function ClubFormScreen() {
+  const { ui } = useLanguage();
     const { user, token } = useAuth();
     const [showPayment, setShowPayment] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -152,21 +158,21 @@ export default function ClubFormScreen() {
         const { nombre, email, telefono, ciudad } = formData;
 
         if (!token || !user) {
-            Alert.alert('Inicia sesión', 'Necesitas una cuenta para activar tu membresía.', [
-                { text: 'Cancelar', style: 'cancel' },
-                { text: 'Iniciar sesión', onPress: () => router.push('/login') },
+            Alert.alert(ui("Inicia sesión"), ui("Necesitas una cuenta para activar tu membresía."), [
+                { text: ui("Cancelar"), style: 'cancel' },
+                { text: ui("Iniciar sesión"), onPress: () => router.push('/login') },
             ]);
             return;
         }
 
         if (!nombre.trim() || !email.trim() || !telefono.trim() || !ciudad.trim()) {
-            Alert.alert('Campos incompletos', 'Por favor completa todos los campos antes de continuar.');
+            Alert.alert(ui("Campos incompletos"), ui("Por favor completa todos los campos antes de continuar."));
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            Alert.alert('Email inválido', 'Por favor ingresa un correo electrónico válido.');
+            Alert.alert(ui("Email inválido"), ui("Por favor ingresa un correo electrónico válido."));
             return;
         }
 
@@ -192,18 +198,19 @@ export default function ClubFormScreen() {
                     params: { url: data.checkout_url },
                 });
             } else {
-                Alert.alert('Error', 'No se pudo generar el link de pago. Intenta de nuevo.');
+                Alert.alert('Error', ui("No se pudo generar el link de pago. Intenta de nuevo."));
             }
 
         } catch (error) {
             console.log(error);
-            Alert.alert('Error de conexión', 'Verifica tu conexión a internet e intenta de nuevo.');
+            Alert.alert(ui("Error de conexión"), ui("Verifica tu conexión a internet e intenta de nuevo."));
         } finally {
             setLoading(false);
         }
     };
 
     return (
+        <SafeAreaView style={styles.container}>
         <ScrollView
             style={styles.container}
             contentContainerStyle={styles.content}
@@ -216,21 +223,19 @@ export default function ClubFormScreen() {
                     <Ionicons name="arrow-back" size={24} color="#D4AF37" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>ITC CLUB</Text>
-                <View style={{ width: 24 }} />
+                <View style={{ width: 48 }} />
             </View>
 
-            <Text style={styles.subtitle}>
-                Completa tus datos para unirte al club.
-            </Text>
+            <Text style={styles.subtitle}>{ui("Completa tus datos para unirte al club.")}</Text>
 
             {/* INFORMACIÓN PERSONAL */}
             <View style={styles.card}>
-                <Text style={styles.sectionTitle}>INFORMACIÓN PERSONAL</Text>
+                <Text style={styles.sectionTitle}>{ui("INFORMACIÓN PERSONAL")}</Text>
 
                 {/* ✅ Inputs controlados con su estado */}
                 <TextInput
                     style={styles.input}
-                    placeholder="Nombre completo"
+                    placeholder={ui("Nombre completo")}
                     placeholderTextColor="#666"
                     value={formData.nombre}
                     onChangeText={(val) => handleChange('nombre', val)}
@@ -239,7 +244,7 @@ export default function ClubFormScreen() {
                 />
                 <TextInput
                     style={styles.input}
-                    placeholder="Correo electrónico"
+                    placeholder={ui("Correo electrónico")}
                     placeholderTextColor="#666"
                     keyboardType="email-address"
                     value={formData.email}
@@ -249,7 +254,7 @@ export default function ClubFormScreen() {
                 />
                 <TextInput
                     style={styles.input}
-                    placeholder="Teléfono"
+                    placeholder={ui("Teléfono")}
                     placeholderTextColor="#666"
                     keyboardType="phone-pad"
                     value={formData.telefono}
@@ -257,7 +262,7 @@ export default function ClubFormScreen() {
                 />
                 <TextInput
                     style={styles.input}
-                    placeholder="Ciudad"
+                    placeholder={ui("Ciudad")}
                     placeholderTextColor="#666"
                     value={formData.ciudad}
                     onChangeText={(val) => handleChange('ciudad', val)}
@@ -267,7 +272,7 @@ export default function ClubFormScreen() {
 
             {/* MÉTODO DE PAGO */}
             <View style={styles.card}>
-                <Text style={styles.sectionTitle}>MÉTODO DE PAGO</Text>
+                <Text style={styles.sectionTitle}>{ui("MÉTODO DE PAGO")}</Text>
 
                 <TouchableOpacity
                     style={styles.paymentButton}
@@ -279,28 +284,23 @@ export default function ClubFormScreen() {
                         color="#D4AF37"
                     />
                     <Text style={styles.paymentText}>
-                        {showPayment ? 'Pago seguro activado' : 'Pago seguro con Stripe'}
+                        {showPayment ? ui("Pago seguro activado") : ui("Pago seguro con Stripe")}
                     </Text>
                 </TouchableOpacity>
 
                 {showPayment && (
                     <View style={styles.paymentInfo}>
-                        <Text style={styles.infoText}>
-                            Serás redirigido a una página segura donde podrás pagar con tarjeta,
-                            Apple Pay o Google Pay. No almacenamos información de pago en la app.
-                        </Text>
+                        <Text style={styles.infoText}>{ui("Serás redirigido a una página segura donde podrás pagar con tarjeta, Apple Pay o Google Pay. No almacenamos información de pago en la app.")}</Text>
                     </View>
                 )}
             </View>
 
             {/* PLAN */}
             <View style={styles.card}>
-                <Text style={styles.sectionTitle}>PLAN</Text>
+                <Text style={styles.sectionTitle}>{ui("PLAN")}</Text>
                 <Text style={styles.planName}>ITC Club</Text>
-                <Text style={styles.planPrice}>$4.99 / mes</Text>
-                <Text style={styles.planDescription}>
-                    Acceso a beneficios exclusivos, descuentos y experiencias especiales.
-                </Text>
+                <Text style={styles.planPrice}>{ui("$4.99 / mes")}</Text>
+                <Text style={styles.planDescription}>{ui("Acceso a beneficios exclusivos, descuentos y experiencias especiales.")}</Text>
             </View>
 
             {/* BOTÓN FINAL */}
@@ -310,13 +310,12 @@ export default function ClubFormScreen() {
                 disabled={loading}
             >
                 <Text style={styles.joinButtonText}>
-                    {loading ? "PROCESANDO..." : "CONTINUAR AL PAGO"}
+                    {loading ? ui("PROCESANDO...") : ui("CONTINUAR AL PAGO")}
                 </Text>
             </TouchableOpacity>
 
-            <Text style={styles.note}>
-                Pago seguro procesado por Stripe. Puedes cancelar en cualquier momento.
-            </Text>
+            <Text style={styles.note}>{ui("Pago seguro procesado por Stripe. Puedes cancelar en cualquier momento.")}</Text>
         </ScrollView>
+        </SafeAreaView>
     );
 }

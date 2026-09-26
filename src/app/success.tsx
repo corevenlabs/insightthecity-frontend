@@ -1,3 +1,4 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -6,6 +7,7 @@ import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import { useAuth } from '../context/AuthContext';
 
 export default function SuccessScreen() {
+  const { ui } = useLanguage();
   const { user, activatePremiumForDevelopment } = useAuth();
   const [scaleAnim] = useState(() => new Animated.Value(0));
   const [fadeAnim] = useState(() => new Animated.Value(0));
@@ -25,16 +27,16 @@ export default function SuccessScreen() {
         <Ionicons name="checkmark-circle" size={100} color="#D4AF37" />
       </Animated.View>
       <Animated.View style={{ opacity: fadeAnim }}>
-        <Text style={styles.title}>¡Bienvenido al Club!</Text>
+        <Text style={styles.title}>{ui("¡Bienvenido al Club!")}</Text>
         <Text style={styles.subtitle}>
           {user?.is_premium
-            ? 'Tu membresía está activa. Ya puedes explorar todo el contenido exclusivo.'
-            : 'Recibimos tu pago y estamos preparando tu contenido exclusivo.'}
+            ? ui("Tu membresía está activa. Ya puedes explorar todo el contenido exclusivo.")
+            : ui("Recibimos tu pago y estamos preparando tu contenido exclusivo.")}
         </Text>
       </Animated.View>
       <Animated.View style={[styles.buttonContainer, { opacity: fadeAnim }]}>
         <TouchableOpacity style={styles.button} onPress={() => router.replace('/club')} accessibilityRole="button">
-          <Text style={styles.buttonText}>VER CONTENIDO ITC CLUB</Text>
+          <Text style={styles.buttonText}>{ui("VER CONTENIDO ITC CLUB")}</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>

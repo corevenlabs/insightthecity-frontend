@@ -94,11 +94,10 @@ export async function fetchArticle(id: number | string): Promise<NewsArticle> {
 }
 
 // Formatea la fecha ISO a algo corto tipo "28 Ago 2026".
-const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-export function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`;
+export function formatDate(iso: string, language: 'es' | 'en' | 'pt' = 'es'): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString({ es: 'es-ES', en: 'en-US', pt: 'pt-BR' }[language], { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 interface FeedState {

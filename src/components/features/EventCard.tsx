@@ -1,3 +1,4 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -9,6 +10,7 @@ type EventCardProps = {
 };
 
 export function EventCard({ title, category, tags }: EventCardProps) {
+  const { ui } = useLanguage();
   return (
     <TouchableOpacity style={styles.eventCard}>
       <Image
@@ -17,9 +19,9 @@ export function EventCard({ title, category, tags }: EventCardProps) {
       />
       <ExperienceTags tags={tags?.length ? tags : [category]} />
       <Text style={styles.eventTitle}>{title}</Text>
-      <Text style={styles.eventTime}>Hoy · 7:00 PM</Text>
+      <Text style={styles.eventTime}>{ui("Hoy · 7:00 PM")}</Text>
       <View style={styles.freeBadge}>
-        <Text style={styles.freeText}>GRATIS</Text>
+        <Text style={styles.freeText}>{ui("GRATIS")}</Text>
       </View>
     </TouchableOpacity>
   );

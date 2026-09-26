@@ -1,3 +1,4 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useState, type ComponentProps } from 'react';
@@ -32,6 +33,7 @@ function weatherIcon(code: number, isDay: boolean): ComponentProps<typeof Ionico
 }
 
 export function WeatherWidget() {
+  const { ui } = useLanguage();
   const [weather, setWeather] = useState<CurrentWeather | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -56,8 +58,8 @@ export function WeatherWidget() {
     <View style={styles.section}>
       <View style={styles.headingRow}>
         <View>
-          <Text style={styles.eyebrow}>NUEVA YORK AHORA</Text>
-          <Text style={styles.heading}>Clima de hoy</Text>
+          <Text style={styles.eyebrow}>{ui("NUEVA YORK AHORA")}</Text>
+          <Text style={styles.heading}>{ui("Clima de hoy")}</Text>
         </View>
         <Ionicons name="location" size={20} color={GOLD} />
       </View>
@@ -66,7 +68,7 @@ export function WeatherWidget() {
         source={{ uri: NYC_WEATHER_IMAGE }}
         style={styles.card}
         imageStyle={styles.cardImage}
-        accessibilityLabel="Vista de Nueva York con el clima actual"
+        accessibilityLabel={ui("Vista de Nueva York con el clima actual")}
       >
         <LinearGradient
           colors={['rgba(0,0,0,0.10)', 'rgba(0,0,0,0.46)', 'rgba(0,0,0,0.94)']}
@@ -74,20 +76,20 @@ export function WeatherWidget() {
           style={styles.cardOverlay}
         >
           {loading ? (
-            <View style={styles.state} accessibilityLabel="Cargando clima actual">
+            <View style={styles.state} accessibilityLabel={ui("Cargando clima actual")}>
               <ActivityIndicator color={GOLD} />
             </View>
           ) : error || !weather ? (
             <View style={styles.state}>
               <Ionicons name="cloud-offline-outline" size={30} color="#BDBDBD" />
-              <Text style={styles.errorText}>No pudimos actualizar el clima.</Text>
+              <Text style={styles.errorText}>{ui("No pudimos actualizar el clima.")}</Text>
               <TouchableOpacity
                 style={styles.retry}
                 onPress={load}
                 accessibilityRole="button"
                 activeOpacity={0.7}
               >
-                <Text style={styles.retryText}>REINTENTAR</Text>
+                <Text style={styles.retryText}>{ui("REINTENTAR")}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -104,7 +106,7 @@ export function WeatherWidget() {
                       importantForAccessibility="no-hide-descendants"
                     />
                     <Text style={styles.condition}>
-                      {weatherDescription(weather.weatherCode)}
+                      {ui(weatherDescription(weather.weatherCode))}
                     </Text>
                   </View>
                 </View>
@@ -117,17 +119,17 @@ export function WeatherWidget() {
               <View style={styles.detailsRow}>
                 <WeatherDetail
                   icon="thermometer-outline"
-                  label="Sensación"
+                  label={ui("Sensación")}
                   value={`${Math.round(weather.apparentTemperature)}°`}
                 />
                 <WeatherDetail
                   icon="water-outline"
-                  label="Humedad"
+                  label={ui("Humedad")}
                   value={`${Math.round(weather.humidity)}%`}
                 />
                 <WeatherDetail
                   icon="navigate-outline"
-                  label="Viento"
+                  label={ui("Viento")}
                   value={`${Math.round(weather.windSpeed)} mph`}
                 />
               </View>
@@ -135,7 +137,7 @@ export function WeatherWidget() {
           )}
         </LinearGradient>
       </ImageBackground>
-      <Text style={styles.source}>Datos meteorológicos: Open-Meteo</Text>
+      <Text style={styles.source}>{ui("Datos meteorológicos: Open-Meteo")}</Text>
     </View>
   );
 }

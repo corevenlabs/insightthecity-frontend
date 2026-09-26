@@ -93,7 +93,7 @@ function compactWeatherSymbol(
 }
 
 function HeaderWeather() {
-  const { t } = useLanguage();
+  const { t, ui } = useLanguage();
   const [weather, setWeather] = useState<CurrentWeather | null>(null);
 
   useEffect(() => {
@@ -118,7 +118,7 @@ function HeaderWeather() {
     );
   }
 
-  const description = weatherDescription(weather.weatherCode);
+  const description = ui(weatherDescription(weather.weatherCode));
 
   return (
     <View
@@ -148,18 +148,19 @@ function openExperience(id: string) {
 }
 
 function CarouselMoreCard({ width, height, label, onPress, stretch }: CarouselMoreCardProps) {
+  const { ui } = useLanguage();
   return (
     <TouchableOpacity
       style={[styles.carouselMoreCard, { width, height }, stretch && { height: undefined, minHeight: height, alignSelf: 'stretch' }]}
       activeOpacity={0.78}
       accessibilityRole="button"
-      accessibilityLabel={`Ver más de ${label}`}
+      accessibilityLabel={ui('Ver más de {title}', { title: label })}
       onPress={onPress}
     >
       <View style={styles.carouselMoreIcon}>
         <Ionicons name="arrow-forward" size={24} color="#050505" />
       </View>
-      <Text style={styles.carouselMoreText}>Ver más</Text>
+      <Text style={styles.carouselMoreText}>{ui("Ver más")}</Text>
     </TouchableOpacity>
   );
 }
@@ -171,7 +172,7 @@ type HomeNewsSectionProps = {
 };
 
 function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
-  const { t } = useLanguage();
+  const { t, ui, language } = useLanguage();
   const { width: windowWidth } = useWindowDimensions();
   const [items, setItems] = useState<NewsCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -186,8 +187,8 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
       const itemLimit = isNewsSection ? 5 : 4;
       const page = await fetchNews(section, 1, itemLimit);
       setItems(page.items.slice(0, itemLimit));
-    } catch (err: any) {
-      setError(err?.message ?? 'No se pudo cargar el contenido.');
+    } catch {
+      setError('No se pudo cargar el contenido.');
     } finally {
       setLoading(false);
     }
@@ -208,7 +209,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
     <NewsImage
       uri={item.image}
       style={imageStyle}
-      accessibilityLabel={`Imagen de ${item.title}`}
+      accessibilityLabel={ui('Imagen de {title}', { title: item.title })}
     />
   );
 
@@ -219,14 +220,14 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
       <View>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel={`${featured.title}, ${formatDate(featured.date)}`}
+          accessibilityLabel={`${featured.title}, ${formatDate(featured.date, language)}`}
           style={styles.newsFeaturedCard}
           onPress={() => openArticle(featured)}
           activeOpacity={0.82}
         >
           {renderImage(featured, styles.newsFeaturedImage)}
           <View style={styles.newsFeaturedOverlay}>
-            <Text style={styles.newsFeaturedDate}>{formatDate(featured.date)}</Text>
+            <Text style={styles.newsFeaturedDate}>{formatDate(featured.date, language)}</Text>
             <Text style={styles.newsFeaturedTitle} numberOfLines={3}>{featured.title}</Text>
           </View>
         </TouchableOpacity>
@@ -235,14 +236,14 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
           <TouchableOpacity
             key={item.id}
             accessibilityRole="button"
-            accessibilityLabel={`${item.title}, ${formatDate(item.date)}`}
+            accessibilityLabel={`${item.title}, ${formatDate(item.date, language)}`}
             style={styles.newsCompactCard}
             onPress={() => openArticle(item)}
             activeOpacity={0.78}
           >
             {renderImage(item, styles.newsCompactImage)}
             <View style={styles.newsCompactContent}>
-              <Text style={styles.newsCompactDate}>{formatDate(item.date)}</Text>
+              <Text style={styles.newsCompactDate}>{formatDate(item.date, language)}</Text>
               <Text style={styles.newsCompactTitle} numberOfLines={3}>{item.title}</Text>
             </View>
           </TouchableOpacity>
@@ -267,7 +268,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
         <TouchableOpacity
           key={item.id}
           accessibilityRole="button"
-          accessibilityLabel={`${item.title}, ${formatDate(item.date)}`}
+          accessibilityLabel={`${item.title}, ${formatDate(item.date, language)}`}
           accessibilityHint="Abre los detalles del plan"
           style={[styles.planCarouselCard, { width: carouselCardWidth }]}
           onPress={() => openArticle(item)}
@@ -275,7 +276,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
         >
           {renderImage(item, styles.planCarouselImage)}
           <View style={styles.planCarouselOverlay}>
-            <Text style={styles.planCarouselDate}>{formatDate(item.date)}</Text>
+            <Text style={styles.planCarouselDate}>{formatDate(item.date, language)}</Text>
             <Text style={styles.planCarouselTitle} numberOfLines={3}>{item.title}</Text>
             {!!item.excerpt && (
               <Text style={styles.planCarouselExcerpt} numberOfLines={2}>{item.excerpt}</Text>
@@ -298,7 +299,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
         <Text style={styles.sectionTitle}>{title}</Text>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel={`Ver todo: ${title}`}
+          accessibilityLabel={ui('Ver todo: {title}', { title: title })}
           style={styles.newsSeeAllButton}
           onPress={() => router.push(route as any)}
           activeOpacity={0.7}
@@ -309,13 +310,13 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
       </View>
 
       {loading ? (
-        <View style={styles.newsState} accessibilityLabel={`Cargando ${title}`}>
+        <View style={styles.newsState} accessibilityLabel={ui('Cargando {title}', { title: title })}>
           <ActivityIndicator color={COLORS.gold} />
         </View>
       ) : error ? (
         <View style={styles.newsState}>
           <Ionicons name="cloud-offline-outline" size={28} color={COLORS.secondary} />
-          <Text style={styles.newsError}>{error}</Text>
+          <Text style={styles.newsError}>{ui('No se pudo cargar el contenido.')}</Text>
           <TouchableOpacity
             accessibilityRole="button"
             style={styles.retryButton}
@@ -326,7 +327,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
           </TouchableOpacity>
         </View>
       ) : items.length === 0 ? (
-        <Text style={styles.emptyText}>Todavía no hay publicaciones en esta sección.</Text>
+        <Text style={styles.emptyText}>{ui("Todavía no hay publicaciones en esta sección.")}</Text>
       ) : (
         isNewsSection ? renderNewsLayout() : renderPlansCarousel()
       )}
@@ -335,13 +336,14 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
 }
 
 function DropCard({ experience, width }: DropCardProps) {
+  const { ui, tagLabel } = useLanguage();
   const primaryTag = getExperienceTags(experience)[0];
   return (
     <TouchableOpacity
       style={[styles.dropCard, { width }]}
       activeOpacity={0.8}
       accessibilityRole="button"
-      accessibilityLabel={`Abrir ${experience.title}`}
+      accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
       onPress={() => openExperience(experience.id)}
     >
       <View style={styles.dropImageContainer}>
@@ -352,7 +354,7 @@ function DropCard({ experience, width }: DropCardProps) {
       </View>
       <View style={styles.dropContent}>
         <Text style={styles.dropMeta} numberOfLines={1}>
-          {experience.region ?? 'NY'}{primaryTag ? ` · ${primaryTag.toUpperCase()}` : ''}
+          {experience.region ?? 'NY'}{primaryTag ? ` · ${tagLabel(primaryTag).toUpperCase()}` : ''}
         </Text>
         <Text style={styles.dropTitle} numberOfLines={2}>{experience.title}</Text>
         <MemberBenefitSummary experience={experience} />
@@ -366,7 +368,7 @@ export default function HomeScreen() {
   const dropBannerWidth = Math.min(600, Math.max(260, windowWidth - 48));
   const eventCardWidth = Math.min(320, Math.max(240, windowWidth * 0.78));
   const { user, refreshUser } = useAuth();
-  const { t } = useLanguage();
+  const { t, ui } = useLanguage();
   const name = firstName(user?.name ?? null, user?.email);
   const [partnership, setPartnership] = useState<FeaturedPartnership | null>(
     DEFAULT_FEATURED_PARTNERSHIP,
@@ -437,8 +439,8 @@ export default function HomeScreen() {
 
             <Text style={styles.clubDescription}>
               {user?.is_premium
-                ? 'Tus beneficios están activos. Descubre eventos, descuentos y experiencias para miembros.'
-                : 'Descuentos, experiencias exclusivas, acceso anticipado y mucho más.'}
+                ? ui("Tus beneficios están activos. Descubre eventos, descuentos y experiencias para miembros.")
+                : ui("Descuentos, experiencias exclusivas, acceso anticipado y mucho más.")}
             </Text>
 
             <TouchableOpacity
@@ -446,7 +448,7 @@ export default function HomeScreen() {
               onPress={() => router.push(user?.is_premium ? '/club' : '/club-form')}
             >
               <Text style={styles.joinBtnText}>
-                {user?.is_premium ? 'VER MIS BENEFICIOS' : 'UNIRME AL CLUB'}
+                {user?.is_premium ? ui("VER MIS BENEFICIOS") : ui("UNIRME AL CLUB")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -466,7 +468,7 @@ export default function HomeScreen() {
             <NewsImage
               uri={partnership.image}
               style={styles.partnershipImage}
-              accessibilityLabel={`Imagen de ${partnership.brandName}`}
+              accessibilityLabel={ui('Imagen de {title}', { title: partnership.brandName })}
             />
             <View style={styles.partnershipOverlay}>
               <View style={styles.partnershipLabel}>
@@ -483,7 +485,7 @@ export default function HomeScreen() {
               )}
               {!!partnership.ctaLabel && (
                 <View style={styles.partnershipCta}>
-                  <Text style={styles.partnershipCtaText}>{partnership.ctaLabel}</Text>
+                  <Text style={styles.partnershipCtaText}>{ui(partnership.ctaLabel)}</Text>
                   {partnership.ctaUrl && (
                     <Ionicons name="arrow-forward" size={15} color="#050505" />
                   )}
@@ -525,7 +527,7 @@ export default function HomeScreen() {
           <CarouselMoreCard
             width={eventCardWidth}
             height={(eventCardWidth - 28) / 1.6 + 112}
-            label="Top de hoy"
+            label={ui("Top de hoy")}
             stretch
             onPress={() => router.push('/explore')}
           />
@@ -566,14 +568,14 @@ export default function HomeScreen() {
         {/* NY AL DIA */}
         <HomeNewsSection
           section="ny-al-dia"
-          title="NY al día"
+          title={ui("NY al día")}
           route="/ny-al-dia"
         />
 
         {/* QUE HACER EN NY */}
         <HomeNewsSection
           section="que-hacer"
-          title="¿Qué hacer en NY?"
+          title={ui("¿Qué hacer en NY?")}
           route="/que-hacer"
         />
 
@@ -591,9 +593,9 @@ export default function HomeScreen() {
 
         <FeatureCard
           image="https://images.unsplash.com/photo-1518391846015-55a9cc003b25"
-          tag="GUÍA TURÍSTICA"
-          title="Guías para vivir NYC como local"
-          subtitle="Rutas, miradores, museos, rooftops y planes gratis para organizar tu viaje."
+          tag={ui("GUÍA TURÍSTICA")}
+          title={ui("Guías para vivir NYC como local")}
+          subtitle={ui("Rutas, miradores, museos, rooftops y planes gratis para organizar tu viaje.")}
           onPress={() => openExperience('nyc-local-guides')}
         />
 
@@ -606,9 +608,10 @@ export default function HomeScreen() {
 }
 
 function EventCard({ experience, isPremiumMember, width }: EventCardProps) {
+  const { ui, tagLabel } = useLanguage();
   const primaryTag = getExperienceTags(experience)[0];
   return (
-    <TouchableOpacity style={[styles.eventCard, { width }]} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Abrir ${experience.title}`} onPress={() => openExperience(experience.id)}>
+    <TouchableOpacity style={[styles.eventCard, { width }]} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={ui('Abrir {title}', { title: experience.title })} onPress={() => openExperience(experience.id)}>
       <Image
         source={{
           uri: experience.image,
@@ -619,7 +622,7 @@ function EventCard({ experience, isPremiumMember, width }: EventCardProps) {
       <View style={styles.eventBody}>
         <View style={styles.eventMetaRow}>
           <Text style={styles.category}>{experience.region ?? 'NY'}</Text>
-          {!!primaryTag && <Text style={styles.eventTag} numberOfLines={1}>{primaryTag}</Text>}
+          {!!primaryTag && <Text style={styles.eventTag} numberOfLines={1}>{tagLabel(primaryTag)}</Text>}
         </View>
 
         <Text style={styles.eventTitle} numberOfLines={2}>
@@ -631,7 +634,7 @@ function EventCard({ experience, isPremiumMember, width }: EventCardProps) {
           <Text style={[styles.freeText, experience.access === 'premium' && styles.premiumSmallText]}>
             {experience.access === 'premium'
               ? isPremiumMember ? 'ITC CLUB' : 'PREMIUM'
-              : 'GRATIS'}
+              : ui("GRATIS")}
           </Text>
         </View>
       </View>

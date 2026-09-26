@@ -24,13 +24,14 @@ const benefits = [
 ] as const;
 
 function PremiumCard({ experience }: { experience: Experience }) {
+  const { ui } = useLanguage();
   const router = useRouter();
   return (
     <TouchableOpacity
       style={styles.experienceCard}
       activeOpacity={0.85}
       accessibilityRole="button"
-      accessibilityLabel={`Abrir ${experience.title}`}
+      accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
       onPress={() => router.push({ pathname: '/experience-detail', params: { id: experience.id } })}
     >
       <Image source={{ uri: experience.image }} style={styles.experienceImage} />
@@ -60,7 +61,7 @@ function PremiumCard({ experience }: { experience: Experience }) {
 export default function ClubScreen() {
   const router = useRouter();
   const { user, loading, refreshUser } = useAuth();
-  const { t } = useLanguage();
+  const { t, ui } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
 
@@ -96,7 +97,7 @@ export default function ClubScreen() {
             <Text style={styles.resultsTitle}>{selectedCategory.length === 0 ? t('club.allMembers') : selectedCategory.join(' · ')}</Text>
             <Text style={styles.resultsCount}>{filteredExperiences.length}</Text>
           </View>
-          {filteredExperiences.length === 0 && <Text style={styles.memberSubtitle}>No hay contenidos con estas etiquetas.</Text>}
+          {filteredExperiences.length === 0 && <Text style={styles.memberSubtitle}>{ui('No hay contenidos con estas etiquetas.')}</Text>}
           {filteredExperiences.map((experience) => <PremiumCard key={experience.id} experience={experience} />)}
         </ScrollView>
       </SafeAreaView>
@@ -117,8 +118,8 @@ export default function ClubScreen() {
           <View key={title} style={[styles.benefitRow, index !== benefits.length - 1 && styles.separator]}>
             <View style={styles.iconContainer}><Ionicons name={icon} size={20} color="#000" /></View>
             <View style={styles.textContainer}>
-              <Text style={styles.benefitTitle}>{title}</Text>
-              <Text style={styles.benefitSubtitle}>{subtitle}</Text>
+              <Text style={styles.benefitTitle}>{ui(title)}</Text>
+              <Text style={styles.benefitSubtitle}>{ui(subtitle)}</Text>
             </View>
           </View>
         ))}

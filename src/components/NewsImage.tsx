@@ -1,3 +1,4 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
@@ -10,6 +11,7 @@ type NewsImageProps = {
 };
 
 export function NewsImage({ uri, style, accessibilityLabel }: NewsImageProps) {
+  const { ui } = useLanguage();
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -18,7 +20,7 @@ export function NewsImage({ uri, style, accessibilityLabel }: NewsImageProps) {
 
   if (!uri || failed) {
     return (
-      <View style={[style, styles.fallback]} accessibilityLabel="Imagen no disponible">
+      <View style={[style, styles.fallback]} accessibilityLabel={ui("Imagen no disponible")}>
         <Ionicons name="image-outline" size={30} color="#6F6F6F" />
       </View>
     );

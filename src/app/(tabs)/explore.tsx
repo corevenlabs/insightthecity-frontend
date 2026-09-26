@@ -17,7 +17,7 @@ const CONTENT_SECTIONS = new Set(['ny_al_dia', 'que_hacer', 'guias']);
 export default function ExploreScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, ui } = useLanguage();
   const [items, setItems] = useState<Experience[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string[]>([]);
   const [search, setSearch] = useState('');
@@ -53,7 +53,7 @@ export default function ExploreScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Volver">
+          <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={ui("Volver")}>
             <Ionicons name="arrow-back" size={24} color="#D4AF37" />
           </TouchableOpacity>
           <Text style={styles.title}>{t('explore.title')}</Text>
@@ -81,7 +81,7 @@ export default function ExploreScreen() {
         ) : filteredEvents.length === 0 ? (
           <View style={styles.state}>
             <Ionicons name="location-outline" size={30} color="#777" />
-            <Text style={styles.emptyText}>No hay eventos para este filtro.</Text>
+            <Text style={styles.emptyText}>{ui("No hay eventos para este filtro.")}</Text>
           </View>
         ) : filteredEvents.map((event) => (
           <TouchableOpacity
@@ -101,7 +101,7 @@ export default function ExploreScreen() {
                 </View>
                 <View style={[styles.badge, event.access === 'premium' ? styles.premiumBadge : styles.freeBadge]}>
                   <Text style={[styles.badgeText, event.access === 'premium' && styles.premiumBadgeText]}>
-                    {event.access === 'premium' ? user?.is_premium ? 'ITC CLUB' : 'PREMIUM' : 'GRATIS'}
+                    {event.access === 'premium' ? user?.is_premium ? 'ITC CLUB' : 'PREMIUM' : ui("GRATIS")}
                   </Text>
                 </View>
               </View>

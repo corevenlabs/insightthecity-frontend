@@ -1,3 +1,4 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import {
@@ -15,6 +16,7 @@ import { NewsImage } from '../components/NewsImage';
 import { formatDate, useNewsFeed, type NewsCard } from '../lib/news';
 
 export default function NyAlDiaScreen() {
+  const { ui, language } = useLanguage();
   const router = useRouter();
   const feed = useNewsFeed('ny-al-dia');
 
@@ -31,23 +33,21 @@ export default function NyAlDiaScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
           <Ionicons name="arrow-back" size={26} color="#D4AF37" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>NY al día</Text>
+        <Text style={styles.headerTitle}>{ui("NY al día")}</Text>
         <View style={{ width: 26 }} />
       </View>
 
-      <Text style={styles.subtitle}>
-        Noticias, alertas y lo más importante para estar al día en Nueva York.
-      </Text>
+      <Text style={styles.subtitle}>{ui("Noticias, alertas y lo más importante para estar al día en Nueva York.")}</Text>
 
       {featured && (
         <TouchableOpacity style={styles.mainCard} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
           <NewsImage
             uri={featured.image}
             style={styles.mainImage}
-            accessibilityLabel={`Imagen de ${featured.title}`}
+            accessibilityLabel={ui('Imagen de {title}', { title: featured.title })}
           />
           <View style={styles.mainContent}>
-            <Text style={styles.badge}>NUEVA YORK AL DÍA</Text>
+            <Text style={styles.badge}>{ui("NUEVA YORK AL DÍA")}</Text>
             <Text style={styles.mainTitle} numberOfLines={3}>
               {featured.title}
             </Text>
@@ -56,12 +56,12 @@ export default function NyAlDiaScreen() {
                 {featured.excerpt}
               </Text>
             )}
-            <Text style={styles.date}>{formatDate(featured.date)}</Text>
+            <Text style={styles.date}>{formatDate(featured.date, language)}</Text>
           </View>
         </TouchableOpacity>
       )}
 
-      {rest.length > 0 && <Text style={styles.sectionTitle}>Últimas noticias</Text>}
+      {rest.length > 0 && <Text style={styles.sectionTitle}>{ui("Últimas noticias")}</Text>}
     </View>
   );
 
@@ -70,10 +70,10 @@ export default function NyAlDiaScreen() {
       <NewsImage
         uri={item.image}
         style={styles.newsImage}
-        accessibilityLabel={`Imagen de ${item.title}`}
+        accessibilityLabel={ui('Imagen de {title}', { title: item.title })}
       />
       <View style={styles.newsContent}>
-        <Text style={styles.date}>{formatDate(item.date)}</Text>
+        <Text style={styles.date}>{formatDate(item.date, language)}</Text>
         <Text style={styles.newsTitle} numberOfLines={2}>
           {item.title}
         </Text>
@@ -94,7 +94,7 @@ export default function NyAlDiaScreen() {
           <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
             <Ionicons name="arrow-back" size={26} color="#D4AF37" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>NY al día</Text>
+          <Text style={styles.headerTitle}>{ui("NY al día")}</Text>
           <View style={{ width: 26 }} />
         </View>
         <View style={styles.center}>
@@ -112,14 +112,14 @@ export default function NyAlDiaScreen() {
           <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
             <Ionicons name="arrow-back" size={26} color="#D4AF37" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>NY al día</Text>
+          <Text style={styles.headerTitle}>{ui("NY al día")}</Text>
           <View style={{ width: 26 }} />
         </View>
         <View style={styles.center}>
           <Ionicons name="cloud-offline-outline" size={44} color="#555" />
-          <Text style={styles.errorText}>{feed.error}</Text>
+          <Text style={styles.errorText}>{ui('No se pudo cargar el contenido.')}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={feed.retry}>
-            <Text style={styles.retryText}>Reintentar</Text>
+            <Text style={styles.retryText}>{ui("Reintentar")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

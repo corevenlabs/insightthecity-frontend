@@ -16,6 +16,8 @@ import { AppState, Platform } from 'react-native';
 import { API_URL } from '../constants/api';
 import type { AppLanguage } from './LanguageContext';
 
+export type ProfileUpdate = Partial<Pick<User, 'name' | 'language' | 'home_area' | 'interests'>>;
+
 export type User = {
   id: number;
   name: string | null;
@@ -44,7 +46,7 @@ type AuthContextValue = {
   enableBiometric: () => Promise<boolean>;
   unlockWithBiometrics: () => Promise<void>;
   refreshUser: () => Promise<User | null>;
-  updateProfile: (data: { name: string; language: AppLanguage; home_area: string; interests: string[] }) => Promise<void>;
+  updateProfile: (data: ProfileUpdate) => Promise<void>;
   uploadAvatar: (file: { uri: string; mimeType?: string | null; fileName?: string | null; file?: File; base64?: string | null }) => Promise<void>;
   activatePremiumForDevelopment: () => Promise<User | null>;
 };
@@ -126,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [biometricLocked, setBiometricLocked] = useState(false);
   const [biometricLabel, setBiometricLabel] = useState('Biometría');
+  const profileRevision = useRef(0);
   const backgroundedAt = useRef<number | null>(null);
   const biometricPromptActive = useRef(false);
 
@@ -352,6 +355,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     if (!token) return null;
+    const revision = profileRevision.current;
     try {
       const res = await fetch(`${API_URL}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -368,7 +372,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (!res.ok) return null;
       const data = await res.json();
-      if (!data?.user) return null;
+      if (!data?.user || revision !== profileRevision.current) return null;
       const refreshedUser = await restoreSimulatedPremium(data.user);
       setUser(refreshedUser);
       await AsyncStorage.setItem(USER_KEY, JSON.stringify(refreshedUser));
@@ -402,11 +406,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const saveProfileResponse = useCallback(async (response: Response) => {
     const data = await response.json();
     if (!response.ok || !data?.success || !data?.user) throw new Error(data?.message || 'No se pudo actualizar el perfil');
+    profileRevision.current += 1;
     setUser(data.user);
-    await AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user));
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user)).catch(() => undefined);
   }, []);
 
-  const updateProfile = useCallback(async (data: { name: string; language: AppLanguage; home_area: string; interests: string[] }) => {
+  const updateProfile = useCallback(async (data: ProfileUpdate) => {
+    profileRevision.current += 1;
     if (!token) throw new Error('Inicia sesión para editar tu perfil');
     await saveProfileResponse(await fetch(`${API_URL}/api/users/me`, {
       method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data),

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, type PropsWithChildren } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, type StyleProp, type TextStyle } from 'react-native';
@@ -26,6 +27,7 @@ export function ExpandableText({ text, style, color = '#D4AF37' }: {
   style?: StyleProp<TextStyle>;
   color?: string;
 }) {
+  const { ui } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   return (
     <View>
@@ -37,10 +39,10 @@ export function ExpandableText({ text, style, color = '#D4AF37' }: {
           setExpanded((value) => !value);
         }}
         accessibilityRole="button"
-        accessibilityLabel={expanded ? 'Ver menos descripción' : 'Ver descripción completa'}
+        accessibilityLabel={expanded ? ui("Ver menos descripción") : ui("Ver descripción completa")}
         accessibilityState={{ expanded }}
       >
-        <Text style={[styles.toggleLabel, { color }]}>{expanded ? 'Ver menos' : 'Ver más'}</Text>
+        <Text style={[styles.toggleLabel, { color }]}>{expanded ? ui("Ver menos") : ui("Ver más")}</Text>
         <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={color} accessible={false} />
       </TouchableOpacity>
     </View>

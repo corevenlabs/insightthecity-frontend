@@ -24,7 +24,7 @@ const GOLD = '#D4AF37';
 const BLACK = '#0A0A0A';
 
 export default function LoginScreen() {
-  const { t } = useLanguage();
+  const { t, ui } = useLanguage();
   const {
     biometricAvailable,
     biometricEnabled,
@@ -134,7 +134,7 @@ export default function LoginScreen() {
               <TextInput
                 value={email}
                 onChangeText={setEmail}
-                placeholder="tu@email.com"
+                placeholder="name@example.com"
                 placeholderTextColor="#666"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -158,7 +158,7 @@ export default function LoginScreen() {
                 style={styles.input}
               />
 
-              <Pressable>
+              <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/forgot-password', params: { email: email.trim() } })}>
                 <Text style={styles.forgotText}>{t('login.forgot')}</Text>
               </Pressable>
 
@@ -188,7 +188,7 @@ export default function LoginScreen() {
                 </View>
                 <TouchableOpacity
                   accessibilityRole="button"
-                  accessibilityLabel={`Ingresar con ${biometricLabel}`}
+                  accessibilityLabel={ui('Ingresar con {biometric}', { biometric: biometricLabel })}
                   activeOpacity={0.72}
                   style={styles.biometricButton}
                   onPress={enterWithBiometrics}

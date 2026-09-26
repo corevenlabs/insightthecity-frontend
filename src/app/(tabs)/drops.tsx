@@ -29,7 +29,7 @@ type MiniDropCardProps = {
 export default function DropsScreen() { 
   const router = useRouter(); 
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, ui } = useLanguage();
   const [items, setItems] = useState<Experience[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string[]>([]);
 
@@ -73,7 +73,7 @@ export default function DropsScreen() {
 
         <TagFilter items={items} selected={selectedFilter} onChange={setSelectedFilter} />
 
-        {filteredItems.length === 0 && <Text style={styles.subtitle}>No hay contenidos con estas etiquetas.</Text>}
+        {filteredItems.length === 0 && <Text style={styles.subtitle}>{ui("No hay contenidos con estas etiquetas.")}</Text>}
 
         {/* DROP PRINCIPAL */}
         {featured && <TouchableOpacity

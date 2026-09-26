@@ -5,11 +5,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
 
 import { useAuth } from './AuthContext';
+import { translateUi, translateTag } from '../i18n/ui';
 
 export type AppLanguage = 'es' | 'en' | 'pt';
 type TranslationParams = Record<string, string | number>;
@@ -331,6 +333,8 @@ type LanguageContextValue = {
   language: AppLanguage;
   setLanguage: (language: AppLanguage) => Promise<void>;
   t: (key: TranslationKey, params?: TranslationParams) => string;
+  ui: (source: string, params?: TranslationParams) => string;
+  tagLabel: (source: string) => string;
 };
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
@@ -340,24 +344,43 @@ function isAppLanguage(value: unknown): value is AppLanguage {
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
+  const languageRevision = useRef(0);
   const [savedLanguage, setSavedLanguage] = useState<AppLanguage>('es');
   const language = isAppLanguage(user?.language) ? user.language : savedLanguage;
 
   useEffect(() => {
+    let active = true;
+    const revision = languageRevision.current;
     if (isAppLanguage(user?.language)) {
-      void AsyncStorage.setItem(LANGUAGE_KEY, user.language);
-      return;
+      const accountLanguage = user.language;
+      void AsyncStorage.setItem(LANGUAGE_KEY, accountLanguage).catch(() => undefined).then(() => {
+        if (active && revision === languageRevision.current) setSavedLanguage(accountLanguage);
+      });
+    } else {
+      void AsyncStorage.getItem(LANGUAGE_KEY).then((saved) => {
+        if (active && revision === languageRevision.current && isAppLanguage(saved)) setSavedLanguage(saved);
+      }).catch(() => undefined);
     }
-    void AsyncStorage.getItem(LANGUAGE_KEY).then((saved) => {
-      if (isAppLanguage(saved)) setSavedLanguage(saved);
-    });
-  }, [user?.language]);
+    return () => { active = false; };
+  }, [user?.id, user?.language]);
 
   const setLanguage = useCallback(async (nextLanguage: AppLanguage) => {
-    setSavedLanguage(nextLanguage);
-    await AsyncStorage.setItem(LANGUAGE_KEY, nextLanguage);
-  }, []);
+    if (!isAppLanguage(nextLanguage)) return;
+    languageRevision.current += 1;
+    if (user) {
+      // Only patch the language: changing it must never overwrite other profile fields.
+      await updateProfile({ language: nextLanguage });
+      setSavedLanguage(nextLanguage);
+      await AsyncStorage.setItem(LANGUAGE_KEY, nextLanguage).catch(() => undefined);
+    } else {
+      await AsyncStorage.setItem(LANGUAGE_KEY, nextLanguage);
+      setSavedLanguage(nextLanguage);
+    }
+  }, [user, updateProfile]);
+
+  const ui = useCallback((source: string, params?: TranslationParams) => translateUi(language, source, params), [language]);
+  const tagLabel = useCallback((source: string) => translateTag(language, source), [language]);
 
   const t = useCallback(
     (key: TranslationKey, params?: TranslationParams) => {
@@ -371,7 +394,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     [language],
   );
 
-  const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
+  const value = useMemo(() => ({ language, setLanguage, t, ui, tagLabel }), [language, setLanguage, t, ui, tagLabel]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

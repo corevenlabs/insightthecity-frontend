@@ -1,3 +1,4 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -6,16 +7,17 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
+import { translateUi, type AppLanguage } from '../i18n/ui';
 import { fetchArticle, formatDate, type NewsArticle } from '../lib/news';
 
 // Envuelve el HTML del artículo (de WordPress) en un documento con los estilos
 // de la app: fondo negro, dorado, tipografía del sistema, imágenes responsivas.
 // Así se ve nativo aunque el motor por dentro sea un WebView.
-function buildHtml(article: NewsArticle): string {
+function buildHtml(article: NewsArticle, language: AppLanguage): string {
   const hero = article.image
     ? `<img class="hero" src="${article.image}" alt="" />`
     : '';
-  const date = formatDate(article.date);
+  const date = formatDate(article.date, language);
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -96,7 +98,7 @@ function buildHtml(article: NewsArticle): string {
       if (!image || image.tagName !== 'IMG') return;
       var fallback = document.createElement('div');
       fallback.className = 'image-fallback';
-      fallback.textContent = 'Imagen no disponible';
+      fallback.textContent = ${JSON.stringify(translateUi(language, 'Imagen no disponible'))};
       image.replaceWith(fallback);
     }, true);
   </script>
@@ -112,10 +114,11 @@ function escapeHtml(s: string): string {
 }
 
 export default function NewsDetailScreen() {
+  const { ui, language } = useLanguage();
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string; section?: string }>();
   const id = params.id;
-  const section = params.section ?? 'Nota';
+  const section = ui(params.section ?? 'Nota');
 
   const [article, setArticle] = useState<NewsArticle | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -154,9 +157,9 @@ export default function NewsDetailScreen() {
       {error ? (
         <View style={styles.center}>
           <Ionicons name="cloud-offline-outline" size={44} color="#555" />
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={styles.errorText}>{ui('No se pudo cargar la nota.')}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={() => router.back()}>
-            <Text style={styles.retryText}>Volver</Text>
+            <Text style={styles.retryText}>{ui('Volver')}</Text>
           </TouchableOpacity>
         </View>
       ) : !article ? (
@@ -166,7 +169,7 @@ export default function NewsDetailScreen() {
       ) : (
         <WebView
           originWhitelist={['*']}
-          source={{ html: buildHtml(article) }}
+          source={{ html: buildHtml(article, language) }}
           style={styles.webview}
           showsVerticalScrollIndicator={false}
           setSupportMultipleWindows={false}

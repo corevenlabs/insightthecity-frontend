@@ -19,7 +19,7 @@ const GOLD = '#D4AF37';
 const BLACK = '#050505';
 
 export default function WelcomeScreen() {
-  const { t } = useLanguage();
+  const { t, ui } = useLanguage();
   const { loading, token } = useAuth();
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [content] = useState(() => new Animated.Value(0));
@@ -66,7 +66,7 @@ export default function WelcomeScreen() {
       >
         <View style={styles.kickerRow}>
           <Ionicons name="sparkles" size={16} color={GOLD} />
-          <Text style={styles.kicker}>NYC & NJ GUIDE</Text>
+          <Text style={styles.kicker}>{ui("NYC & NJ GUIDE")}</Text>
         </View>
 
         <TouchableOpacity
