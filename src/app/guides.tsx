@@ -84,7 +84,7 @@ export default function GuidesScreen() {
           const locked = guide.access === 'premium' && !user?.is_premium;
           return (
             <View style={s.card} key={guide.id}>
-              {guide.coverUrl ? <Image source={{ uri: guide.coverUrl }} style={s.image} accessibilityLabel={guide.title} /> : (
+              {guide.coverUrl ? <Image source={{ uri: guide.coverUrl }} style={s.image} resizeMode="contain" accessibilityLabel={guide.title} /> : (
                 <View style={[s.image, s.placeholder]}><Ionicons name="document-text-outline" size={44} color={C.gold} /></View>
               )}
               <View style={s.body}>
@@ -123,7 +123,7 @@ const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, back: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   title: { color: C.white, fontSize: 28, fontWeight: '900' }, subtitle: { color: C.secondary, lineHeight: 22, marginTop: 8, marginBottom: 20 },
   search: { height: 52, borderRadius: 16, backgroundColor: C.card, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 20 }, input: { flex: 1, color: C.white, fontSize: 15, marginLeft: 10 },
-  card: { backgroundColor: C.card, borderRadius: 20, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#242424' }, image: { width: '100%', height: 210 }, placeholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#181818' }, body: { padding: 18 },
+  card: { backgroundColor: C.card, borderRadius: 20, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#242424' }, image: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#080808' }, placeholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#181818' }, body: { padding: 18 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, tag: { color: C.white, fontSize: 11, fontWeight: '800', backgroundColor: '#272727', paddingHorizontal: 9, paddingVertical: 5, borderRadius: 99 }, premium: { color: C.bg, fontSize: 11, fontWeight: '900', backgroundColor: C.gold, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 99 },
   cardTitle: { color: C.white, fontSize: 21, fontWeight: '800', marginTop: 13 }, description: { color: C.secondary, lineHeight: 21, marginTop: 7 }, meta: { color: C.gold, fontSize: 12, fontWeight: '700', marginTop: 10 },
   button: { minHeight: 52, borderRadius: 14, backgroundColor: C.gold, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18 }, locked: { backgroundColor: '#111', borderWidth: 1, borderColor: C.gold }, buttonText: { color: C.bg, fontWeight: '900', fontSize: 13 }, lockedText: { color: C.gold },

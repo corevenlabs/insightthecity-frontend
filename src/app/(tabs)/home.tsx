@@ -676,11 +676,11 @@ function FeatureCard({
       accessibilityLabel={title}
       onPress={onPress}
     >
-      <Image source={{ uri: image }} style={styles.featureImage} />
+      <Image source={{ uri: image }} style={styles.featureImage} resizeMode="contain" />
       <View style={styles.featureContent}>
         <Text style={styles.featureTag}>{tag}</Text>
-        <Text style={styles.featureTitle}>{title}</Text>
-        <Text style={styles.featureSubtitle}>{subtitle}</Text>
+        <Text style={styles.featureTitle} numberOfLines={2}>{title}</Text>
+        <Text style={styles.featureSubtitle} numberOfLines={3}>{subtitle}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -1227,7 +1227,8 @@ clubGold: {
 
   featureImage: {
     width: '100%',
-    height: 150,
+    aspectRatio: 16 / 9,
+    backgroundColor: '#080808',
   },
 
   featureContent: {
