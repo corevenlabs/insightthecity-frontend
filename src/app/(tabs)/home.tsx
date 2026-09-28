@@ -24,6 +24,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { fetchNews, formatDate, type NewsCard } from '../../lib/news';
 import { fetchExperiences } from '../../lib/experiences';
+import { fetchGuides, type Guide } from '../../lib/guides';
 import {
   DEFAULT_FEATURED_PARTNERSHIP,
   fetchFeaturedPartnership,
@@ -375,11 +376,16 @@ export default function HomeScreen() {
   );
   const [topToday, setTopToday] = useState<Experience[]>([]);
   const [homeDrops, setHomeDrops] = useState<Experience[]>([]);
+  const [featuredGuide, setFeaturedGuide] = useState<Guide | null>(null);
 
   useFocusEffect(useCallback(() => {
     void refreshUser();
-    void Promise.all([fetchExperiences('top_today'), fetchExperiences('drops')])
-      .then(([top, drops]) => { setTopToday(top); setHomeDrops(drops); })
+    void Promise.all([fetchExperiences('top_today'), fetchExperiences('drops'), fetchGuides()])
+      .then(([top, drops, guides]) => {
+        setTopToday(top);
+        setHomeDrops(drops);
+        setFeaturedGuide(guides.find((guide) => guide.isFeatured) ?? guides[0] ?? null);
+      })
       .catch(() => undefined);
   }, [refreshUser]));
 
@@ -591,13 +597,26 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        <FeatureCard
-          image="https://images.unsplash.com/photo-1518391846015-55a9cc003b25"
-          tag={ui("GUÍA TURÍSTICA")}
-          title={ui("Guías para vivir NYC como local")}
-          subtitle={ui("Rutas, miradores, museos, rooftops y planes gratis para organizar tu viaje.")}
-          onPress={() => openExperience('nyc-local-guides')}
-        />
+        {featuredGuide ? (
+          <FeatureCard
+            image={featuredGuide.coverUrl ?? 'https://images.unsplash.com/photo-1518391846015-55a9cc003b25'}
+            tag={`${featuredGuide.access === 'premium' ? 'ITC CLUB' : ui('GRATIS')} · ${featuredGuide.region}`}
+            title={featuredGuide.title}
+            subtitle={featuredGuide.description ?? ui('Descubre esta guía seleccionada por Insight The City.')}
+            onPress={() => router.push('/guides')}
+          />
+        ) : (
+          <TouchableOpacity
+            style={styles.newsState}
+            activeOpacity={0.72}
+            accessibilityRole="button"
+            accessibilityLabel={ui('Abrir guías')}
+            onPress={() => router.push('/guides')}
+          >
+            <Ionicons name="book-outline" size={30} color={COLORS.gold} />
+            <Text style={styles.emptyText}>{ui('Todavía no hay guías publicadas.')}</Text>
+          </TouchableOpacity>
+        )}
 
         <WeatherWidget />
 
@@ -650,7 +669,13 @@ function FeatureCard({
   onPress,
 }: FeatureCardProps) {
   return (
-    <TouchableOpacity style={styles.featureCard} onPress={onPress}>
+    <TouchableOpacity
+      style={styles.featureCard}
+      activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      onPress={onPress}
+    >
       <Image source={{ uri: image }} style={styles.featureImage} />
       <View style={styles.featureContent}>
         <Text style={styles.featureTag}>{tag}</Text>

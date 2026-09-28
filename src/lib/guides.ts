@@ -1,4 +1,4 @@
 import {API_URL} from '../constants/api';
 export type Guide={id:number;title:string;description:string|null;category:string|null;language:'es'|'en'|'pt';region:'NY'|'NJ';access:'free'|'premium';coverUrl:string|null;pdfName:string|null;pdfSize:number;pageCount:number|null;isFeatured:boolean;downloads:number};
-export async function fetchGuides(){const r=await fetch(`${API_URL}/api/guides`);if(!r.ok)throw new Error('No se pudieron cargar las guías');return r.json() as Promise<Guide[]>}
+export async function fetchGuides(){const r=await fetch(`${API_URL}/api/guides?fresh=${Date.now()}`,{headers:{'Cache-Control':'no-cache'}});if(!r.ok)throw new Error('No se pudieron cargar las guías');return r.json() as Promise<Guide[]>}
 export async function getGuideDownload(id:number,token:string){const r=await fetch(`${API_URL}/api/guides/${id}/download`,{method:'POST',headers:{Authorization:`Bearer ${token}`}});const b=await r.json();if(!r.ok)throw new Error(b.message||'No se pudo abrir la guía');return b.url as string}
