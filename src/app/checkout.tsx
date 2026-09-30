@@ -27,12 +27,18 @@ const INJECTED_JS = `
 `;
 
 export default function Checkout() {
-  const { url } = useLocalSearchParams();
+  const { url, mode, guideId } = useLocalSearchParams();
   const webViewRef = useRef<WebView>(null);
   const checkoutUrl = Array.isArray(url) ? url[0] : url;
 
   const handleShouldStartLoad = (request: { url: string }) => {
     if (request.url.includes('success.miapp.com')) {
+      if (mode === 'guide') {
+        const sessionMatch = request.url.match(/[?&]session_id=([^&]+)/);
+        const purchaseSession = sessionMatch ? decodeURIComponent(sessionMatch[1]) : '';
+        router.replace({ pathname: '/guides', params: { purchaseSession, guideId: String(guideId || '') } });
+        return false;
+      }
       router.replace('/success');
       return false; // ✅ Bloquea antes de que intente cargar el dominio
     }
