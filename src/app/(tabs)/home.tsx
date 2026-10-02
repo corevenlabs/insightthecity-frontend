@@ -453,7 +453,7 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {ui('BENEFICIOS ITC CLUB')}
+            {ui('BENEFICIOS ITC CLUB').replace(/\s*CLUB$/i, '')} <Text style={styles.headerBrandGold}>CLUB</Text>
           </Text>
 
           <TouchableOpacity
@@ -547,10 +547,10 @@ export default function HomeScreen() {
       </ScrollView>
       {showPromotion && (
         <View style={styles.promotion}>
-          <Text style={styles.promotionLogo}><Text style={styles.headerBrandWhite}>ITC </Text><Text style={styles.headerBrandGold}>CLUB</Text></Text>
-          <Text style={styles.promotionTitle}>{ui('Beneficios cerca de ti')}</Text>
+          <Text style={styles.promotionLogo} numberOfLines={1}><Text style={styles.headerBrandWhite}>ITC </Text><Text style={styles.headerBrandGold}>CLUB</Text></Text>
+          <Text style={styles.promotionTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>{ui('Beneficios cerca de ti')}</Text>
           <TouchableOpacity style={styles.promotionButton} accessibilityRole="button" accessibilityLabel={ui('Ver beneficios')} onPress={() => router.push('/club')}>
-            <Text style={styles.promotionButtonText}>{ui('Ver más')}</Text>
+            <Text style={styles.promotionButtonText} numberOfLines={1}>{ui('Ver más')}</Text>
           </TouchableOpacity>
           {windowWidth >= 600 && <Text style={styles.promotionPartner}>PARTNERSHIP</Text>}
           <TouchableOpacity style={styles.promotionClose} accessibilityRole="button" accessibilityLabel={ui('Cerrar')} onPress={() => setShowPromotion(false)}>
@@ -571,14 +571,12 @@ const COLORS = {
 };
 
 const styles = StyleSheet.create({
-  logoLockup: { alignItems: 'center' },
-  logoClub: { color: COLORS.white, fontSize: 8, letterSpacing: 4, paddingLeft: 4 },
   promotion: { position: 'absolute', bottom: 8, left: 12, right: 12, minHeight: 64,
-    flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 14, paddingRight: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 10, paddingRight: 4,
     backgroundColor: 'rgba(15,15,15,0.97)', borderRadius: 14, borderWidth: 1, borderColor: COLORS.gold },
   promotionLogo: { color: COLORS.gold, fontSize: 18, lineHeight: 24, fontWeight: '800', letterSpacing: -0.8 },
-  promotionTitle: { flex: 1, color: COLORS.white, fontSize: 13, lineHeight: 18 },
-  promotionButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, backgroundColor: '#E5B840', borderRadius: 24 },
+  promotionTitle: { flex: 1, minWidth: 0, color: COLORS.white, fontSize: 13, lineHeight: 18 },
+  promotionButton: { flexShrink: 0, minHeight: 44, justifyContent: 'center', paddingHorizontal: 10, backgroundColor: COLORS.gold, borderRadius: 24 },
   promotionButtonText: { color: COLORS.background, fontSize: 12, fontWeight: '700' },
   promotionPartner: { color: COLORS.secondary, fontSize: 10, letterSpacing: 3, borderLeftWidth: 1, borderLeftColor: '#777777', paddingLeft: 12 },
   promotionClose: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
@@ -812,8 +810,10 @@ clubGold: {
   },
 
   sectionHeader: {
-    marginTop: 28,
-    marginBottom: 10,
+    marginTop: 24,
+    marginBottom: 8,
+    minHeight: 44,
+    gap: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -821,15 +821,23 @@ clubGold: {
 
   sectionTitle: {
     color: COLORS.white,
-    fontSize: 20,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: '700',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    flexShrink: 1,
   },
 
   seeMore: {
     color: COLORS.gold,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
   },
 
   sectionHeaderAction: {
+    flexShrink: 0,
     minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
@@ -846,7 +854,7 @@ clubGold: {
     marginRight: 10,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: '#2C2C2C',
     backgroundColor: COLORS.card,
   },
 
@@ -905,12 +913,12 @@ clubGold: {
 
   benefitBody: {
     paddingHorizontal: 10,
-    paddingTop: 7,
-    paddingBottom: 7,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
 
   benefitCategory: {
-    color: '#C6A34D',
+    color: COLORS.gold,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '600',
@@ -951,7 +959,7 @@ clubGold: {
   },
   recommendationBannerOverlay: { flex: 1, minWidth: 0, justifyContent: 'center', padding: 10 },
   recommendationBannerCategory: { color: COLORS.gold, fontSize: 9, lineHeight: 13, letterSpacing: 1, paddingRight: 22 },
-  recommendationBannerTitle: { marginTop: 4, color: COLORS.white, fontSize: 15, lineHeight: 19, fontWeight: '700', paddingRight: 16 },
+  recommendationBannerTitle: { marginTop: 4, color: COLORS.white, fontSize: 16, lineHeight: 21, fontWeight: '700', paddingRight: 16 },
   recommendationDescription: { color: COLORS.secondary, fontSize: 12, lineHeight: 17, marginTop: 5 },
   recommendationBannerFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
   recommendationRegionRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
@@ -959,19 +967,20 @@ clubGold: {
   recommendationOpenIcon: { position: 'absolute', right: 8, top: 8 },
 
   newsSection: {
-    marginTop: 28,
+    marginTop: 24,
   },
 
   newsSectionHeader: {
-    marginBottom: 14,
+    marginBottom: 8,
     minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 16,
+    gap: 8,
   },
 
   newsSeeAllButton: {
+    flexShrink: 0,
     minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
@@ -981,8 +990,9 @@ clubGold: {
 
   newsSeeAllText: {
     color: COLORS.gold,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
   },
 
   newsState: {
@@ -1154,7 +1164,7 @@ clubGold: {
     marginRight: 10,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: '#2C2C2C',
     backgroundColor: COLORS.card,
   },
 
@@ -1175,8 +1185,8 @@ clubGold: {
 
   planCarouselTitle: {
     color: COLORS.white,
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 21,
     fontWeight: '700',
   },
 
