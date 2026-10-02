@@ -1,3 +1,4 @@
+import { AdaptiveGrid } from '../../components/AdaptiveGrid';
 import { useSaved } from '../../context/SavedContext';
 import { NewsImage } from '../../components/NewsImage';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +13,7 @@ export default function SavedScreen() {
   const { items, ready } = useSaved();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <Text style={styles.title}>{ui('Guardados')}</Text>
         <Text style={styles.subtitle}>
@@ -22,15 +23,15 @@ export default function SavedScreen() {
 
       {!ready ? <ActivityIndicator color="#D4AF37" style={{ marginTop: 40 }} /> : items.length > 0 ? (
         <ScrollView contentContainerStyle={{ paddingVertical: 20, gap: 14, paddingBottom: 120 }}>
-          {items.map(item => <View key={item.key} style={{ borderRadius: 14, overflow: 'hidden', backgroundColor: '#121212' }}>
+          <AdaptiveGrid>{items.map(item => <View key={item.key} style={{ borderRadius: 14, overflow: 'hidden', backgroundColor: '#121212' }}>
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={item.title} onPress={() => router.push(item.kind === 'experience'
               ? { pathname: '/experience-detail', params: { id: item.id } }
               : { pathname: '/news-detail', params: { id: item.id, section: '¿Qué hacer en NY?', source: 'que-hacer' } })}>
-              <NewsImage uri={item.image} style={{ width: '100%', height: 160 }} accessibilityLabel={item.title} />
+              <NewsImage uri={item.image} style={{ width: '100%', aspectRatio: 1.8 }} accessibilityLabel={item.title} />
               <Text style={{ color: '#FFFFFF', fontSize: 17, padding: 14 }}>{item.title}</Text>
             </TouchableOpacity>
 
-          </View>)}
+          </View>)}</AdaptiveGrid>
         </ScrollView>
       ) : <View style={styles.emptyState}>
         <View style={styles.iconCircle}>

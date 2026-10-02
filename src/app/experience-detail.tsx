@@ -1,3 +1,4 @@
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { SaveButton } from '../components/SaveButton';
 import { savedExperience } from '../context/SavedContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -7,7 +8,7 @@ import { ExpandableSection, ExpandableText } from '@/components/ExpandableConten
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { ActivityIndicator, FlatList, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getExperienceById } from '@/constants/experiences';
@@ -30,7 +31,9 @@ export default function ExperienceDetailScreen() {
   const [benefitCode, setBenefitCode] = useState<BenefitCode | null>(null);
   const [benefitLoading, setBenefitLoading] = useState(false);
   const [benefitError, setBenefitError] = useState('');
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: availableWidth, height: screenHeight } = useResponsiveLayout();
+  const screenWidth = Math.min(availableWidth, 860);
+  const heroHeight = Math.min(480, Math.max(220, Math.min(screenWidth * 0.8, screenHeight * 0.6)));
 
   useEffect(() => {
     let active = true;
@@ -86,15 +89,18 @@ export default function ExperienceDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <View style={styles.hero}>
+        <View style={[styles.hero, { height: heroHeight }]}>
           <FlatList
+            key={`${screenWidth}`}
             data={photos}
+            initialScrollIndex={Math.min(photoIndex, photos.length - 1)}
+            getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
             horizontal
             pagingEnabled
             scrollEnabled={requiresPremium && photos.length > 1}
             showsHorizontalScrollIndicator={false}
             keyExtractor={(url, index) => `${index}-${url}`}
-            renderItem={({ item }) => <Image source={{ uri: item }} style={[styles.heroImage, { width: screenWidth }]} />}
+            renderItem={({ item }) => <Image source={{ uri: item }} style={[styles.heroImage, { width: screenWidth, height: heroHeight }]} />}
             onMomentumScrollEnd={(event) => setPhoto({ id, index: Math.round(event.nativeEvent.contentOffset.x / screenWidth) })}
           />
           <View style={styles.heroShade} pointerEvents="none" />
@@ -259,7 +265,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  content: {
+  content: { width: '100%', maxWidth: 860, alignSelf: 'center',
     paddingBottom: 120,
   },
   hero: {

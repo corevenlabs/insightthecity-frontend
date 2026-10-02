@@ -33,6 +33,9 @@ function buildHtml(article: NewsArticle, language: AppLanguage): string {
     color: #E8E8E8;
     font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
     font-size: 17px;
+    max-width: 760px;
+    margin: 0 auto;
+    box-sizing: border-box;
     line-height: 1.72;
     padding: 0 20px 60px;
     -webkit-text-size-adjust: 100%;

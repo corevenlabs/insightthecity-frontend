@@ -1,3 +1,4 @@
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { Guide } from '../lib/guides';
@@ -9,12 +10,14 @@ export function GuideCard({ guide, width, onPress, accessibilityLabel }: {
   onPress: () => void;
   accessibilityLabel: string;
 }) {
+  const { width: viewportWidth, fontScale } = useResponsiveLayout();
+  const coverWidth = Math.min(132, (width ?? viewportWidth - 24) * (fontScale > 1.35 ? 0.25 : 0.33));
   return (
     <TouchableOpacity style={[s.card, width !== undefined && { width }]} onPress={onPress}
       activeOpacity={0.78} accessibilityRole="button" accessibilityLabel={accessibilityLabel}>
-      <NewsImage uri={guide.coverUrl} style={s.cover} accessibilityLabel={guide.title} />
+      <NewsImage uri={guide.coverUrl} style={[s.cover, { width: coverWidth }]} accessibilityLabel={guide.title} />
       <View style={s.body}>
-        <Text style={s.title} numberOfLines={1}>{guide.title}</Text>
+        <Text style={s.title} numberOfLines={2}>{guide.title}</Text>
         {!!guide.description && <Text style={s.description} numberOfLines={1}>{guide.description}</Text>}
         <View style={s.badges}>
           {guide.includedInMembership && <View style={[s.badge, s.club]}><Text style={s.clubText}>ITC CLUB</Text></View>}

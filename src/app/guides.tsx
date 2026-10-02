@@ -1,3 +1,4 @@
+import { AdaptiveGrid } from '../components/AdaptiveGrid';
 import { GuideCard } from '../components/GuideCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -88,7 +89,7 @@ export default function GuidesScreen() {
       <Text style={s.subtitle}>{ui('Compra una guía individual o disfrútala incluida con tu membresía ITC Club.')}</Text>
       <View style={s.search}><Ionicons name="search" size={20} color={C.secondary} /><TextInput value={search} onChangeText={setSearch} placeholder={ui('Buscar guía...')} accessibilityLabel={ui('Buscar guía...')} placeholderTextColor={C.secondary} style={s.input} /></View>
       {!!error && <Text style={s.error} accessibilityRole="alert">{error}</Text>}
-      {loading && items.length === 0 ? <View style={s.loading} accessibilityLabel={ui('Cargando guías')}><ActivityIndicator color={C.gold} /></View> : filtered.map((guide) => {
+      {loading && items.length === 0 ? <View style={s.loading} accessibilityLabel={ui('Cargando guías')}><ActivityIndicator color={C.gold} /></View> : <AdaptiveGrid>{filtered.map((guide) => {
         const available = owns(guide);
         return <View style={s.card} key={guide.id}>
           <GuideCard guide={guide}
@@ -102,7 +103,7 @@ export default function GuidesScreen() {
             </>}
           </View>
         </View>;
-      })}
+      })}</AdaptiveGrid>}
       {!loading && filtered.length === 0 && !error && <Text style={s.empty}>{ui('No hay guías disponibles.')}</Text>}
     </ScrollView>
   </SafeAreaView>;
@@ -112,7 +113,7 @@ const C = { bg: '#050505', card: '#121212', gold: '#D4AF37', white: '#FFFFFF', s
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg }, content: { paddingHorizontal: 12, paddingTop: 20, paddingBottom: 120 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, back: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  title: { color: C.white, fontSize: 28, fontWeight: '900' }, subtitle: { color: C.secondary, lineHeight: 22, marginTop: 8, marginBottom: 20 },
+  title: { flexShrink: 1, textAlign: 'center', color: C.white, fontSize: 28, fontWeight: '900' }, subtitle: { flexShrink: 1, textAlign: 'center', color: C.secondary, lineHeight: 22, marginTop: 8, marginBottom: 20 },
   search: { minHeight: 52, borderRadius: 16, backgroundColor: C.card, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 20 }, input: { flex: 1, color: C.white, fontSize: 15, marginLeft: 10 },
   card: { marginBottom: 20 }, image: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#080808' }, placeholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#181818' }, body: { paddingHorizontal: 8, paddingBottom: 8 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, tag: { color: C.white, fontSize: 11, fontWeight: '800', backgroundColor: '#272727', paddingHorizontal: 9, paddingVertical: 5, borderRadius: 99 }, premium: { color: C.bg, fontSize: 11, fontWeight: '900', backgroundColor: C.gold, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 99 }, owned: { color: '#07150D', fontSize: 11, fontWeight: '900', backgroundColor: C.green, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 99 },

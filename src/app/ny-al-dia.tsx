@@ -1,3 +1,4 @@
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -16,6 +17,7 @@ import { NewsImage } from '../components/NewsImage';
 import { formatDate, useNewsFeed, type NewsCard } from '../lib/news';
 
 export default function NyAlDiaScreen() {
+  const { columns, width } = useResponsiveLayout();
   const { ui, language } = useLanguage();
   const router = useRouter();
   const feed = useNewsFeed('ny-al-dia');
@@ -40,7 +42,7 @@ export default function NyAlDiaScreen() {
       <Text style={styles.subtitle}>{ui("Noticias, alertas y lo más importante para estar al día en Nueva York.")}</Text>
 
       {featured && (
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title} style={styles.mainCard} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title} style={[styles.mainCard, { height: Math.min(400, Math.max(220, width * 0.65)) }]} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
           <NewsImage
             uri={featured.image}
             style={styles.mainImage}
@@ -66,7 +68,7 @@ export default function NyAlDiaScreen() {
   );
 
   const renderItem = ({ item }: { item: NewsCard }) => (
-    <TouchableOpacity accessibilityRole="button" accessibilityLabel={item.title} style={styles.newsCard} onPress={() => openArticle(item.id)} activeOpacity={0.85}>
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel={item.title} style={[styles.newsCard, columns > 1 && { flex: 1, marginHorizontal: 8 }]} onPress={() => openArticle(item.id)} activeOpacity={0.85}>
       <NewsImage
         uri={item.image}
         style={styles.newsImage}
@@ -129,6 +131,9 @@ export default function NyAlDiaScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <FlatList
+        key={`columns:${columns}`}
+        numColumns={columns}
+        columnWrapperStyle={columns > 1 ? { marginHorizontal: -8 } : undefined}
         data={rest}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
@@ -172,7 +177,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 4,
   },
-  headerTitle: { color: COLORS.white, fontSize: 30, fontWeight: '800' },
+  headerTitle: { flexShrink: 1, textAlign: 'center', color: COLORS.white, fontSize: 30, fontWeight: '800' },
   subtitle: { color: COLORS.secondary, lineHeight: 22, marginBottom: 22 },
   mainCard: {
     backgroundColor: COLORS.card,
@@ -195,7 +200,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1F1F1F',
   },
-  newsImage: { width: '100%', height: 145, backgroundColor: '#1A1A1A' },
+  newsImage: { width: '100%', aspectRatio: 1.8, backgroundColor: '#1A1A1A' },
   newsContent: { padding: 14 },
   date: { color: COLORS.gold, fontSize: 12, fontWeight: '700', marginTop: 8 },
   newsTitle: { color: COLORS.white, fontSize: 17, fontWeight: '700', marginTop: 4 },

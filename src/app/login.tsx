@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  scrollContent: {
+  scrollContent: { width: '100%', maxWidth: 560, alignSelf: 'center',
     flexGrow: 1,
     paddingHorizontal: 22,
     paddingBottom: 28,

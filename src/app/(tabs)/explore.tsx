@@ -1,3 +1,4 @@
+import { AdaptiveGrid } from '../../components/AdaptiveGrid';
 import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { TagFilter } from '@/components/TagFilter';
@@ -50,7 +51,7 @@ export default function ExploreScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={ui("Volver")}>
@@ -84,7 +85,7 @@ export default function ExploreScreen() {
             <Ionicons name="location-outline" size={30} color="#777" />
             <Text style={styles.emptyText}>{ui("No hay eventos para este filtro.")}</Text>
           </View>
-        ) : filteredEvents.map((event) => (
+        ) : <AdaptiveGrid>{filteredEvents.map((event) => (
           <TouchableOpacity
             key={event.id}
             style={styles.card}
@@ -116,7 +117,7 @@ export default function ExploreScreen() {
               <Text style={styles.time}>{event.date}</Text>
             </View>
           </TouchableOpacity>
-        ))}
+        ))}</AdaptiveGrid>}
 
         <View style={{ height: 120 }} />
       </ScrollView>
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
   iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  title: { color: '#FFF', fontSize: 32, fontWeight: '700' },
+  title: { flexShrink: 1, textAlign: 'center', color: '#FFF', fontSize: 32, fontWeight: '700' },
   searchBox: { minHeight: 48, flexDirection: 'row', alignItems: 'center', backgroundColor: '#141414', borderRadius: 14, paddingHorizontal: 14, marginTop: 20, marginBottom: 16 },
   input: { flex: 1, color: '#FFF', paddingVertical: 14, marginLeft: 10, fontSize: 16 },
   tabsContainer: { marginBottom: 15 },
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
   state: { minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 12 },
   emptyText: { color: '#A6A6A6', fontSize: 15 },
   card: { backgroundColor: '#121212', borderRadius: 20, overflow: 'hidden', marginBottom: 18 },
-  image: { width: '100%', height: 180, backgroundColor: '#1A1A1A' },
+  image: { width: '100%', aspectRatio: 1.8, backgroundColor: '#1A1A1A' },
   cardContent: { padding: 16 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   categoryRow: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },

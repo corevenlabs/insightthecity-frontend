@@ -193,7 +193,7 @@ export default function ClubFormScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: BLACK },
-  content: { paddingHorizontal: 20, paddingBottom: 48 },
+  content: { width: '100%', maxWidth: 640, alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 48 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, marginBottom: 12 },
   backButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { color: GOLD, fontSize: 20, fontWeight: '800' },

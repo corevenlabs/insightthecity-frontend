@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8 },
   backButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { flex: 1, color: '#FFFFFF', fontSize: 18, fontWeight: '800', textAlign: 'center' },
-  content: { paddingHorizontal: 22, paddingBottom: 48 },
+  content: { width: '100%', maxWidth: 640, alignSelf: 'center', paddingHorizontal: 22, paddingBottom: 48 },
   lead: { color: RED, fontSize: 17, fontWeight: '800', marginTop: 8, marginBottom: 12 },
   body: { color: '#E2E2E2', fontSize: 15, lineHeight: 22, marginBottom: 8 },
   listItem: { flexDirection: 'row', gap: 10, marginBottom: 8 },

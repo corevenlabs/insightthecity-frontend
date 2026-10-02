@@ -1,3 +1,4 @@
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -16,6 +17,7 @@ import { NewsImage } from '../components/NewsImage';
 import { formatDate, useNewsFeed, type NewsCard } from '../lib/news';
 
 export default function QueHacerScreen() {
+  const { columns, width } = useResponsiveLayout();
   const { ui, language } = useLanguage();
   const router = useRouter();
   const feed = useNewsFeed('que-hacer');
@@ -42,7 +44,7 @@ export default function QueHacerScreen() {
       <Text style={styles.subtitle}>{ui("Planes, eventos y experiencias para vivir Nueva York con intención.")}</Text>
 
       {featured && (
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title} style={styles.heroCard} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title} style={[styles.heroCard, { height: Math.min(400, Math.max(220, width * 0.65)) }]} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
           <NewsImage
             uri={featured.image}
             style={styles.heroImage}
@@ -64,7 +66,7 @@ export default function QueHacerScreen() {
   );
 
   const renderItem = ({ item }: { item: NewsCard }) => (
-    <TouchableOpacity accessibilityRole="button" accessibilityLabel={item.title} style={styles.articleCard} onPress={() => openArticle(item.id)} activeOpacity={0.85}>
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel={item.title} style={[styles.articleCard, columns > 1 && { flex: 1, marginHorizontal: 8 }]} onPress={() => openArticle(item.id)} activeOpacity={0.85}>
       <NewsImage
         uri={item.image}
         style={styles.articleImage}
@@ -114,6 +116,9 @@ export default function QueHacerScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <FlatList
+        key={`columns:${columns}`}
+        numColumns={columns}
+        columnWrapperStyle={columns > 1 ? { marginHorizontal: -8 } : undefined}
         data={rest}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
@@ -157,7 +162,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 4,
   },
-  headerTitle: { color: COLORS.white, fontSize: 26, fontWeight: '800' },
+  headerTitle: { flexShrink: 1, textAlign: 'center', color: COLORS.white, fontSize: 26, fontWeight: '800' },
   subtitle: { color: COLORS.secondary, lineHeight: 22, marginBottom: 22 },
   heroCard: { height: 260, borderRadius: 20, overflow: 'hidden', backgroundColor: COLORS.card },
   heroImage: { width: '100%', height: '100%', position: 'absolute' },
@@ -175,7 +180,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1F1F1F',
   },
-  articleImage: { width: 110, minHeight: 120, backgroundColor: '#1A1A1A' },
+  articleImage: { width: '34%', minHeight: 120, backgroundColor: '#1A1A1A' },
   articleContent: { flex: 1, padding: 14 },
   articleTitle: { color: COLORS.white, fontSize: 16, fontWeight: '700', marginTop: 4 },
   articleSubtitle: { color: COLORS.secondary, lineHeight: 19, marginTop: 6 },

@@ -1,3 +1,4 @@
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { savedExperience } from '../context/SavedContext';
 import { SaveButton } from './SaveButton';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +13,7 @@ import { NewsImage } from './NewsImage';
 
 export function BenefitPreview({ experience, width }: { experience: Experience; width: number }) {
   const { ui, tagLabel } = useLanguage();
+  const { fontScale } = useResponsiveLayout();
   const photos = Array.from(new Set([experience.image, ...(experience.images ?? [])].filter(Boolean)));
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -29,7 +31,7 @@ export function BenefitPreview({ experience, width }: { experience: Experience; 
   }, [paused, reduceMotion, photos.length]));
   const benefit = experience.cardBenefit?.trim() || experience.memberBenefit?.trim();
   return <View style={[s.card, { width }]}>
-    <TouchableOpacity style={s.imageWrap} activeOpacity={0.85} accessibilityRole="button"
+    <TouchableOpacity style={[s.imageWrap, { minHeight: Math.max(230, 170 * fontScale) }]} activeOpacity={0.85} accessibilityRole="button"
       accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
       onPress={() => router.push({ pathname: '/experience-detail', params: { id: experience.id } })}>
       <NewsImage uri={photos[index] || experience.image} style={s.image} accessibilityLabel={experience.title} />
@@ -43,7 +45,7 @@ export function BenefitPreview({ experience, width }: { experience: Experience; 
     {!!benefit && <View style={s.badge} pointerEvents="none"><Ionicons name="pricetag" size={14} color="#D4AF37" /><Text style={s.badgeText} numberOfLines={1}>{benefit}</Text></View>}
     <SaveButton item={savedExperience(experience)} />
     {photos.length > 1 && <>
-      <View style={s.indicators}>{photos.map((photo, i) => <TouchableOpacity key={photo} style={s.dotTap}
+      <View style={s.indicators}>{photos.map((photo, i) => <TouchableOpacity key={photo} style={[s.dotTap, { width: Math.min(32, (width - 16) / photos.length) }]}
         accessibilityRole="button" accessibilityLabel={`${ui('Foto')} ${i + 1} / ${photos.length}`} accessibilityState={{ selected: index === i }}
         onPress={() => { setPaused(true); setIndex(i); }}><View style={[s.dot, index === i && s.active]} /></TouchableOpacity>)}</View>
     </>}

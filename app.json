@@ -2,8 +2,8 @@
   "expo": {
     "name": "ITC Club",
     "slug": "itc-club",
-    "version": "1.0.1",
-    "orientation": "portrait",
+    "version": "1.0.2",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "itcclub",
     "userInterfaceStyle": "automatic",
@@ -15,7 +15,8 @@
           "itcclub"
         ],
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {

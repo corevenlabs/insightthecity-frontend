@@ -1,3 +1,4 @@
+import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
 import { HomePromotion } from '../../components/HomePromotion';
 import { BenefitPreview } from '../../components/BenefitPreview';
 import { getExperienceTags } from '@/lib/experienceFilters';
@@ -12,7 +13,6 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -117,8 +117,7 @@ function openExperience(id: string) {
 
 function RecommendationsCarousel({ experiences }: { experiences: Experience[] }) {
   const { ui, tagLabel } = useLanguage();
-  const { width: windowWidth } = useWindowDimensions();
-  const bannerWidth = Math.min(480, windowWidth - 76);
+  const { carouselWidth: bannerWidth } = useResponsiveLayout();
   const intervalWidth = bannerWidth + 10;
 
   return (
@@ -168,8 +167,7 @@ function RecommendationsCarousel({ experiences }: { experiences: Experience[] })
 
 function GuidesCarousel({ guides }: { guides: Guide[] }) {
   const { ui } = useLanguage();
-  const { width } = useWindowDimensions();
-  const cardWidth = Math.min(480, Math.max(320, width - 40));
+  const { carouselWidth: cardWidth } = useResponsiveLayout();
 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}
@@ -192,14 +190,12 @@ type HomeNewsSectionProps = {
 
 function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
   const { t, ui, language } = useLanguage();
-  const { width: windowWidth } = useWindowDimensions();
+  const { planWidth } = useResponsiveLayout();
   const [items, setItems] = useState<NewsCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isNewsSection = section === 'ny-al-dia';
-  const carouselCardWidth = isNewsSection
-    ? Math.min(320, Math.max(260, windowWidth * 0.72))
-    : (windowWidth - 50) / 2;
+  const carouselCardWidth = planWidth;
 
   // reloadKey vuelve a disparar la carga al pulsar "Reintentar".
   const [reloadKey, setReloadKey] = useState(0);
@@ -333,8 +329,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
 }
 
 export default function HomeScreen() {
-  const { width: windowWidth } = useWindowDimensions();
-  const benefitCardWidth = Math.min(480, windowWidth - 76);
+  const { carouselWidth: benefitCardWidth, gutter, width, fontScale } = useResponsiveLayout();
   const { user, refreshUser } = useAuth();
   const { t, ui } = useLanguage();
   const name = firstName(user?.name ?? null, user?.email);
@@ -364,13 +359,13 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingHorizontal: gutter }]}
       >
         {/* HEADER */}
 
-        <View style={styles.header}>
+        <View style={[styles.header, (width < 360 || fontScale > 1.35) && { flexWrap: 'wrap', rowGap: 8 }]}>
           <View style={styles.headerIdentity}>
-            <Text style={styles.headerBrand}><Text style={styles.headerBrandWhite}>ITC </Text><Text style={styles.headerBrandGold}>CLUB</Text></Text>
+            <Text style={styles.headerBrand} numberOfLines={1}><Text style={styles.headerBrandWhite}>ITC </Text><Text style={styles.headerBrandGold}>CLUB</Text></Text>
             <View style={styles.headerDivider} />
             <Text style={styles.greeting} numberOfLines={1}>
               {name ? t('home.hello', { name }) : t('home.helloGuest')}
@@ -554,6 +549,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     color: COLORS.white,
     fontSize: 18,
+    minWidth: 0,
     fontWeight: '500',
   },
 

@@ -1,3 +1,4 @@
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Redirect, router } from 'expo-router';
@@ -6,6 +7,7 @@ import {
   Animated,
   Easing,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -20,6 +22,7 @@ const BLACK = '#050505';
 
 export default function WelcomeScreen() {
   const { t, ui } = useLanguage();
+  const { height } = useResponsiveLayout();
   const { loading, token } = useAuth();
   const [content] = useState(() => new Animated.Value(0));
 
@@ -43,11 +46,12 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <View style={styles.logoSection}>
         <Image
           source={require('@/assets/images/itc-login-logo.gif')}
-          style={styles.animatedLogo}
-          contentFit="cover"
+          style={[styles.animatedLogo, { height: Math.min(420, Math.max(180, height * 0.45)) }]}
+          contentFit="contain"
           transition={0}
           accessibilityRole="image"
           accessibilityLabel="Insight The City"
@@ -115,6 +119,7 @@ export default function WelcomeScreen() {
           {t('welcome.subtitle')}
         </Text>
       </Animated.View>
+    </ScrollView>
     </SafeAreaView>
   );
 }
@@ -132,9 +137,10 @@ const styles = StyleSheet.create({
   },
   animatedLogo: {
     width: '88%',
-    height: '88%',
+    maxWidth: 520,
+    maxHeight: 420,
   },
-  actionPanel: {
+  actionPanel: { width: '100%', maxWidth: 560, alignSelf: 'center',
     paddingHorizontal: 24,
     paddingBottom: 30,
   },

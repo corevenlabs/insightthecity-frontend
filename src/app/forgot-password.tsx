@@ -80,7 +80,7 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0A' }, fill: { flex: 1 }, content: { flexGrow: 1, padding: 24, paddingBottom: 40 },
+  container: { flex: 1, backgroundColor: '#0A0A0A' }, fill: { flex: 1 }, content: { width: '100%', maxWidth: 560, alignSelf: 'center', flexGrow: 1, padding: 24, paddingBottom: 40 },
   back: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', marginBottom: 42 },
   eyebrow: { color: GOLD, fontSize: 12, fontWeight: '800', letterSpacing: 2, marginBottom: 14 },
   title: { color: '#FFF', fontSize: 32, fontWeight: '900', lineHeight: 39 },

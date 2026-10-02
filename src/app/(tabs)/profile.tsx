@@ -102,7 +102,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.pageHeader}><Text style={styles.pageTitle}>{c.title}</Text><Pressable accessibilityRole="button" accessibilityLabel={c.edit} onPress={openEditor} style={styles.settings}><Ionicons name="settings-outline" size={25} color={GOLD} /></Pressable></View>
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32, width: '100%', maxWidth: 680, alignSelf: 'center' }}>
       <View style={styles.header}>
         <Pressable onPress={openEditor} accessibilityRole="button" accessibilityLabel={c.edit} style={styles.avatar}>
           {user.avatar_url ? <Image source={{ uri: user.avatar_url }} style={styles.avatarPhoto} contentFit="cover" /> : <Text style={styles.avatarText}>{initials(user.name || user.email)}</Text>}
@@ -208,7 +208,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  pageHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, gap: 8 },
+  pageHeader: { width: '100%', maxWidth: 680, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, gap: 8 },
   pageTitle: { color: '#FFF', fontSize: 26, fontWeight: '700', flex: 1, flexShrink: 1 },
   centeredTitle: { textAlign: 'center' },
   settings: { width: 48, height: 48, flexShrink: 0, alignItems: 'center', justifyContent: 'center' },
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   membershipCard: { borderWidth: 1, borderColor: GOLD }, membershipHeading: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   status: { color: GOLD, fontSize: 12 }, planTitle: { color: '#FFF', fontSize: 22, fontWeight: '700', marginBottom: 6 },
   planDescription: { color: '#A6A6A6', lineHeight: 20, marginBottom: 16 },
-  membershipDetailsContent: { flexGrow: 1, padding: 20, paddingBottom: 32 },
+  membershipDetailsContent: { width: '100%', maxWidth: 680, alignSelf: 'center', flexGrow: 1, padding: 20, paddingBottom: 32 },
   membershipDetailsCard: { marginHorizontal: 0, padding: 26, minHeight: 350 },
   membershipBrand: { flexDirection: 'row', alignSelf: 'center', alignItems: 'baseline', marginTop: 8 },
   membershipBrandItc: { color: '#FFF', fontSize: 31, fontWeight: '800', letterSpacing: 4 },
@@ -237,11 +237,11 @@ const styles = StyleSheet.create({
   membershipNote: { color: '#A6A6A6', fontSize: 13, lineHeight: 19, marginTop: 14 },
   cancelMembershipLink: { alignSelf: 'center', minHeight: 48, justifyContent: 'center', paddingHorizontal: 12, marginTop: 22 },
   cancelMembershipText: { color: GOLD, fontSize: 14 },
-  form: { padding: 20, paddingBottom: 40 }, input: { color: '#FFF', backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#333', borderRadius: 12, padding: 14, fontSize: 16, marginTop: 8, marginBottom: 12 },
+  form: { width: '100%', maxWidth: 680, alignSelf: 'center', padding: 20, paddingBottom: 40 }, input: { color: '#FFF', backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#333', borderRadius: 12, padding: 14, fontSize: 16, marginTop: 8, marginBottom: 12 },
   photoButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
   photoHint: { color: '#A6A6A6', fontSize: 12, textAlign: 'center', marginBottom: 12 },
   error: { color: '#FF8080', marginTop: 16 }, modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: 24 },
-  helpCard: { backgroundColor: '#1A1A1A', borderRadius: 20, padding: 24 }, helpText: { color: '#CCC', lineHeight: 23, marginBottom: 24 },
+  helpCard: { width: '100%', maxWidth: 560, alignSelf: 'center', backgroundColor: '#1A1A1A', borderRadius: 20, padding: 24 }, helpText: { color: '#CCC', lineHeight: 23, marginBottom: 24 },
 
   container: {
     flex: 1,

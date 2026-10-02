@@ -146,6 +146,8 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <LanguageProvider><SavedProvider>
+      <View style={{ flex: 1, backgroundColor: '#050505', alignItems: 'center' }}>
+      <View style={{ flex: 1, width: '100%', maxWidth: 1100 }}>
         <Stack
           initialRouteName="index"
           screenOptions={{
@@ -175,6 +177,7 @@ export default function RootLayout() {
 
         <ChatLauncher visible={!hideChatButton} animate={pathname === '/home'} />
         <BiometricLockScreen />
+      </View></View>
       </SavedProvider></LanguageProvider>
     </AuthProvider>
   );

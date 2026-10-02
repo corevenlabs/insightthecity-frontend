@@ -1,3 +1,4 @@
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -6,6 +7,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 export function HomePromotion() {
   const { ui } = useLanguage();
+  const { width, fontScale } = useResponsiveLayout();
+  const compact = width < 360 || fontScale > 1.35;
   const [hidden, setHidden] = useState(false);
   const [closing, setClosing] = useState(false);
   const [height, setHeight] = useState(64);
@@ -35,9 +38,9 @@ export function HomePromotion() {
     style={{ overflow: 'hidden', marginTop: progress.interpolate({ inputRange: [0, 1], outputRange: [0, 16] }),
       height: closing ? progress.interpolate({ inputRange: [0, 1], outputRange: [0, height] }) : undefined }}>
     <View style={s.banner} onLayout={event => { if (!closing) setHeight(event.nativeEvent.layout.height); }}>
-      <Animated.View style={[s.row, { opacity: contents }]}>
+      <Animated.View style={[s.row, compact && { flexWrap: 'wrap', paddingVertical: 8 }, { opacity: contents }]}>
         <Text style={s.brand} numberOfLines={1}>{brand}</Text>
-        <Text style={s.message} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{ui('Beneficios cerca de ti')}</Text>
+        <Text style={[s.message, compact && { flexBasis: '45%' }]} numberOfLines={compact ? 2 : 1}>{ui('Beneficios cerca de ti')}</Text>
         <TouchableOpacity style={s.button} accessibilityRole="button" accessibilityLabel={ui('Ver beneficios')} onPress={() => router.push('/club')}>
           <Text style={s.buttonText} numberOfLines={1}>{ui('Ver más')}</Text>
         </TouchableOpacity>

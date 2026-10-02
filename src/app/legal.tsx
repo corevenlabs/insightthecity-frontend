@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, gap: 8 },
   backButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { flex: 1, color: '#FFFFFF', fontSize: 17, fontWeight: '800', textAlign: 'center' },
-  content: { paddingHorizontal: 22, paddingBottom: 48 },
+  content: { width: '100%', maxWidth: 760, alignSelf: 'center', paddingHorizontal: 22, paddingBottom: 48 },
   meta: { color: '#A6A6A6', fontSize: 13, marginTop: 4, marginBottom: 18 },
   heading: { color: '#FFFFFF', fontSize: 19, fontWeight: '800', marginTop: 24, marginBottom: 8, lineHeight: 25 },
   paragraph: { color: '#E2E2E2', fontSize: 16, lineHeight: 25, marginBottom: 14 },

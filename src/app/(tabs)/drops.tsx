@@ -1,3 +1,4 @@
+import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
 import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { TagFilter } from '@/components/TagFilter';
@@ -27,6 +28,7 @@ type MiniDropCardProps = {
 };
 
 export default function DropsScreen() {
+  const { width } = useResponsiveLayout();
   const router = useRouter();
   const { user } = useAuth();
   const { t, ui } = useLanguage();
@@ -51,7 +53,7 @@ export default function DropsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
@@ -77,7 +79,7 @@ export default function DropsScreen() {
 
         {/* DROP PRINCIPAL */}
         {featured && <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title}
-          style={styles.heroCard}
+          style={[styles.heroCard, { minHeight: Math.min(480, Math.max(280, width * 0.7)) }]}
           onPress={() => openExperience(featured.id)}
         >
           <Image

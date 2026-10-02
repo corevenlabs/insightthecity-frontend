@@ -1,3 +1,4 @@
+import { AdaptiveGrid } from '../../components/AdaptiveGrid';
 import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { TagFilter } from '@/components/TagFilter';
@@ -85,7 +86,7 @@ export default function ClubScreen() {
 
   if (!loading && user?.is_premium) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <ScrollView contentContainerStyle={styles.memberContent} showsVerticalScrollIndicator={false}>
           <View style={styles.memberHeader}>
             <Text style={styles.memberLogo} accessibilityLabel="ITC CLUB">ITC <Text style={styles.gold}>CLUB</Text></Text>
@@ -103,13 +104,14 @@ export default function ClubScreen() {
             <Text style={styles.resultsCount}>{filteredExperiences.length}</Text>
           </View>
           {filteredExperiences.length === 0 && <Text style={styles.memberSubtitle}>{ui('No hay contenidos con estas etiquetas.')}</Text>}
-          {filteredExperiences.map((experience) => <PremiumCard key={experience.id} experience={experience} />)}
+          <AdaptiveGrid>{filteredExperiences.map((experience) => <PremiumCard key={experience.id} experience={experience} />)}</AdaptiveGrid>
         </ScrollView>
       </SafeAreaView>
     );
   }
 
   return (
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <ImageBackground
         source={{ uri: 'https://img.magnific.com/fotos-premium/vistas-nueva-york-empire-state-building-noche_772417-160.jpg' }}
@@ -137,12 +139,13 @@ export default function ClubScreen() {
         <Text style={styles.cancel}>{ui('Renovación automática. Cancela cuando quieras.')}</Text>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0A0A' },
-  content: { padding: 20, paddingTop: 60, paddingBottom: 110 },
+  content: { width: '100%', maxWidth: 680, alignSelf: 'center', padding: 20, paddingTop: 60, paddingBottom: 110 },
   hero: { paddingTop: 80, paddingBottom: 60, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   header: { color: '#FFF', fontSize: 46, fontWeight: '900', textAlign: 'center', marginBottom: 12 },
   gold: { color: GOLD },
@@ -176,7 +179,7 @@ const styles = StyleSheet.create({
   resultsTitle: { color: '#FFF', fontSize: 20, fontWeight: '700' },
   resultsCount: { color: '#050505', backgroundColor: GOLD, minWidth: 28, height: 28, textAlign: 'center', lineHeight: 28, borderRadius: 14, fontWeight: '700' },
   experienceCard: { backgroundColor: '#121212', borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: '#242424', marginBottom: 16 },
-  experienceImage: { width: '100%', height: 180, backgroundColor: '#1A1A1A' },
+  experienceImage: { width: '100%', aspectRatio: 1.8, backgroundColor: '#1A1A1A' },
   experienceBody: { padding: 16 },
   experienceTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   category: { color: GOLD, fontSize: 11, letterSpacing: 1, fontWeight: '700' },

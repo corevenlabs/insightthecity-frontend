@@ -1,23 +1,27 @@
+import { StyleSheet, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { StyleSheet } from 'react-native';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function TabLayout() {
   const { t, ui } = useLanguage();
+  const insets = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarLabelPosition: 'below-icon',
         tabBarActiveTintColor: '#D4AF37',
         tabBarInactiveTintColor: '#999999',
         tabBarStyle: {
           backgroundColor: '#0A0A0A',
           borderTopWidth: 1,
           borderTopColor: '#171717',
-          height: 76,
-          paddingBottom: 10,
+          height: 60 + Math.max(insets.bottom, 10) + Math.max(0, fontScale - 1) * 16,
+          paddingBottom: Math.max(insets.bottom, 10),
           paddingTop: 7,
         },
         tabBarLabelStyle: styles.tabLabel,

@@ -2,7 +2,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
 import { confirmSubscription } from '../lib/payments';
@@ -54,18 +54,18 @@ export default function SuccessScreen() {
 
   if (status === 'confirming') {
     return (
-      <View style={styles.container}>
+      <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={styles.container}>
         <ActivityIndicator color="#D4AF37" size="large" />
         <Text style={[styles.subtitle, { marginTop: 24 }]} accessibilityLiveRegion="polite">
           {ui('Confirmando tu pago con Stripe…')}
         </Text>
-      </View>
+      </ScrollView>
     );
   }
 
   const active = status === 'active';
   return (
-    <View style={styles.container}>
+    <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={styles.container}>
       <Animated.View style={[styles.iconContainer, { transform: [{ scale: scaleAnim }] }]}>
         <Ionicons name={active ? 'checkmark-circle' : 'time-outline'} size={100} color="#D4AF37" accessible={false} />
       </Animated.View>
@@ -88,12 +88,12 @@ export default function SuccessScreen() {
           <Text style={styles.buttonText}>{active ? ui('VER CONTENIDO ITC CLUB') : ui('IR A MI PERFIL')}</Text>
         </TouchableOpacity>
       </Animated.View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0A', alignItems: 'center', justifyContent: 'center', padding: 30 },
+  container: { flexGrow: 1, width: '100%', maxWidth: 620, alignSelf: 'center', backgroundColor: '#0A0A0A', alignItems: 'center', justifyContent: 'center', padding: 30 },
   iconContainer: { marginBottom: 30 },
   title: { color: '#D4AF37', fontSize: 28, fontWeight: '700', textAlign: 'center', marginBottom: 16 },
   subtitle: { color: '#C4C4C4', fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 50 },
