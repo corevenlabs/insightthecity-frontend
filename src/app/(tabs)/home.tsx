@@ -547,7 +547,7 @@ export default function HomeScreen() {
       </ScrollView>
       {showPromotion && (
         <View style={styles.promotion}>
-          <View style={styles.logoLockup}><Text style={styles.promotionLogo}>ITC</Text><Text style={styles.logoClub}>CLUB</Text></View>
+          <Text style={styles.promotionLogo}><Text style={styles.headerBrandWhite}>ITC </Text><Text style={styles.headerBrandGold}>CLUB</Text></Text>
           <Text style={styles.promotionTitle}>{ui('Beneficios cerca de ti')}</Text>
           <TouchableOpacity style={styles.promotionButton} accessibilityRole="button" accessibilityLabel={ui('Ver beneficios')} onPress={() => router.push('/club')}>
             <Text style={styles.promotionButtonText}>{ui('Ver más')}</Text>
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
   promotion: { position: 'absolute', bottom: 8, left: 12, right: 12, minHeight: 64,
     flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 14, paddingRight: 4,
     backgroundColor: 'rgba(15,15,15,0.97)', borderRadius: 14, borderWidth: 1, borderColor: COLORS.gold },
-  promotionLogo: { color: COLORS.gold, fontSize: 28, lineHeight: 32, fontWeight: '800', letterSpacing: -0.8 },
+  promotionLogo: { color: COLORS.gold, fontSize: 18, lineHeight: 24, fontWeight: '800', letterSpacing: -0.8 },
   promotionTitle: { flex: 1, color: COLORS.white, fontSize: 13, lineHeight: 18 },
   promotionButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, backgroundColor: '#E5B840', borderRadius: 24 },
   promotionButtonText: { color: COLORS.background, fontSize: 12, fontWeight: '700' },
