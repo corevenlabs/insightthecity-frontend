@@ -88,7 +88,7 @@ export default function ClubScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <ScrollView contentContainerStyle={styles.memberContent} showsVerticalScrollIndicator={false}>
           <View style={styles.memberHeader}>
-            <View style={styles.memberIcon}><Ionicons name="star" size={22} color="#050505" /></View>
+            <Text style={styles.memberLogo} accessibilityLabel="ITC CLUB">ITC <Text style={styles.gold}>CLUB</Text></Text>
             <View style={styles.memberHeaderText}>
               <Text style={styles.memberEyebrow}>{t('club.active')}</Text>
               <Text style={styles.memberTitle}>{t('club.exclusiveContent')}</Text>
@@ -160,8 +160,8 @@ const styles = StyleSheet.create({
   priceBold: { color: '#FFF', fontWeight: '700' },
   cancel: { color: '#A6A6A6', fontSize: 12, textAlign: 'center', marginTop: 5 },
   memberContent: { padding: 20, paddingBottom: 120 },
-  memberHeader: { flexDirection: 'row', backgroundColor: '#121212', borderRadius: 20, padding: 18, borderWidth: 1, borderColor: '#3A3115', marginBottom: 28 },
-  memberIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: GOLD, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  memberHeader: { flexDirection: 'column', gap: 12, backgroundColor: '#121212', borderRadius: 20, padding: 18, borderWidth: 1, borderColor: '#3A3115', marginBottom: 28 },
+  memberLogo: { color: '#FFFFFF', fontSize: 24, lineHeight: 30, fontWeight: '800', letterSpacing: -0.8 },
   memberHeaderText: { flex: 1 },
   memberEyebrow: { color: GOLD, fontSize: 11, letterSpacing: 1.1, fontWeight: '700', marginBottom: 5 },
   memberTitle: { color: '#FFF', fontSize: 25, fontWeight: '700' },

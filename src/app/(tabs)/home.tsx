@@ -1,3 +1,5 @@
+import { HomePromotion } from '../../components/HomePromotion';
+import { BenefitPreview } from '../../components/BenefitPreview';
 import { getExperienceTags } from '@/lib/experienceFilters';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -34,11 +36,6 @@ function firstName(name: string | null, email?: string): string | null {
   if (email) return email.split('@')[0];
   return null;
 }
-
-type BenefitCardProps = {
-  experience: Experience;
-  width: number;
-};
 
 function compactWeatherSymbol(
   code: number,
@@ -116,44 +113,6 @@ function openExperience(id: string) {
     pathname: '/experience-detail',
     params: { id },
   } as any);
-}
-
-function BenefitCard({ experience, width }: BenefitCardProps) {
-  const { ui, tagLabel } = useLanguage();
-  const primaryTag = getExperienceTags(experience)[0];
-  const benefit = experience.cardBenefit?.trim() || experience.memberBenefit?.trim();
-
-  return (
-    <TouchableOpacity
-      style={[styles.benefitCard, { width }]}
-      activeOpacity={0.82}
-      accessibilityRole="button"
-      accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
-      onPress={() => openExperience(experience.id)}
-    >
-      <View style={styles.benefitImageWrap}>
-        <Image source={{ uri: experience.image }} style={styles.benefitImage} />
-          {!!benefit && (
-            <View style={styles.benefitBadge}>
-              <Text style={styles.benefitBadgeText} numberOfLines={1}>{benefit}</Text>
-            </View>
-          )}
-      </View>
-      <View style={styles.benefitBody}>
-        <Text style={styles.benefitCategory} numberOfLines={1}>
-          {primaryTag ? tagLabel(primaryTag).toUpperCase() : experience.category.toUpperCase()}
-        </Text>
-        <Text style={styles.benefitName} numberOfLines={1}>{experience.title}</Text>
-        <View style={styles.benefitFooter}>
-          <View style={styles.benefitRegionRow}>
-            <Ionicons name="location-outline" size={18} color={COLORS.secondary} />
-            <Text style={styles.benefitRegion}>{experience.region ?? 'NY'}</Text>
-          </View>
-
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
 }
 
 function RecommendationsCarousel({ experiences }: { experiences: Experience[] }) {
@@ -280,36 +239,22 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
     />
   );
 
-  const renderNewsLayout = () => {
-    return (
-      <ScrollView
-        horizontal
-        nestedScrollEnabled
-        decelerationRate="fast"
-        snapToInterval={carouselCardWidth + 10}
-        disableIntervalMomentum
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.newsCarouselContent}
-      >
-        {items.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            accessibilityRole="button"
-            accessibilityLabel={`${item.title}, ${formatDate(item.date, language)}`}
-            style={[styles.newsHomeCard, { width: carouselCardWidth }]}
-            onPress={() => openArticle(item)}
-            activeOpacity={0.82}
-          >
-            {renderImage(item, styles.newsHomeImage)}
-            <View style={styles.newsHomeOverlay}>
-              <Text style={styles.newsHomeDate}>{formatDate(item.date, language)}</Text>
-              <Text style={styles.newsHomeTitle} numberOfLines={3}>{item.title}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    );
-  };
+  const renderNewsLayout = () => (
+    <View style={styles.newsHomeList}>
+      {items.map((item) => (
+        <TouchableOpacity key={item.id} accessibilityRole="button"
+          accessibilityLabel={`${item.title}, ${formatDate(item.date, language)}`}
+          style={styles.newsHomeCard} onPress={() => openArticle(item)} activeOpacity={0.72}>
+          {renderImage(item, styles.newsHomeImage)}
+          <View style={styles.newsHomeOverlay}>
+            <Text style={styles.newsHomeTitle} numberOfLines={2}>{item.title}</Text>
+            {!!item.excerpt && <Text style={styles.newsHomeExcerpt} numberOfLines={1}>{item.excerpt}</Text>}
+            <Text style={styles.newsHomeDate}>{formatDate(item.date, language)}</Text>
+          </View>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
 
   const renderPlansCarousel = () => (
     <ScrollView
@@ -389,14 +334,13 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
 
 export default function HomeScreen() {
   const { width: windowWidth } = useWindowDimensions();
-  const benefitCardWidth = Math.min(210, Math.max(172, windowWidth * 0.46));
+  const benefitCardWidth = Math.min(480, windowWidth - 76);
   const { user, refreshUser } = useAuth();
   const { t, ui } = useLanguage();
   const name = firstName(user?.name ?? null, user?.email);
   const [clubBenefits, setClubBenefits] = useState<Experience[]>([]);
   const [recommendations, setRecommendations] = useState<Experience[]>([]);
   const [guides, setGuides] = useState<Guide[]>([]);
-  const [showPromotion, setShowPromotion] = useState(true);
 
   useFocusEffect(useCallback(() => {
     void refreshUser();
@@ -420,7 +364,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { paddingBottom: showPromotion ? 104 : 24 }]}
+        contentContainerStyle={styles.content}
       >
         {/* HEADER */}
 
@@ -449,6 +393,8 @@ export default function HomeScreen() {
           </Text>
         </TouchableOpacity>
 
+        <HomePromotion />
+
         {/* BENEFICIOS ITC CLUB */}
 
         <View style={styles.sectionHeader}>
@@ -473,8 +419,8 @@ export default function HomeScreen() {
           contentContainerStyle={styles.benefitsCarousel}
         >
           {clubBenefits.map((experience) => (
-            <BenefitCard
-              key={experience.id}
+            <BenefitPreview
+              key={`${experience.id}:${experience.image}:${(experience.images ?? []).join('|')}`}
               experience={experience}
               width={benefitCardWidth}
             />
@@ -545,19 +491,7 @@ export default function HomeScreen() {
 
 
       </ScrollView>
-      {showPromotion && (
-        <View style={styles.promotion}>
-          <Text style={styles.promotionLogo} numberOfLines={1}><Text style={styles.headerBrandWhite}>ITC </Text><Text style={styles.headerBrandGold}>CLUB</Text></Text>
-          <Text style={styles.promotionTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>{ui('Beneficios cerca de ti')}</Text>
-          <TouchableOpacity style={styles.promotionButton} accessibilityRole="button" accessibilityLabel={ui('Ver beneficios')} onPress={() => router.push('/club')}>
-            <Text style={styles.promotionButtonText} numberOfLines={1}>{ui('Ver más')}</Text>
-          </TouchableOpacity>
-          {windowWidth >= 600 && <Text style={styles.promotionPartner}>PARTNERSHIP</Text>}
-          <TouchableOpacity style={styles.promotionClose} accessibilityRole="button" accessibilityLabel={ui('Cerrar')} onPress={() => setShowPromotion(false)}>
-            <Ionicons name="close-outline" size={26} color={COLORS.white} />
-          </TouchableOpacity>
-        </View>
-      )}
+
     </SafeAreaView>
   );
 }
@@ -571,15 +505,6 @@ const COLORS = {
 };
 
 const styles = StyleSheet.create({
-  promotion: { position: 'absolute', bottom: 8, left: 12, right: 12, minHeight: 64,
-    flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 10, paddingRight: 4,
-    backgroundColor: 'rgba(15,15,15,0.97)', borderRadius: 14, borderWidth: 1, borderColor: COLORS.gold },
-  promotionLogo: { color: COLORS.gold, fontSize: 18, lineHeight: 24, fontWeight: '800', letterSpacing: -0.8 },
-  promotionTitle: { flex: 1, minWidth: 0, color: COLORS.white, fontSize: 13, lineHeight: 18 },
-  promotionButton: { flexShrink: 0, minHeight: 44, justifyContent: 'center', paddingHorizontal: 10, backgroundColor: COLORS.gold, borderRadius: 24 },
-  promotionButtonText: { color: COLORS.background, fontSize: 12, fontWeight: '700' },
-  promotionPartner: { color: COLORS.secondary, fontSize: 10, letterSpacing: 3, borderLeftWidth: 1, borderLeftColor: '#777777', paddingLeft: 12 },
-  promotionClose: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
@@ -588,7 +513,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingTop: 6,
-    paddingBottom: 104,
+    paddingBottom: 32,
   },
 
   header: {
@@ -1034,50 +959,17 @@ clubGold: {
     textAlign: 'center',
   },
 
-  newsCarouselContent: {
-    paddingRight: 8,
-  },
-
+  newsHomeList: { gap: 16 },
   newsHomeCard: {
-    flexDirection: 'row',
-    minHeight: 96,
-    overflow: 'hidden',
-    marginRight: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#2C2C2C',
-    backgroundColor: COLORS.card,
+    flexDirection: 'row', alignItems: 'center', minHeight: 88, gap: 14,
   },
-
   newsHomeImage: {
-    width: '45%',
-    alignSelf: 'stretch',
-    minHeight: 94,
-    borderRadius: 8,
-    backgroundColor: '#1A1A1A',
+    width: 88, height: 88, borderRadius: 12, backgroundColor: '#1A1A1A',
   },
-
-  newsHomeOverlay: {
-    flex: 1,
-    minWidth: 0,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-  },
-
-  newsHomeDate: {
-    color: COLORS.secondary,
-    fontSize: 10,
-    lineHeight: 14,
-  },
-
-  newsHomeTitle: {
-    marginTop: 6,
-    color: COLORS.white,
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: '600',
-  },
+  newsHomeOverlay: { flex: 1, minWidth: 0, gap: 5, paddingVertical: 4 },
+  newsHomeTitle: { color: COLORS.white, fontSize: 16, lineHeight: 21, fontWeight: '700' },
+  newsHomeExcerpt: { color: COLORS.secondary, fontSize: 13, lineHeight: 18 },
+  newsHomeDate: { color: COLORS.secondary, fontSize: 12, lineHeight: 17 },
 
   newsFeaturedCard: {
     height: 250,
