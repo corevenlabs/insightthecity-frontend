@@ -54,7 +54,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="club"
         options={{
-          href: null,
+          title: ui('Beneficios'),
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'gift' : 'gift-outline'} size={size} color={color} />
+          ),
         }}
       />
 

@@ -426,7 +426,7 @@ export default function HomeScreen() {
 
         <View style={styles.header}>
           <View style={styles.headerIdentity}>
-            <View style={styles.logoLockup}><Text style={styles.headerLogo}>ITC</Text><Text style={styles.logoClub}>CLUB</Text></View>
+            <Text style={styles.headerBrand}><Text style={styles.headerBrandWhite}>ITC </Text><Text style={styles.headerBrandGold}>CLUB</Text></Text>
             <View style={styles.headerDivider} />
             <Text style={styles.greeting} numberOfLines={1}>
               {name ? t('home.hello', { name }) : t('home.helloGuest')}
@@ -608,6 +608,9 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
 
+  headerBrand: { fontSize: 22, lineHeight: 28, fontWeight: '800', letterSpacing: -0.8 },
+  headerBrandWhite: { color: COLORS.white },
+  headerBrandGold: { color: COLORS.gold },
   headerLogo: {
     color: COLORS.gold,
     fontSize: 30,
