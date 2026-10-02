@@ -713,6 +713,410 @@ export const UI_TRANSLATIONS = {
   "Hoy · 7:00 PM": {
     "en": "Today · 7:00 PM",
     "pt": "Hoje · 19:00"
+  },
+  "mes": {
+    "en": "month",
+    "pt": "mês"
+  },
+  "año": {
+    "en": "year",
+    "pt": "ano"
+  },
+  "semana": {
+    "en": "week",
+    "pt": "semana"
+  },
+  "día": {
+    "en": "day",
+    "pt": "dia"
+  },
+  "Renovación automática. Cancela cuando quieras.": {
+    "en": "Renews automatically. Cancel anytime.",
+    "pt": "Renovação automática. Cancele quando quiser."
+  },
+  "Ver todas las experiencias": {
+    "en": "See all experiences",
+    "pt": "Ver todas as experiências"
+  },
+  "Ver todos los drops": {
+    "en": "See all drops",
+    "pt": "Ver todos os drops"
+  },
+  "Ver todas las guías": {
+    "en": "See all guides",
+    "pt": "Ver todos os guias"
+  },
+  "Descubre esta guía seleccionada por Insight The City.": {
+    "en": "Discover this guide curated by Insight The City.",
+    "pt": "Descubra este guia selecionado pela Insight The City."
+  },
+  "Abrir guías": {
+    "en": "Open guides",
+    "pt": "Abrir guias"
+  },
+  "Todavía no hay guías publicadas.": {
+    "en": "No guides have been published yet.",
+    "pt": "Ainda não há guias publicados."
+  },
+  "No se pudo abrir la gestión de la membresía.": {
+    "en": "Could not open membership management.",
+    "pt": "Não foi possível abrir o gerenciamento da assinatura."
+  },
+  "Legal y privacidad": {
+    "en": "Legal and privacy",
+    "pt": "Jurídico e privacidade"
+  },
+  "Términos y Condiciones": {
+    "en": "Terms and Conditions",
+    "pt": "Termos e Condições"
+  },
+  "Política de Privacidad": {
+    "en": "Privacy Policy",
+    "pt": "Política de Privacidade"
+  },
+  "Términos de la membresía": {
+    "en": "Membership terms",
+    "pt": "Termos da assinatura"
+  },
+  "Accesibilidad": {
+    "en": "Accessibility",
+    "pt": "Acessibilidade"
+  },
+  "Eliminar cuenta": {
+    "en": "Delete account",
+    "pt": "Excluir conta"
+  },
+  "Cancelada · activa hasta el fin del período": {
+    "en": "Canceled · active until the end of the period",
+    "pt": "Cancelada · ativa até o fim do período"
+  },
+  "Pago pendiente": {
+    "en": "Payment past due",
+    "pt": "Pagamento pendente"
+  },
+  "Tu membresía y sus beneficios": {
+    "en": "Your membership and benefits",
+    "pt": "Sua assinatura e seus benefícios"
+  },
+  "Precio": {
+    "en": "Price",
+    "pt": "Preço"
+  },
+  "Renovación": {
+    "en": "Renewal",
+    "pt": "Renovação"
+  },
+  "Desactivada": {
+    "en": "Off",
+    "pt": "Desativada"
+  },
+  "Automática": {
+    "en": "Automatic",
+    "pt": "Automática"
+  },
+  "Acceso hasta": {
+    "en": "Access until",
+    "pt": "Acesso até"
+  },
+  "Próxima renovación": {
+    "en": "Next renewal",
+    "pt": "Próxima renovação"
+  },
+  "Tu membresía fue activada por el equipo de ITC Club y no tiene cobros asociados.": {
+    "en": "Your membership was activated by the ITC Club team and has no charges.",
+    "pt": "Sua assinatura foi ativada pela equipe ITC Club e não tem cobranças."
+  },
+  "No se te volverá a cobrar. Puedes reactivar la renovación desde Administrar membresía.": {
+    "en": "You will not be charged again. You can turn renewal back on from Manage membership.",
+    "pt": "Você não será cobrado novamente. Você pode reativar a renovação em Gerenciar assinatura."
+  },
+  "Tu membresía se renueva automáticamente hasta que la canceles. Si cancelas, conservas el acceso hasta el final del período pagado.": {
+    "en": "Your membership renews automatically until you cancel. If you cancel, you keep access until the end of the paid period.",
+    "pt": "Sua assinatura é renovada automaticamente até você cancelar. Se cancelar, você mantém o acesso até o fim do período pago."
+  },
+  "ADMINISTRAR O CANCELAR MEMBRESÍA": {
+    "en": "MANAGE OR CANCEL MEMBERSHIP",
+    "pt": "GERENCIAR OU CANCELAR ASSINATURA"
+  },
+  "Se abre el portal seguro de Stripe, donde puedes cancelar, cambiar tu tarjeta o ver tus recibos.": {
+    "en": "Opens Stripe's secure portal, where you can cancel, change your card or view your receipts.",
+    "pt": "Abre o portal seguro da Stripe, onde você pode cancelar, trocar o cartão ou ver seus recibos."
+  },
+  "No se pudo cargar el precio. Revisa tu conexión e inténtalo de nuevo.": {
+    "en": "Could not load the price. Check your connection and try again.",
+    "pt": "Não foi possível carregar o preço. Verifique sua conexão e tente novamente."
+  },
+  "No se completó el pago. No se te cobró nada.": {
+    "en": "The payment was not completed. You were not charged.",
+    "pt": "O pagamento não foi concluído. Nada foi cobrado."
+  },
+  "No se pudo iniciar el pago. Intenta de nuevo.": {
+    "en": "Could not start the payment. Please try again.",
+    "pt": "Não foi possível iniciar o pagamento. Tente novamente."
+  },
+  "Necesitas una cuenta": {
+    "en": "You need an account",
+    "pt": "Você precisa de uma conta"
+  },
+  "Crea una cuenta o inicia sesión para unirte a ITC Club. La membresía queda asociada a tu cuenta.": {
+    "en": "Create an account or sign in to join ITC Club. The membership is linked to your account.",
+    "pt": "Crie uma conta ou entre para assinar o ITC Club. A assinatura fica vinculada à sua conta."
+  },
+  "INICIAR SESIÓN": {
+    "en": "SIGN IN",
+    "pt": "ENTRAR"
+  },
+  "CREAR CUENTA": {
+    "en": "CREATE ACCOUNT",
+    "pt": "CRIAR CONTA"
+  },
+  "Ya eres miembro de ITC Club": {
+    "en": "You are already an ITC Club member",
+    "pt": "Você já é membro do ITC Club"
+  },
+  "Puedes ver o cancelar tu membresía en Perfil > Mi membresía.": {
+    "en": "You can view or cancel your membership in Profile > My membership.",
+    "pt": "Você pode ver ou cancelar sua assinatura em Perfil > Minha assinatura."
+  },
+  "IR A MI PERFIL": {
+    "en": "GO TO MY PROFILE",
+    "pt": "IR PARA MEU PERFIL"
+  },
+  "Cargando…": {
+    "en": "Loading…",
+    "pt": "Carregando…"
+  },
+  "TU CUENTA": {
+    "en": "YOUR ACCOUNT",
+    "pt": "SUA CONTA"
+  },
+  "La membresía se asociará a tu cuenta:": {
+    "en": "The membership will be linked to your account:",
+    "pt": "A assinatura será vinculada à sua conta:"
+  },
+  "Pagarás en la página segura de Stripe con tarjeta, Apple Pay o Google Pay. No guardamos los datos de tu tarjeta.": {
+    "en": "You will pay on Stripe's secure page with a card, Apple Pay or Google Pay. We do not store your card details.",
+    "pt": "Você pagará na página segura da Stripe com cartão, Apple Pay ou Google Pay. Não guardamos os dados do seu cartão."
+  },
+  "Renovación automática": {
+    "en": "Automatic renewal",
+    "pt": "Renovação automática"
+  },
+  "Se te cobrarán {price} hoy y luego cada {period}, de forma automática, hasta que canceles.": {
+    "en": "You will be charged {price} today and then every {period}, automatically, until you cancel.",
+    "pt": "Você será cobrado {price} hoje e depois a cada {period}, automaticamente, até cancelar."
+  },
+  "Puedes cancelar cuando quieras en Perfil > Mi membresía. La cancelación aplica al final del período pagado y conservas el acceso hasta entonces.": {
+    "en": "You can cancel anytime in Profile > My membership. Cancellation takes effect at the end of the paid period and you keep access until then.",
+    "pt": "Você pode cancelar quando quiser em Perfil > Minha assinatura. O cancelamento vale ao fim do período pago e você mantém o acesso até lá."
+  },
+  "Leer los Términos de la membresía": {
+    "en": "Read the membership terms",
+    "pt": "Ler os termos da assinatura"
+  },
+  "Acepto que mi membresía se renueve automáticamente por {price} cada {period} hasta que la cancele, y acepto los Términos de la membresía.": {
+    "en": "I agree that my membership renews automatically at {price} every {period} until I cancel, and I accept the membership terms.",
+    "pt": "Concordo que minha assinatura seja renovada automaticamente por {price} a cada {period} até eu cancelar, e aceito os termos da assinatura."
+  },
+  "SUSCRIBIRME POR {price} / {period}": {
+    "en": "SUBSCRIBE FOR {price} / {period}",
+    "pt": "ASSINAR POR {price} / {period}"
+  },
+  "No se pudo eliminar la cuenta.": {
+    "en": "Could not delete the account.",
+    "pt": "Não foi possível excluir a conta."
+  },
+  "Esta acción es permanente y no se puede deshacer.": {
+    "en": "This action is permanent and cannot be undone.",
+    "pt": "Esta ação é permanente e não pode ser desfeita."
+  },
+  "Al eliminar tu cuenta:": {
+    "en": "When you delete your account:",
+    "pt": "Ao excluir sua conta:"
+  },
+  "Borramos tu perfil, tu foto, tus mensajes del chat y tus códigos de beneficios.": {
+    "en": "We delete your profile, photo, chat messages and benefit codes.",
+    "pt": "Excluímos seu perfil, sua foto, suas mensagens do chat e seus códigos de benefícios."
+  },
+  "Si tienes una membresía ITC Club, la cancelamos de inmediato y no se te volverá a cobrar.": {
+    "en": "If you have an ITC Club membership, we cancel it immediately and you will not be charged again.",
+    "pt": "Se você tiver uma assinatura ITC Club, nós a cancelamos imediatamente e você não será cobrado novamente."
+  },
+  "Pierdes el acceso a las guías que compraste.": {
+    "en": "You lose access to the guides you purchased.",
+    "pt": "Você perde o acesso aos guias que comprou."
+  },
+  "Stripe puede conservar el registro de tus pagos por obligaciones legales y fiscales.": {
+    "en": "Stripe may keep records of your payments for legal and tax obligations.",
+    "pt": "A Stripe pode manter o registro dos seus pagamentos por obrigações legais e fiscais."
+  },
+  "Cuenta: {email}": {
+    "en": "Account: {email}",
+    "pt": "Conta: {email}"
+  },
+  "Confirma tu contraseña": {
+    "en": "Confirm your password",
+    "pt": "Confirme sua senha"
+  },
+  "Entiendo que mi cuenta y mis datos se eliminarán de forma permanente.": {
+    "en": "I understand that my account and data will be permanently deleted.",
+    "pt": "Entendo que minha conta e meus dados serão excluídos permanentemente."
+  },
+  "ELIMINAR MI CUENTA": {
+    "en": "DELETE MY ACCOUNT",
+    "pt": "EXCLUIR MINHA CONTA"
+  },
+  "OBTENER BENEFICIO": {
+    "en": "GET BENEFIT",
+    "pt": "OBTER BENEFÍCIO"
+  },
+  "No se pudo generar el código.": {
+    "en": "Could not generate the code.",
+    "pt": "Não foi possível gerar o código."
+  },
+  "Solo para mayores de 21 años. El comercio puede pedirte una identificación. Bebe con responsabilidad.": {
+    "en": "21+ only. The venue may ask for ID. Please drink responsibly.",
+    "pt": "Somente para maiores de 21 anos. O estabelecimento pode pedir um documento. Beba com responsabilidade."
+  },
+  "Suscríbete para desbloquear": {
+    "en": "Subscribe to unlock",
+    "pt": "Assine para desbloquear"
+  },
+  "Genera un código QR válido durante 24 horas": {
+    "en": "Generates a QR code valid for 24 hours",
+    "pt": "Gera um código QR válido por 24 horas"
+  },
+  "Abre un sitio externo": {
+    "en": "Opens an external site",
+    "pt": "Abre um site externo"
+  },
+  "AGOTADO": {
+    "en": "SOLD OUT",
+    "pt": "ESGOTADO"
+  },
+  "NO DISPONIBLE": {
+    "en": "UNAVAILABLE",
+    "pt": "INDISPONÍVEL"
+  },
+  "Cerrar código QR": {
+    "en": "Close QR code",
+    "pt": "Fechar código QR"
+  },
+  "Tu beneficio está listo": {
+    "en": "Your benefit is ready",
+    "pt": "Seu benefício está pronto"
+  },
+  "Código QR para canjear el beneficio": {
+    "en": "QR code to redeem the benefit",
+    "pt": "Código QR para resgatar o benefício"
+  },
+  "Muestra este código al personal para validar el beneficio.": {
+    "en": "Show this code to the staff to validate the benefit.",
+    "pt": "Mostre este código à equipe para validar o benefício."
+  },
+  "Válido por 24 horas · un solo uso": {
+    "en": "Valid for 24 hours · single use",
+    "pt": "Válido por 24 horas · uso único"
+  },
+  "LISTO": {
+    "en": "DONE",
+    "pt": "PRONTO"
+  },
+  "Compra confirmada": {
+    "en": "Purchase confirmed",
+    "pt": "Compra confirmada"
+  },
+  "La guía ya está disponible en tu cuenta.": {
+    "en": "The guide is now available in your account.",
+    "pt": "O guia já está disponível na sua conta."
+  },
+  "No se pudo iniciar la compra.": {
+    "en": "Could not start the purchase.",
+    "pt": "Não foi possível iniciar a compra."
+  },
+  "Compra una guía individual o disfrútala incluida con tu membresía ITC Club.": {
+    "en": "Buy a single guide or enjoy it included with your ITC Club membership.",
+    "pt": "Compre um guia avulso ou aproveite-o incluído na sua assinatura ITC Club."
+  },
+  "Cargando guías": {
+    "en": "Loading guides",
+    "pt": "Carregando guias"
+  },
+  "COMPRADA": {
+    "en": "PURCHASED",
+    "pt": "COMPRADO"
+  },
+  "Descargar guía PDF": {
+    "en": "Download PDF guide",
+    "pt": "Baixar guia em PDF"
+  },
+  "DESCARGAR GUÍA PDF": {
+    "en": "DOWNLOAD PDF GUIDE",
+    "pt": "BAIXAR GUIA EM PDF"
+  },
+  "Comprar guía": {
+    "en": "Buy guide",
+    "pt": "Comprar guia"
+  },
+  "COMPRAR GUÍA": {
+    "en": "BUY GUIDE",
+    "pt": "COMPRAR GUIA"
+  },
+  "Obtener con ITC Club": {
+    "en": "Get with ITC Club",
+    "pt": "Obter com ITC Club"
+  },
+  "OBTENER CON ITC CLUB": {
+    "en": "GET WITH ITC CLUB",
+    "pt": "OBTER COM ITC CLUB"
+  },
+  "No hay guías disponibles.": {
+    "en": "No guides available.",
+    "pt": "Não há guias disponíveis."
+  },
+  "No se pudo cargar el documento. Revisa tu conexión e inténtalo de nuevo.": {
+    "en": "Could not load the document. Check your connection and try again.",
+    "pt": "Não foi possível carregar o documento. Verifique sua conexão e tente novamente."
+  },
+  "Última actualización: {date}": {
+    "en": "Last updated: {date}",
+    "pt": "Última atualização: {date}"
+  },
+  "Para crear tu cuenta debes aceptar los Términos y la Política de Privacidad.": {
+    "en": "To create your account you must accept the Terms and the Privacy Policy.",
+    "pt": "Para criar sua conta, você deve aceitar os Termos e a Política de Privacidade."
+  },
+  "Tengo 18 años o más y acepto los Términos y Condiciones y la Política de Privacidad de ITC Club.": {
+    "en": "I am 18 or older and I accept the ITC Club Terms and Conditions and Privacy Policy.",
+    "pt": "Tenho 18 anos ou mais e aceito os Termos e Condições e a Política de Privacidade do ITC Club."
+  },
+  "Leer Términos y Condiciones": {
+    "en": "Read Terms and Conditions",
+    "pt": "Ler Termos e Condições"
+  },
+  "Leer Política de Privacidad": {
+    "en": "Read Privacy Policy",
+    "pt": "Ler Política de Privacidade"
+  },
+  "Confirmando tu pago con Stripe…": {
+    "en": "Confirming your payment with Stripe…",
+    "pt": "Confirmando seu pagamento com a Stripe…"
+  },
+  "Estamos confirmando tu pago": {
+    "en": "We are confirming your payment",
+    "pt": "Estamos confirmando seu pagamento"
+  },
+  "Tu membresía está activa. Te enviamos un correo con los términos de renovación y cómo cancelar.": {
+    "en": "Your membership is active. We emailed you the renewal terms and how to cancel.",
+    "pt": "Sua assinatura está ativa. Enviamos um e-mail com os termos de renovação e como cancelar."
+  },
+  "Tu pago aún no aparece como confirmado. Si se completó, tu membresía se activará en unos minutos; revisa Perfil > Mi membresía.": {
+    "en": "Your payment is not confirmed yet. If it went through, your membership will activate in a few minutes; check Profile > My membership.",
+    "pt": "Seu pagamento ainda não aparece como confirmado. Se foi concluído, sua assinatura será ativada em alguns minutos; confira Perfil > Minha assinatura."
+  },
+  "Al usar ITC Club aceptas nuestros Términos y Condiciones y nuestra Política de Privacidad.": {
+    "en": "By using ITC Club you agree to our Terms and Conditions and Privacy Policy.",
+    "pt": "Ao usar o ITC Club, você aceita nossos Termos e Condições e nossa Política de Privacidade."
   }
 } as const;
 

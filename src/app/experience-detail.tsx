@@ -19,8 +19,12 @@ export default function ExperienceDetailScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { user, token } = useAuth();
   const [experience, setExperience] = useState<Experience | undefined>(() => getExperienceById(id));
-  const [loading, setLoading] = useState(true);
-  const [photoIndex, setPhotoIndex] = useState(0);
+  // Se guarda para qué id se cargó / qué foto se ve: al cambiar de experiencia
+  // el estado anterior deja de aplicar sin tener que resetearlo en un efecto.
+  const [loadedId, setLoadedId] = useState<string | undefined>(undefined);
+  const [photo, setPhoto] = useState<{ id?: string; index: number }>({ id, index: 0 });
+  const loading = Boolean(id) && loadedId !== id;
+  const photoIndex = photo.id === id ? photo.index : 0;
   const [benefitCode, setBenefitCode] = useState<BenefitCode | null>(null);
   const [benefitLoading, setBenefitLoading] = useState(false);
   const [benefitError, setBenefitError] = useState('');
@@ -28,15 +32,13 @@ export default function ExperienceDetailScreen() {
 
   useEffect(() => {
     let active = true;
-    if (!id) { setLoading(false); return; }
+    if (!id) return;
     fetchExperience(id)
       .then((item) => { if (active) setExperience(item); })
       .catch(() => undefined)
-      .finally(() => { if (active) setLoading(false); });
+      .finally(() => { if (active) setLoadedId(id); });
     return () => { active = false; };
   }, [id]);
-
-  useEffect(() => { setPhotoIndex(0); }, [id]);
 
   if (loading && !experience) {
     return <SafeAreaView style={styles.container}><View style={styles.emptyState}><Text style={styles.emptyTitle}>{ui("Actualizando contenido…")}</Text></View></SafeAreaView>;
@@ -47,7 +49,7 @@ export default function ExperienceDetailScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>{ui("Contenido no disponible")}</Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={() => router.back()}>
+          <TouchableOpacity accessibilityRole="button" style={styles.primaryButton} onPress={() => router.back()}>
             <Text style={styles.primaryButtonText}>{ui("VOLVER")}</Text>
           </TouchableOpacity>
         </View>
@@ -91,11 +93,11 @@ export default function ExperienceDetailScreen() {
             showsHorizontalScrollIndicator={false}
             keyExtractor={(url, index) => `${index}-${url}`}
             renderItem={({ item }) => <Image source={{ uri: item }} style={[styles.heroImage, { width: screenWidth }]} />}
-            onMomentumScrollEnd={(event) => setPhotoIndex(Math.round(event.nativeEvent.contentOffset.x / screenWidth))}
+            onMomentumScrollEnd={(event) => setPhoto({ id, index: Math.round(event.nativeEvent.contentOffset.x / screenWidth) })}
           />
           <View style={styles.heroShade} pointerEvents="none" />
           <View style={styles.heroOverlay} pointerEvents="box-none">
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={22} color="#D4AF37" />
             </TouchableOpacity>
 
@@ -136,6 +138,15 @@ export default function ExperienceDetailScreen() {
                 : ui("Beneficio gratis")}
           </Text>
         </View>
+
+        {experience.isAgeRestricted && (
+          <View style={styles.ageNotice}>
+            <View style={styles.ageBadge}><Text style={styles.ageBadgeText}>21+</Text></View>
+            <Text style={styles.ageText}>
+              {ui('Solo para mayores de 21 años. El comercio puede pedirte una identificación. Bebe con responsabilidad.')}
+            </Text>
+          </View>
+        )}
 
         {requiresPremium && experience.memberBenefit && (
           <View style={styles.benefitCard}>
@@ -358,6 +369,10 @@ const styles = StyleSheet.create({
   premiumText: {
     color: COLORS.gold,
   },
+  ageNotice: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20, marginTop: 16, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#5A4A1A', backgroundColor: '#15120A' },
+  ageBadge: { minWidth: 44, height: 32, borderRadius: 8, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+  ageBadgeText: { color: '#000', fontWeight: '900', fontSize: 14 },
+  ageText: { flex: 1, color: '#EDEDED', fontSize: 14, lineHeight: 20 },
   benefitCard: { marginHorizontal: 20, marginTop: 20, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: COLORS.gold, backgroundColor: COLORS.card },
   benefitHeading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   benefitLabel: { color: COLORS.gold, fontSize: 12, fontWeight: '900' },

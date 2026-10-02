@@ -38,6 +38,8 @@ export type Experience = {
   isPaidEvent?: boolean;
   ticketUrl?: string | null;
   ticketCta?: string | null;
+  /** Contenido o beneficio con alcohol: la app muestra el aviso 21+. */
+  isAgeRestricted?: boolean;
   section?: string | null;
 };
 
@@ -109,6 +111,7 @@ export const experiences: Experience[] = [
     description:
       'Un rooftop con vistas al Empire State Building y ambiente perfecto para cerrar la noche. El beneficio aplica para una selección de cocktails.',
     includes: ['Beneficio en cocktails seleccionados', 'Vista al skyline', 'Recomendación de horario para fotos'],
+    isAgeRestricted: true,
     recommendation:
       'Ve antes de que oscurezca para aprovechar la vista y quedarte al ambiente nocturno.',
   },

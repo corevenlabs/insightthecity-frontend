@@ -28,7 +28,7 @@ export default function QueHacerScreen() {
 
   const backHeader = (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()} hitSlop={10}>
         <Ionicons name="arrow-back" size={26} color="#D4AF37" />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>{ui("¿Qué hacer en NY?")}</Text>
@@ -42,7 +42,7 @@ export default function QueHacerScreen() {
       <Text style={styles.subtitle}>{ui("Planes, eventos y experiencias para vivir Nueva York con intención.")}</Text>
 
       {featured && (
-        <TouchableOpacity style={styles.heroCard} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title} style={styles.heroCard} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
           <NewsImage
             uri={featured.image}
             style={styles.heroImage}
@@ -63,7 +63,7 @@ export default function QueHacerScreen() {
   );
 
   const renderItem = ({ item }: { item: NewsCard }) => (
-    <TouchableOpacity style={styles.articleCard} onPress={() => openArticle(item.id)} activeOpacity={0.85}>
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel={item.title} style={styles.articleCard} onPress={() => openArticle(item.id)} activeOpacity={0.85}>
       <NewsImage
         uri={item.image}
         style={styles.articleImage}
@@ -101,7 +101,7 @@ export default function QueHacerScreen() {
         <View style={styles.center}>
           <Ionicons name="cloud-offline-outline" size={44} color="#555" />
           <Text style={styles.errorText}>{ui('No se pudo cargar el contenido.')}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={feed.retry}>
+          <TouchableOpacity accessibilityRole="button" style={styles.retryBtn} onPress={feed.retry}>
             <Text style={styles.retryText}>{ui("Reintentar")}</Text>
           </TouchableOpacity>
         </View>

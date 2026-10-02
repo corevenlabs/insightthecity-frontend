@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, usePathname, useRouter } from 'expo-router';
 import * as Updates from 'expo-updates';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -21,7 +21,7 @@ function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean
   const { language } = useLanguage();
   const [inviteMessage, setInviteMessage] = useState<'intro' | 'help' | null>(null);
   const [typedCount, setTypedCount] = useState(0);
-  const bubbleProgress = useRef(new Animated.Value(0)).current;
+  const [bubbleProgress] = useState(() => new Animated.Value(0));
   const buttonLabel = language === 'en' ? 'Open chat with Yorki' : language === 'pt' ? 'Abrir chat com Yorki' : 'Abrir chat con Yorki';
   const introduction = language === 'en' ? "Hi, I'm" : language === 'pt' ? 'Olá, sou' : 'Hola, soy';
   const helpQuestion = language === 'en' ? 'What would you like to do today?' : language === 'pt' ? 'O que você gostaria de fazer hoje?' : '¿Qué te gustaría hacer hoy?';
@@ -30,7 +30,6 @@ function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean
     if (!visible || !animate) {
       bubbleProgress.stopAnimation();
       bubbleProgress.setValue(0);
-      setInviteMessage(null);
       return;
     }
     const openBubble = () => Animated.sequence([
@@ -59,9 +58,8 @@ function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean
         }
       }, 55);
     };
-    setTypedCount(0);
-    setInviteMessage('intro');
     timers.push(
+      setTimeout(() => { setTypedCount(0); setInviteMessage('intro'); }, 0),
       setTimeout(openBubble, 250),
       setTimeout(() => startTyping(`${introduction} YORKi`.length), 950),
       setTimeout(closeBubble, 2450),
@@ -76,6 +74,8 @@ function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean
       if (typingTimer) clearInterval(typingTimer);
       bubbleProgress.stopAnimation();
       bubbleProgress.setValue(0);
+      setInviteMessage(null);
+      setTypedCount(0);
     };
   }, [visible, animate, bubbleProgress, introduction, helpQuestion]);
 
@@ -136,8 +136,10 @@ export default function RootLayout() {
     '/forgot-password',
     '/register',
     '/chat',
-    '/checkout',
+    '/checkout-return',
     '/success',
+    '/legal',
+    '/delete-account',
   ].includes(pathname);
 
   return (
@@ -159,8 +161,10 @@ export default function RootLayout() {
           />
           <Stack.Screen name="club-form" />
           <Stack.Screen name="chat" />
-          <Stack.Screen name="checkout" />
+          <Stack.Screen name="checkout-return" />
           <Stack.Screen name="success" />
+          <Stack.Screen name="legal" />
+          <Stack.Screen name="delete-account" />
           <Stack.Screen name="guides" />
           <Stack.Screen name="que-hacer" />
           <Stack.Screen name="ny-al-dia" />

@@ -57,7 +57,7 @@ export default function DropsScreen() {
         contentContainerStyle={styles.content} 
       > 
         <View style={styles.header}> 
-          <TouchableOpacity onPress={() => router.back()}> 
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()}> 
             <Ionicons name="arrow-back" size={26} color="#D4AF37" />
           </TouchableOpacity> 
           <Text style={styles.headerTitle}> 
@@ -76,7 +76,7 @@ export default function DropsScreen() {
         {filteredItems.length === 0 && <Text style={styles.subtitle}>{ui("No hay contenidos con estas etiquetas.")}</Text>}
 
         {/* DROP PRINCIPAL */}
-        {featured && <TouchableOpacity
+        {featured && <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title}
           style={styles.heroCard}
           onPress={() => openExperience(featured.id)}
         > 
@@ -111,7 +111,7 @@ export default function DropsScreen() {
                 <Text style={styles.timeLabel}>SEC</Text> 
               </View> 
             </View> 
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.claimButton}
               onPress={() => openExperience(featured.id)}
             > 
@@ -148,7 +148,7 @@ function MiniDropCard({ id, image, title, subtitle, tags, access, showBenefitOnC
   };
 
   return ( 
-    <TouchableOpacity style={styles.miniDropCard} onPress={openExperience}> 
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel={title} style={styles.miniDropCard} onPress={openExperience}> 
       <Image source={{ uri: image }} style={styles.miniDropImage} /> 
       <View style={styles.miniDropContent}> 
         <View style={styles.miniTopline}>

@@ -64,7 +64,8 @@ export default function ExploreScreen() {
           <Ionicons name="search" size={18} color="#999" />
           <TextInput
             placeholder={t('explore.search')}
-            placeholderTextColor="#777"
+            accessibilityLabel={t('explore.search')}
+            placeholderTextColor="#8A8A8A"
             style={styles.input}
             value={search}
             onChangeText={setSearch}

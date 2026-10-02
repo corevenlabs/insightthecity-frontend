@@ -181,23 +181,28 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
   const isNewsSection = section === 'ny-al-dia';
   const carouselCardWidth = Math.min(windowWidth - 76, 320);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const itemLimit = isNewsSection ? 5 : 4;
-      const page = await fetchNews(section, 1, itemLimit);
-      setItems(page.items.slice(0, itemLimit));
-    } catch {
-      setError('No se pudo cargar el contenido.');
-    } finally {
-      setLoading(false);
-    }
-  }, [isNewsSection, section]);
+  // reloadKey vuelve a disparar la carga al pulsar "Reintentar".
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let alive = true;
+    const itemLimit = isNewsSection ? 5 : 4;
+    fetchNews(section, 1, itemLimit)
+      .then((page) => {
+        if (!alive) return;
+        setItems(page.items.slice(0, itemLimit));
+        setError(null);
+      })
+      .catch(() => { if (alive) setError('No se pudo cargar el contenido.'); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [isNewsSection, section, reloadKey]);
+
+  const retry = () => {
+    setLoading(true);
+    setError(null);
+    setReloadKey((key) => key + 1);
+  };
 
   const openArticle = (item: NewsCard) => {
     router.push({
@@ -321,7 +326,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
           <TouchableOpacity
             accessibilityRole="button"
             style={styles.retryButton}
-            onPress={load}
+            onPress={retry}
             activeOpacity={0.72}
           >
             <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
@@ -449,7 +454,7 @@ export default function HomeScreen() {
                 : ui("Descuentos, experiencias exclusivas, acceso anticipado y mucho más.")}
             </Text>
 
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.joinBtn}
               onPress={() => router.push(user?.is_premium ? '/club' : '/club-form')}
             >
@@ -508,7 +513,7 @@ export default function HomeScreen() {
             {t('home.topToday')}
           </Text>
 
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Ver todas las experiencias')}
             onPress={() => router.push('/explore')}
           >
             <Text style={styles.seeMore}>
@@ -546,7 +551,7 @@ export default function HomeScreen() {
             Drops
           </Text>
 
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Ver todos los drops')}
             onPress={() => router.push('/drops')}
           >
             <Text style={styles.seeMore}>
@@ -592,7 +597,7 @@ export default function HomeScreen() {
             {t('home.guides')}
           </Text>
 
-          <TouchableOpacity onPress={() => router.push('/guides')}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Ver todas las guías')} onPress={() => router.push('/guides')}>
             <Text style={styles.seeMore}>{t('common.seeAll')}</Text>
           </TouchableOpacity>
         </View>
