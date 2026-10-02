@@ -93,6 +93,7 @@ export default function ExploreScreen() {
             accessibilityLabel={`${event.title}, ${event.region ?? 'NY'}, ${event.location}`}
           >
             <Image source={{ uri: event.image }} style={styles.image} />
+
             <View style={styles.cardContent}>
               <View style={styles.topRow}>
                 <View style={styles.categoryRow}>

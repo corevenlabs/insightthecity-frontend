@@ -1,14 +1,11 @@
-import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { getExperienceTags } from '@/lib/experienceFilters';
-import { ExpandableText } from '@/components/ExpandableContent';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useCallback, useEffect, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
   Image,
-  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,18 +15,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Experience } from '@/constants/experiences';
+import { GuideCard } from '../../components/GuideCard';
 import { NewsImage } from '../../components/NewsImage';
-import { WeatherWidget } from '../../components/WeatherWidget';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { fetchNews, formatDate, type NewsCard } from '../../lib/news';
 import { fetchExperiences } from '../../lib/experiences';
 import { fetchGuides, type Guide } from '../../lib/guides';
-import {
-  DEFAULT_FEATURED_PARTNERSHIP,
-  fetchFeaturedPartnership,
-  type FeaturedPartnership,
-} from '../../lib/partnerships';
 import {
   fetchCurrentWeather,
   weatherDescription,
@@ -43,31 +35,9 @@ function firstName(name: string | null, email?: string): string | null {
   return null;
 }
 
-type EventCardProps = {
-  experience: Experience;
-  isPremiumMember: boolean;
-  width: number;
-};
-
-type DropCardProps = {
+type BenefitCardProps = {
   experience: Experience;
   width: number;
-};
-
-type FeatureCardProps = {
-  image: string;
-  title: string;
-  subtitle: string;
-  tag: string;
-  onPress: () => void;
-};
-
-type CarouselMoreCardProps = {
-  stretch?: boolean;
-  width: number;
-  height: number;
-  label: string;
-  onPress: () => void;
 };
 
 function compactWeatherSymbol(
@@ -129,7 +99,6 @@ function HeaderWeather() {
         temperature: Math.round(weather.temperature),
       })}
     >
-      <Text style={styles.headerWeatherTemperature}>{Math.round(weather.temperature)}°</Text>
       <SymbolView
         name={compactWeatherSymbol(weather.weatherCode, weather.isDay)}
         size={38}
@@ -137,6 +106,7 @@ function HeaderWeather() {
         style={styles.headerWeatherSymbol}
         accessibilityLabel={description}
       />
+      <Text style={styles.headerWeatherTemperature}>{Math.round(weather.temperature)}°</Text>
     </View>
   );
 }
@@ -148,21 +118,110 @@ function openExperience(id: string) {
   } as any);
 }
 
-function CarouselMoreCard({ width, height, label, onPress, stretch }: CarouselMoreCardProps) {
-  const { ui } = useLanguage();
+function BenefitCard({ experience, width }: BenefitCardProps) {
+  const { ui, tagLabel } = useLanguage();
+  const primaryTag = getExperienceTags(experience)[0];
+  const benefit = experience.cardBenefit?.trim() || experience.memberBenefit?.trim();
+
   return (
     <TouchableOpacity
-      style={[styles.carouselMoreCard, { width, height }, stretch && { height: undefined, minHeight: height, alignSelf: 'stretch' }]}
-      activeOpacity={0.78}
+      style={[styles.benefitCard, { width }]}
+      activeOpacity={0.82}
       accessibilityRole="button"
-      accessibilityLabel={ui('Ver más de {title}', { title: label })}
-      onPress={onPress}
+      accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
+      onPress={() => openExperience(experience.id)}
     >
-      <View style={styles.carouselMoreIcon}>
-        <Ionicons name="arrow-forward" size={24} color="#050505" />
+      <View style={styles.benefitImageWrap}>
+        <Image source={{ uri: experience.image }} style={styles.benefitImage} />
+          {!!benefit && (
+            <View style={styles.benefitBadge}>
+              <Text style={styles.benefitBadgeText} numberOfLines={1}>{benefit}</Text>
+            </View>
+          )}
       </View>
-      <Text style={styles.carouselMoreText}>{ui("Ver más")}</Text>
+      <View style={styles.benefitBody}>
+        <Text style={styles.benefitCategory} numberOfLines={1}>
+          {primaryTag ? tagLabel(primaryTag).toUpperCase() : experience.category.toUpperCase()}
+        </Text>
+        <Text style={styles.benefitName} numberOfLines={1}>{experience.title}</Text>
+        <View style={styles.benefitFooter}>
+          <View style={styles.benefitRegionRow}>
+            <Ionicons name="location-outline" size={18} color={COLORS.secondary} />
+            <Text style={styles.benefitRegion}>{experience.region ?? 'NY'}</Text>
+          </View>
+
+        </View>
+      </View>
     </TouchableOpacity>
+  );
+}
+
+function RecommendationsCarousel({ experiences }: { experiences: Experience[] }) {
+  const { ui, tagLabel } = useLanguage();
+  const { width: windowWidth } = useWindowDimensions();
+  const bannerWidth = Math.min(480, windowWidth - 76);
+  const intervalWidth = bannerWidth + 10;
+
+  return (
+    <View>
+      <ScrollView
+        horizontal
+        snapToInterval={intervalWidth}
+        decelerationRate="fast"
+        disableIntervalMomentum
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.recommendationsBannerTrack}
+
+      >
+        {experiences.map((experience) => {
+          const primaryTag = getExperienceTags(experience)[0];
+          return (
+            <TouchableOpacity
+              key={experience.id}
+              style={[styles.recommendationBanner, { width: bannerWidth }]}
+              activeOpacity={0.84}
+              accessibilityRole="button"
+              accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
+              onPress={() => openExperience(experience.id)}
+            >
+              <Image source={{ uri: experience.image }} style={styles.recommendationBannerImage} />
+              <View style={styles.recommendationBannerOverlay}>
+                <Text style={styles.recommendationBannerCategory} numberOfLines={1}>
+                  {primaryTag ? tagLabel(primaryTag).toUpperCase() : experience.category.toUpperCase()}
+                </Text>
+                <Text style={styles.recommendationBannerTitle} numberOfLines={2}>{experience.title}</Text>
+                {!!experience.description && <Text style={styles.recommendationDescription} numberOfLines={2}>{experience.description}</Text>}
+                <View style={styles.recommendationBannerFooter}>
+                  <View style={styles.recommendationRegionRow}>
+                    <Ionicons name="location-outline" size={18} color={COLORS.secondary} />
+                    <Text style={styles.recommendationBannerRegion}>{experience.region ?? 'NY'}</Text>
+                  </View>
+
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+function GuidesCarousel({ guides }: { guides: Guide[] }) {
+  const { ui } = useLanguage();
+  const { width } = useWindowDimensions();
+  const cardWidth = Math.min(480, Math.max(320, width - 40));
+
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}
+      snapToInterval={cardWidth + 12} decelerationRate="fast"
+      contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
+      {guides.map((guide) => (
+        <GuideCard key={guide.id} guide={guide} width={cardWidth}
+          accessibilityLabel={ui('Abrir guía: {title}', { title: guide.title })}
+          onPress={() => router.push('/guides')} />
+      ))}
+    </ScrollView>
   );
 }
 
@@ -179,7 +238,9 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isNewsSection = section === 'ny-al-dia';
-  const carouselCardWidth = Math.min(windowWidth - 76, 320);
+  const carouselCardWidth = isNewsSection
+    ? Math.min(320, Math.max(260, windowWidth * 0.72))
+    : (windowWidth - 50) / 2;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -202,7 +263,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
   const openArticle = (item: NewsCard) => {
     router.push({
       pathname: '/news-detail',
-      params: { id: String(item.id), section: title },
+      params: { id: String(item.id), section: title, source: section },
     } as any);
   };
 
@@ -215,41 +276,33 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
   );
 
   const renderNewsLayout = () => {
-    const [featured, ...secondary] = items;
-
     return (
-      <View>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={`${featured.title}, ${formatDate(featured.date, language)}`}
-          style={styles.newsFeaturedCard}
-          onPress={() => openArticle(featured)}
-          activeOpacity={0.82}
-        >
-          {renderImage(featured, styles.newsFeaturedImage)}
-          <View style={styles.newsFeaturedOverlay}>
-            <Text style={styles.newsFeaturedDate}>{formatDate(featured.date, language)}</Text>
-            <Text style={styles.newsFeaturedTitle} numberOfLines={3}>{featured.title}</Text>
-          </View>
-        </TouchableOpacity>
-
-        {secondary.slice(0, 4).map((item) => (
+      <ScrollView
+        horizontal
+        nestedScrollEnabled
+        decelerationRate="fast"
+        snapToInterval={carouselCardWidth + 10}
+        disableIntervalMomentum
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.newsCarouselContent}
+      >
+        {items.map((item) => (
           <TouchableOpacity
             key={item.id}
             accessibilityRole="button"
             accessibilityLabel={`${item.title}, ${formatDate(item.date, language)}`}
-            style={styles.newsCompactCard}
+            style={[styles.newsHomeCard, { width: carouselCardWidth }]}
             onPress={() => openArticle(item)}
-            activeOpacity={0.78}
+            activeOpacity={0.82}
           >
-            {renderImage(item, styles.newsCompactImage)}
-            <View style={styles.newsCompactContent}>
-              <Text style={styles.newsCompactDate}>{formatDate(item.date, language)}</Text>
-              <Text style={styles.newsCompactTitle} numberOfLines={3}>{item.title}</Text>
+            {renderImage(item, styles.newsHomeImage)}
+            <View style={styles.newsHomeOverlay}>
+              <Text style={styles.newsHomeDate}>{formatDate(item.date, language)}</Text>
+              <Text style={styles.newsHomeTitle} numberOfLines={3}>{item.title}</Text>
             </View>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
     );
   };
 
@@ -277,20 +330,13 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
         >
           {renderImage(item, styles.planCarouselImage)}
           <View style={styles.planCarouselOverlay}>
-            <Text style={styles.planCarouselDate}>{formatDate(item.date, language)}</Text>
-            <Text style={styles.planCarouselTitle} numberOfLines={3}>{item.title}</Text>
+            <Text style={styles.planCarouselTitle} numberOfLines={2}>{item.title}</Text>
             {!!item.excerpt && (
               <Text style={styles.planCarouselExcerpt} numberOfLines={2}>{item.excerpt}</Text>
             )}
           </View>
         </TouchableOpacity>
       ))}
-      <CarouselMoreCard
-        width={carouselCardWidth}
-        height={360}
-        label={title}
-        onPress={() => router.push(route as any)}
-      />
     </ScrollView>
   );
 
@@ -336,252 +382,124 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
   );
 }
 
-function DropCard({ experience, width }: DropCardProps) {
-  const { ui, tagLabel } = useLanguage();
-  const primaryTag = getExperienceTags(experience)[0];
-  return (
-    <TouchableOpacity
-      style={[styles.dropCard, { width }]}
-      activeOpacity={0.8}
-      accessibilityRole="button"
-      accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
-      onPress={() => openExperience(experience.id)}
-    >
-      <View style={styles.dropImageContainer}>
-        <Image source={{ uri: experience.image }} style={styles.dropImage} />
-        <View style={styles.dropBadge}>
-          <Text style={styles.dropBadgeText}>DROP</Text>
-        </View>
-      </View>
-      <View style={styles.dropContent}>
-        <Text style={styles.dropMeta} numberOfLines={1}>
-          {experience.region ?? 'NY'}{primaryTag ? ` · ${tagLabel(primaryTag).toUpperCase()}` : ''}
-        </Text>
-        <Text style={styles.dropTitle} numberOfLines={2}>{experience.title}</Text>
-        <MemberBenefitSummary experience={experience} />
-      </View>
-    </TouchableOpacity>
-  );
-}
-
 export default function HomeScreen() {
   const { width: windowWidth } = useWindowDimensions();
-  const dropBannerWidth = Math.min(600, Math.max(260, windowWidth - 48));
-  const eventCardWidth = Math.min(320, Math.max(240, windowWidth * 0.78));
+  const benefitCardWidth = Math.min(210, Math.max(172, windowWidth * 0.46));
   const { user, refreshUser } = useAuth();
   const { t, ui } = useLanguage();
   const name = firstName(user?.name ?? null, user?.email);
-  const [partnership, setPartnership] = useState<FeaturedPartnership | null>(
-    DEFAULT_FEATURED_PARTNERSHIP,
-  );
-  const [topToday, setTopToday] = useState<Experience[]>([]);
-  const [homeDrops, setHomeDrops] = useState<Experience[]>([]);
-  const [featuredGuide, setFeaturedGuide] = useState<Guide | null>(null);
+  const [clubBenefits, setClubBenefits] = useState<Experience[]>([]);
+  const [recommendations, setRecommendations] = useState<Experience[]>([]);
+  const [guides, setGuides] = useState<Guide[]>([]);
+  const [showPromotion, setShowPromotion] = useState(true);
 
   useFocusEffect(useCallback(() => {
     void refreshUser();
-    void Promise.all([fetchExperiences('top_today'), fetchExperiences('drops'), fetchGuides()])
-      .then(([top, drops, guides]) => {
-        setTopToday(top);
-        setHomeDrops(drops);
-        setFeaturedGuide(guides.find((guide) => guide.isFeatured) ?? guides[0] ?? null);
+    void Promise.all([fetchExperiences(), fetchGuides()])
+      .then(([experiences, guides]) => {
+        setClubBenefits(experiences.filter((experience) => experience.access === 'premium'));
+        const curated = experiences.filter(
+          (experience) => experience.section === 'top_today' && experience.access !== 'premium',
+        );
+        setRecommendations(
+          curated.length > 0
+            ? curated
+            : experiences.filter((experience) => experience.access !== 'premium'),
+        );
+        setGuides(guides);
       })
       .catch(() => undefined);
   }, [refreshUser]));
 
-  useEffect(() => {
-    let active = true;
-    fetchFeaturedPartnership()
-      .then((item) => {
-        if (active) setPartnership(item);
-      })
-      .catch(() => {
-        // Mientras el endpoint nuevo llega a producción, conservamos la muestra local.
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: showPromotion ? 104 : 24 }]}
       >
         {/* HEADER */}
 
         <View style={styles.header}>
-          <View style={styles.headerCopy}>
-            <View style={styles.greetingRow}>
-              <Text style={styles.greeting} numberOfLines={1}>
-                {name ? t('home.hello', { name }) : t('home.helloGuest')}
-              </Text>
-            </View>
-
-            <Text style={styles.subtitle}>
-              {t('home.subtitle')}
+          <View style={styles.headerIdentity}>
+            <View style={styles.logoLockup}><Text style={styles.headerLogo}>ITC</Text><Text style={styles.logoClub}>CLUB</Text></View>
+            <View style={styles.headerDivider} />
+            <Text style={styles.greeting} numberOfLines={1}>
+              {name ? t('home.hello', { name }) : t('home.helloGuest')}
             </Text>
           </View>
 
           <HeaderWeather />
         </View>
 
-        {/* HERO CARD */}
+        <TouchableOpacity
+          style={styles.searchBar}
+          activeOpacity={0.78}
+          accessibilityRole="button"
+          accessibilityLabel={ui('Buscar lugares, eventos y guías')}
+          onPress={() => router.push('/explore')}
+        >
+          <Ionicons name="search-outline" size={24} color={COLORS.secondary} />
+          <Text style={styles.searchPlaceholder} numberOfLines={1}>
+            {ui('Buscar lugares, eventos y guías')}
+          </Text>
+        </TouchableOpacity>
 
-        <View style={styles.heroCard}>
-          <Image
-            source={{
-              uri: 'https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2',
-            }}
-            style={styles.heroImage}
-          />
-
-          <View style={styles.heroOverlay}>
-            <Text style={styles.clubTitle}>
-              <Text style={styles.clubWhite}>ITC </Text>
-              <Text style={styles.clubGold}>CLUB</Text>
-            </Text>
-
-            <Text style={styles.clubDescription}>
-              {user?.is_premium
-                ? ui("Tus beneficios están activos. Descubre eventos, descuentos y experiencias para miembros.")
-                : ui("Descuentos, experiencias exclusivas, acceso anticipado y mucho más.")}
-            </Text>
-
-            <TouchableOpacity
-              style={styles.joinBtn}
-              onPress={() => router.push(user?.is_premium ? '/club' : '/club-form')}
-            >
-              <Text style={styles.joinBtnText}>
-                {user?.is_premium ? ui("VER MIS BENEFICIOS") : ui("UNIRME AL CLUB")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {partnership && (
-          <TouchableOpacity
-            style={styles.partnershipCard}
-            activeOpacity={partnership.ctaUrl ? 0.84 : 1}
-            disabled={!partnership.ctaUrl}
-            accessibilityRole={partnership.ctaUrl ? 'link' : undefined}
-            accessibilityLabel={`${partnership.brandName}: ${partnership.title}`}
-            onPress={() => {
-              if (partnership.ctaUrl) void Linking.openURL(partnership.ctaUrl);
-            }}
-          >
-            <NewsImage
-              uri={partnership.image}
-              style={styles.partnershipImage}
-              accessibilityLabel={ui('Imagen de {title}', { title: partnership.brandName })}
-            />
-            <View style={styles.partnershipOverlay}>
-              <View style={styles.partnershipLabel}>
-                <Ionicons name="sparkles" size={12} color={COLORS.gold} />
-                <Text style={styles.partnershipLabelText}>
-                  PARTNERSHIP · {partnership.brandName.toUpperCase()}
-                </Text>
-              </View>
-              <Text style={styles.partnershipTitle} numberOfLines={2}>
-                {partnership.title}
-              </Text>
-              {!!partnership.description && (
-                <ExpandableText key={partnership.description} text={partnership.description} style={styles.partnershipDescription} />
-              )}
-              {!!partnership.ctaLabel && (
-                <View style={styles.partnershipCta}>
-                  <Text style={styles.partnershipCtaText}>{ui(partnership.ctaLabel)}</Text>
-                  {partnership.ctaUrl && (
-                    <Ionicons name="arrow-forward" size={15} color="#050505" />
-                  )}
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
-        )}
-
-        {/* TOP DE HOY */}
+        {/* BENEFICIOS ITC CLUB */}
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {t('home.topToday')}
+            {ui('BENEFICIOS ITC CLUB')}
           </Text>
 
           <TouchableOpacity
+            style={styles.sectionHeaderAction}
+            onPress={() => router.push('/club')}
+          >
+            <Text style={styles.seeMore}>
+              {t('common.seeAll')}
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.gold} />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.benefitsCarousel}
+        >
+          {clubBenefits.map((experience) => (
+            <BenefitCard
+              key={experience.id}
+              experience={experience}
+              width={benefitCardWidth}
+            />
+          ))}
+        </ScrollView>
+
+        {/* ITC RECOMIENDA */}
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>
+            {ui('ITC RECOMIENDA')}
+          </Text>
+
+          <TouchableOpacity
+            style={styles.sectionHeaderAction}
             onPress={() => router.push('/explore')}
           >
             <Text style={styles.seeMore}>
               {t('common.seeAll')}
             </Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.gold} />
           </TouchableOpacity>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        >
+        <RecommendationsCarousel experiences={recommendations} />
 
-          {topToday.map((experience) => (
-            <EventCard
-              key={experience.id}
-              experience={experience}
-              width={eventCardWidth}
-              isPremiumMember={Boolean(user?.is_premium)}
-            />
-          ))}
-          <CarouselMoreCard
-            width={eventCardWidth}
-            height={(eventCardWidth - 28) / 1.6 + 112}
-            label={ui("Top de hoy")}
-            stretch
-            onPress={() => router.push('/explore')}
-          />
-        </ScrollView>
-
-        {/* DROPS */}
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            Drops
-          </Text>
-
-          <TouchableOpacity
-            onPress={() => router.push('/drops')}
-          >
-            <Text style={styles.seeMore}>
-            {t('common.seeAll')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        >
-          {homeDrops.map((experience) => (
-            <DropCard key={experience.id} experience={experience} width={dropBannerWidth} />
-          ))}
-          <CarouselMoreCard
-            width={dropBannerWidth}
-            height={dropBannerWidth / 2.35 + 110}
-            stretch
-            label="Drops"
-            onPress={() => router.push('/drops')}
-          />
-        </ScrollView>
-
-        {/* NY AL DIA */}
-        <HomeNewsSection
-          section="ny-al-dia"
-          title={ui("NY al día")}
-          route="/ny-al-dia"
-        />
-
-        {/* QUE HACER EN NY */}
+        {/* QUE HACER EN NEW YORK */}
         <HomeNewsSection
           section="que-hacer"
-          title={ui("¿Qué hacer en NY?")}
+          title={ui("QUÉ HACER EN NEW YORK")}
           route="/que-hacer"
         />
 
@@ -592,19 +510,14 @@ export default function HomeScreen() {
             {t('home.guides')}
           </Text>
 
-          <TouchableOpacity onPress={() => router.push('/guides')}>
+          <TouchableOpacity style={styles.sectionHeaderAction} onPress={() => router.push('/guides')}>
             <Text style={styles.seeMore}>{t('common.seeAll')}</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.gold} />
           </TouchableOpacity>
         </View>
 
-        {featuredGuide ? (
-          <FeatureCard
-            image={featuredGuide.coverUrl ?? 'https://images.unsplash.com/photo-1518391846015-55a9cc003b25'}
-            tag={`${featuredGuide.access === 'premium' ? 'ITC CLUB' : ui('GRATIS')} · ${featuredGuide.region}`}
-            title={featuredGuide.title}
-            subtitle={featuredGuide.description ?? ui('Descubre esta guía seleccionada por Insight The City.')}
-            onPress={() => router.push('/guides')}
-          />
+        {guides.length > 0 ? (
+          <GuidesCarousel guides={guides} />
         ) : (
           <TouchableOpacity
             style={styles.newsState}
@@ -618,116 +531,99 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        <WeatherWidget />
+        {/* NY AL DIA */}
+        <HomeNewsSection
+          section="ny-al-dia"
+          title={ui("NY AL DÍA")}
+          route="/ny-al-dia"
+        />
 
-        <View style={{ height: 100 }} />
+
       </ScrollView>
+      {showPromotion && (
+        <View style={styles.promotion}>
+          <View style={styles.logoLockup}><Text style={styles.promotionLogo}>ITC</Text><Text style={styles.logoClub}>CLUB</Text></View>
+          <Text style={styles.promotionTitle}>{ui('Beneficios cerca de ti')}</Text>
+          <TouchableOpacity style={styles.promotionButton} accessibilityRole="button" accessibilityLabel={ui('Ver beneficios')} onPress={() => router.push('/club')}>
+            <Text style={styles.promotionButtonText}>{ui('Ver más')}</Text>
+          </TouchableOpacity>
+          {windowWidth >= 600 && <Text style={styles.promotionPartner}>PARTNERSHIP</Text>}
+          <TouchableOpacity style={styles.promotionClose} accessibilityRole="button" accessibilityLabel={ui('Cerrar')} onPress={() => setShowPromotion(false)}>
+            <Ionicons name="close-outline" size={26} color={COLORS.white} />
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
-  );
-}
-
-function EventCard({ experience, isPremiumMember, width }: EventCardProps) {
-  const { ui, tagLabel } = useLanguage();
-  const primaryTag = getExperienceTags(experience)[0];
-  return (
-    <TouchableOpacity style={[styles.eventCard, { width }]} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={ui('Abrir {title}', { title: experience.title })} onPress={() => openExperience(experience.id)}>
-      <Image
-        source={{
-          uri: experience.image,
-        }}
-        style={styles.eventImage}
-      />
-
-      <View style={styles.eventBody}>
-        <View style={styles.eventMetaRow}>
-          <Text style={styles.category}>{experience.region ?? 'NY'}</Text>
-          {!!primaryTag && <Text style={styles.eventTag} numberOfLines={1}>{tagLabel(primaryTag)}</Text>}
-        </View>
-
-        <Text style={styles.eventTitle} numberOfLines={2}>
-          {experience.title}
-        </Text>
-        <MemberBenefitSummary experience={experience} />
-
-        <View style={[styles.freeBadge, styles.eventAccessBadge, experience.access === 'premium' && styles.premiumSmallBadge]}>
-          <Text style={[styles.freeText, experience.access === 'premium' && styles.premiumSmallText]}>
-            {experience.access === 'premium'
-              ? isPremiumMember ? 'ITC CLUB' : 'PREMIUM'
-              : ui("GRATIS")}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-function FeatureCard({
-  image,
-  title,
-  subtitle,
-  tag,
-  onPress,
-}: FeatureCardProps) {
-  return (
-    <TouchableOpacity
-      style={styles.featureCard}
-      activeOpacity={0.8}
-      accessibilityRole="button"
-      accessibilityLabel={title}
-      onPress={onPress}
-    >
-      <Image source={{ uri: image }} style={styles.featureImage} resizeMode="contain" />
-      <View style={styles.featureContent}>
-        <Text style={styles.featureTag}>{tag}</Text>
-        <Text style={styles.featureTitle} numberOfLines={2}>{title}</Text>
-        <Text style={styles.featureSubtitle} numberOfLines={3}>{subtitle}</Text>
-      </View>
-    </TouchableOpacity>
   );
 }
 
 const COLORS = {
   background: '#050505',
   card: '#121212',
-  gold: '#D4A017',
+  gold: '#D4AF37',
   white: '#FFFFFF',
   secondary: '#A6A6A6',
 };
 
 const styles = StyleSheet.create({
+  logoLockup: { alignItems: 'center' },
+  logoClub: { color: COLORS.white, fontSize: 8, letterSpacing: 4, paddingLeft: 4 },
+  promotion: { position: 'absolute', bottom: 8, left: 12, right: 12, minHeight: 64,
+    flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 14, paddingRight: 4,
+    backgroundColor: 'rgba(15,15,15,0.97)', borderRadius: 14, borderWidth: 1, borderColor: COLORS.gold },
+  promotionLogo: { color: COLORS.gold, fontSize: 28, lineHeight: 32, fontWeight: '800', letterSpacing: -0.8 },
+  promotionTitle: { flex: 1, color: COLORS.white, fontSize: 13, lineHeight: 18 },
+  promotionButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, backgroundColor: '#E5B840', borderRadius: 24 },
+  promotionButtonText: { color: COLORS.background, fontSize: 12, fontWeight: '700' },
+  promotionPartner: { color: COLORS.secondary, fontSize: 10, letterSpacing: 3, borderLeftWidth: 1, borderLeftColor: '#777777', paddingLeft: 12 },
+  promotionClose: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
 
   content: {
-    padding: 20,
-    paddingBottom: 120,
+    paddingHorizontal: 20,
+    paddingTop: 6,
+    paddingBottom: 104,
   },
 
   header: {
+    minHeight: 58,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
 
-  headerCopy: {
+  headerIdentity: {
     flex: 1,
     minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingRight: 12,
   },
 
-  greetingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  headerLogo: {
+    color: COLORS.gold,
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: '800',
+    letterSpacing: -0.8,
+  },
+
+  headerDivider: {
+    width: 1,
+    height: 34,
+    marginHorizontal: 13,
+    backgroundColor: COLORS.gold,
+    opacity: 0.65,
   },
 
   greeting: {
     flexShrink: 1,
     color: COLORS.white,
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '500',
   },
 
   headerWeatherBadge: {
@@ -751,9 +647,22 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-  subtitle: {
+  searchBar: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 8,
+    paddingHorizontal: 16,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+    backgroundColor: '#232323',
+  },
+
+  searchPlaceholder: {
+    flex: 1,
     color: COLORS.secondary,
-    marginTop: 4,
     fontSize: 16,
   },
 
@@ -896,8 +805,9 @@ clubGold: {
 
   sectionHeader: {
     marginTop: 28,
-    marginBottom: 14,
+    marginBottom: 10,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
 
@@ -910,6 +820,135 @@ clubGold: {
   seeMore: {
     color: COLORS.gold,
   },
+
+  sectionHeaderAction: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingLeft: 10,
+  },
+
+  benefitsCarousel: {
+    paddingRight: 8,
+  },
+
+  benefitCard: {
+    overflow: 'hidden',
+    marginRight: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333333',
+    backgroundColor: COLORS.card,
+  },
+
+  benefitImageWrap: {
+    width: '100%',
+    aspectRatio: 1.72,
+    overflow: 'hidden',
+    backgroundColor: '#1A1A1A',
+  },
+
+  benefitImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+
+  benefitFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 6,
+    marginTop: 4,
+  },
+
+  benefitBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    flexShrink: 1,
+    maxWidth: '60%',
+    minHeight: 21,
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+    borderRadius: 5,
+    backgroundColor: '#D4AF37',
+  },
+
+  benefitBadgeText: {
+    color: COLORS.background,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '800',
+  },
+
+  benefitBookmark: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    width: 30,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 7,
+    backgroundColor: 'rgba(5,5,5,0.68)',
+  },
+
+  benefitBody: {
+    paddingHorizontal: 10,
+    paddingTop: 7,
+    paddingBottom: 7,
+  },
+
+  benefitCategory: {
+    color: '#C6A34D',
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '600',
+    letterSpacing: 1.2,
+  },
+
+  benefitName: {
+    marginTop: 2,
+    color: COLORS.white,
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: '700',
+  },
+
+  benefitRegionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 2,
+  },
+
+  benefitRegion: {
+    color: COLORS.secondary,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+
+  recommendationsBannerTrack: {
+    paddingRight: 10,
+  },
+
+  recommendationBanner: {
+    flexDirection: 'row', minHeight: 132, overflow: 'hidden', marginRight: 10,
+    borderRadius: 12, borderWidth: 1, borderColor: '#2C2C2C', backgroundColor: COLORS.card,
+  },
+  recommendationBannerImage: {
+    width: '48%', alignSelf: 'stretch', resizeMode: 'cover', backgroundColor: '#1A1A1A',
+  },
+  recommendationBannerOverlay: { flex: 1, minWidth: 0, justifyContent: 'center', padding: 10 },
+  recommendationBannerCategory: { color: COLORS.gold, fontSize: 9, lineHeight: 13, letterSpacing: 1, paddingRight: 22 },
+  recommendationBannerTitle: { marginTop: 4, color: COLORS.white, fontSize: 15, lineHeight: 19, fontWeight: '700', paddingRight: 16 },
+  recommendationDescription: { color: COLORS.secondary, fontSize: 12, lineHeight: 17, marginTop: 5 },
+  recommendationBannerFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
+  recommendationRegionRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  recommendationBannerRegion: { color: COLORS.secondary, fontSize: 12, lineHeight: 16 },
+  recommendationOpenIcon: { position: 'absolute', right: 8, top: 8 },
 
   newsSection: {
     marginTop: 28,
@@ -975,6 +1014,51 @@ clubGold: {
     color: COLORS.secondary,
     paddingVertical: 24,
     textAlign: 'center',
+  },
+
+  newsCarouselContent: {
+    paddingRight: 8,
+  },
+
+  newsHomeCard: {
+    flexDirection: 'row',
+    minHeight: 96,
+    overflow: 'hidden',
+    marginRight: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#2C2C2C',
+    backgroundColor: COLORS.card,
+  },
+
+  newsHomeImage: {
+    width: '45%',
+    alignSelf: 'stretch',
+    minHeight: 94,
+    borderRadius: 8,
+    backgroundColor: '#1A1A1A',
+  },
+
+  newsHomeOverlay: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+
+  newsHomeDate: {
+    color: COLORS.secondary,
+    fontSize: 10,
+    lineHeight: 14,
+  },
+
+  newsHomeTitle: {
+    marginTop: 6,
+    color: COLORS.white,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: '600',
   },
 
   newsFeaturedCard: {
@@ -1058,47 +1142,41 @@ clubGold: {
   },
 
   planCarouselCard: {
-    height: 360,
     overflow: 'hidden',
-    marginRight: 12,
-    borderRadius: 20,
+    marginRight: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#2A2A2A',
+    borderColor: '#333333',
     backgroundColor: COLORS.card,
   },
 
   planCarouselImage: {
     width: '100%',
-    height: 190,
+    aspectRatio: 1.6,
     backgroundColor: '#1A1A1A',
   },
 
+
   planCarouselOverlay: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 18,
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    paddingBottom: 14,
     backgroundColor: COLORS.card,
-  },
-
-  planCarouselDate: {
-    color: COLORS.gold,
-    fontSize: 12,
-    fontWeight: '800',
-    marginBottom: 7,
   },
 
   planCarouselTitle: {
     color: COLORS.white,
-    fontSize: 22,
-    lineHeight: 27,
-    fontWeight: '800',
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '700',
   },
 
   planCarouselExcerpt: {
-    color: '#D0D0D0',
+    color: COLORS.secondary,
     fontSize: 13,
     lineHeight: 18,
-    marginTop: 8,
+    marginTop: 6,
   },
 
   homeNewsImageFallback: {

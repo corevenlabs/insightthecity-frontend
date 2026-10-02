@@ -35,6 +35,7 @@ function PremiumCard({ experience }: { experience: Experience }) {
       onPress={() => router.push({ pathname: '/experience-detail', params: { id: experience.id } })}
     >
       <Image source={{ uri: experience.image }} style={styles.experienceImage} />
+
       <View style={styles.experienceBody}>
         <View style={styles.experienceTopline}>
           <ExperienceTags tags={getExperienceTags(experience)} />

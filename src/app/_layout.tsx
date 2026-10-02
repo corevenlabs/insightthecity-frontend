@@ -1,3 +1,4 @@
+import { SavedProvider } from '../context/SavedContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, usePathname, useRouter } from 'expo-router';
 import * as Updates from 'expo-updates';
@@ -84,7 +85,7 @@ function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean
   const introPrefix = `${introduction} `;
   const introPrefixCount = Math.min(typedCount, introPrefix.length);
   const yorkCount = Math.min(Math.max(typedCount - introPrefix.length, 0), 4);
-  return <View style={styles.chatLauncher} pointerEvents="box-none">
+  return <View style={[styles.chatLauncher, animate && { bottom: 165 }]} pointerEvents="box-none">
     <Animated.View style={[styles.morphingChatButton, {
       width: bubbleProgress.interpolate({ inputRange: [0, 0.3, 0.7, 1, 1.08], outputRange: [58, 76, 174, 220, 226], extrapolate: 'clamp' }),
       height: bubbleProgress.interpolate({ inputRange: [0, 0.3, 0.7, 1, 1.08], outputRange: [58, 52, 60, 68, 64], extrapolate: 'clamp' }),
@@ -142,7 +143,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <LanguageProvider>
+      <LanguageProvider><SavedProvider>
         <Stack
           initialRouteName="index"
           screenOptions={{
@@ -170,7 +171,7 @@ export default function RootLayout() {
 
         <ChatLauncher visible={!hideChatButton} animate={pathname === '/home'} />
         <BiometricLockScreen />
-      </LanguageProvider>
+      </SavedProvider></LanguageProvider>
     </AuthProvider>
   );
 }

@@ -84,6 +84,7 @@ export default function DropsScreen() {
             source={{ uri: featured.image }}
             style={styles.heroImage} 
           /> 
+
           <View style={styles.overlay}> 
             <View style={styles.heroTopline}>
               <Text style={styles.badge}> {t('drops.featured')} </Text>
@@ -149,7 +150,8 @@ function MiniDropCard({ id, image, title, subtitle, tags, access, showBenefitOnC
 
   return ( 
     <TouchableOpacity style={styles.miniDropCard} onPress={openExperience}> 
-      <Image source={{ uri: image }} style={styles.miniDropImage} /> 
+      <Image source={{ uri: image }} style={styles.miniDropImage} />
+
       <View style={styles.miniDropContent}> 
         <View style={styles.miniTopline}>
           <View style={styles.regionBadge}><Text style={styles.regionBadgeText}>{region}</Text></View>

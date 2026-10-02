@@ -1,3 +1,5 @@
+import { SaveButton } from '../components/SaveButton';
+import { savedExperience } from '../context/SavedContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { getExperienceTags } from '@/lib/experienceFilters';
@@ -94,6 +96,7 @@ export default function ExperienceDetailScreen() {
             onMomentumScrollEnd={(event) => setPhotoIndex(Math.round(event.nativeEvent.contentOffset.x / screenWidth))}
           />
           <View style={styles.heroShade} pointerEvents="none" />
+          {!['ny_al_dia', 'guias'].includes(experience.section || '') && <SaveButton item={savedExperience(experience)} />}
           <View style={styles.heroOverlay} pointerEvents="box-none">
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={22} color="#D4AF37" />

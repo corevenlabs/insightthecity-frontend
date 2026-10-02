@@ -1,9 +1,10 @@
+import { GuideCard } from '../components/GuideCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { confirmGuidePurchase, createGuidePurchase, fetchGuides, getGuideDownload, type Guide } from '../lib/guides';
@@ -83,11 +84,10 @@ export default function GuidesScreen() {
       {loading && items.length === 0 ? <View style={s.loading} accessibilityLabel={ui('Cargando guías')}><ActivityIndicator color={C.gold} /></View> : filtered.map((guide) => {
         const available = owns(guide);
         return <View style={s.card} key={guide.id}>
-          {guide.coverUrl ? <Image source={{ uri: guide.coverUrl }} style={s.image} resizeMode="contain" accessibilityLabel={guide.title} /> : <View style={[s.image, s.placeholder]}><Ionicons name="document-text-outline" size={44} color={C.gold} /></View>}
+          <GuideCard guide={guide}
+            accessibilityLabel={`${guide.title} · ${ui(available ? 'Descargar guía PDF' : guide.individualPurchaseEnabled ? 'Comprar guía' : 'Obtener con ITC Club')}`}
+            onPress={() => { if (busy === guide.id) return; if (available) void download(guide); else if (guide.individualPurchaseEnabled) void purchase(guide); else router.push('/club-form'); }} />
           <View style={s.body}>
-            <View style={s.tags}><Text style={s.tag}>{guide.region}</Text><Text style={s.tag}>{guide.language.toUpperCase()}</Text>{guide.includedInMembership && <Text style={s.premium}>ITC CLUB</Text>}{guide.isPurchased && <Text style={s.owned}>{ui('COMPRADA')}</Text>}</View>
-            <Text style={s.cardTitle}>{guide.title}</Text>
-            {!!guide.description && <Text style={s.description}>{guide.description}</Text>}
             <View style={s.commerceRow}><Text style={s.meta}>{guide.pageCount ? `${guide.pageCount} páginas · ` : ''}{(guide.pdfSize / 1048576).toFixed(1)} MB</Text>{guide.access !== 'free' && guide.individualPurchaseEnabled && <Text style={s.price}>{price(guide)}</Text>}</View>
             {available ? <TouchableOpacity disabled={busy === guide.id} style={s.button} onPress={() => void download(guide)} accessibilityRole="button" accessibilityLabel={ui('Descargar guía PDF')}>{busy === guide.id ? <ActivityIndicator color={C.bg} /> : <Ionicons name="download-outline" size={20} color={C.bg} />}<Text style={s.buttonText}>{ui('DESCARGAR GUÍA PDF')}</Text></TouchableOpacity> : <>
               {guide.individualPurchaseEnabled && <TouchableOpacity disabled={busy === guide.id} style={s.button} onPress={() => void purchase(guide)} accessibilityRole="button" accessibilityLabel={`${ui('Comprar guía')} ${price(guide)}`}>{busy === guide.id ? <ActivityIndicator color={C.bg} /> : <Ionicons name="card-outline" size={20} color={C.bg} />}<Text style={s.buttonText}>{ui('COMPRAR GUÍA')} · {price(guide)}</Text></TouchableOpacity>}
@@ -103,11 +103,11 @@ export default function GuidesScreen() {
 
 const C = { bg: '#050505', card: '#121212', gold: '#D4AF37', white: '#FFFFFF', secondary: '#A6A6A6', green: '#72D59B' };
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg }, content: { padding: 20, paddingBottom: 120 },
+  container: { flex: 1, backgroundColor: C.bg }, content: { paddingHorizontal: 12, paddingTop: 20, paddingBottom: 120 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, back: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   title: { color: C.white, fontSize: 28, fontWeight: '900' }, subtitle: { color: C.secondary, lineHeight: 22, marginTop: 8, marginBottom: 20 },
   search: { minHeight: 52, borderRadius: 16, backgroundColor: C.card, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 20 }, input: { flex: 1, color: C.white, fontSize: 15, marginLeft: 10 },
-  card: { backgroundColor: C.card, borderRadius: 20, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#242424' }, image: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#080808' }, placeholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#181818' }, body: { padding: 18 },
+  card: { marginBottom: 20 }, image: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#080808' }, placeholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#181818' }, body: { paddingHorizontal: 8, paddingBottom: 8 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, tag: { color: C.white, fontSize: 11, fontWeight: '800', backgroundColor: '#272727', paddingHorizontal: 9, paddingVertical: 5, borderRadius: 99 }, premium: { color: C.bg, fontSize: 11, fontWeight: '900', backgroundColor: C.gold, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 99 }, owned: { color: '#07150D', fontSize: 11, fontWeight: '900', backgroundColor: C.green, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 99 },
   cardTitle: { color: C.white, fontSize: 21, fontWeight: '800', marginTop: 13 }, description: { color: C.secondary, lineHeight: 21, marginTop: 7 }, commerceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 12 }, meta: { color: C.gold, fontSize: 12, fontWeight: '700', flex: 1 }, price: { color: C.white, fontSize: 17, fontWeight: '900' },
   button: { minHeight: 52, borderRadius: 14, backgroundColor: C.gold, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18, paddingHorizontal: 14 }, buttonText: { color: C.bg, fontWeight: '900', fontSize: 13 }, clubButton: { minHeight: 52, borderRadius: 14, borderWidth: 1, borderColor: C.gold, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 10, paddingHorizontal: 14 }, clubButtonText: { color: C.gold, fontWeight: '900', fontSize: 13 },

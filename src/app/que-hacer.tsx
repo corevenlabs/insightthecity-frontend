@@ -21,7 +21,7 @@ export default function QueHacerScreen() {
   const feed = useNewsFeed('que-hacer');
 
   const openArticle = (id: number) => {
-    router.push({ pathname: '/news-detail', params: { id: String(id), section: '¿Qué hacer en NY?' } } as any);
+    router.push({ pathname: '/news-detail', params: { id: String(id), section: '¿Qué hacer en NY?', source: 'que-hacer' } } as any);
   };
 
   const [featured, ...rest] = feed.items;
@@ -48,6 +48,7 @@ export default function QueHacerScreen() {
             style={styles.heroImage}
             accessibilityLabel={ui('Imagen de {title}', { title: featured.title })}
           />
+
           <View style={styles.heroOverlay}>
             <Text style={styles.badge}>{ui("QUE HACER EN NY")}</Text>
             <Text style={styles.heroTitle} numberOfLines={3}>
@@ -69,6 +70,7 @@ export default function QueHacerScreen() {
         style={styles.articleImage}
         accessibilityLabel={ui('Imagen de {title}', { title: item.title })}
       />
+
       <View style={styles.articleContent}>
         <Text style={styles.badge}>{formatDate(item.date, language)}</Text>
         <Text style={styles.articleTitle} numberOfLines={2}>

@@ -1,3 +1,5 @@
+import { SaveButton } from '../components/SaveButton';
+import { savedPlan } from '../context/SavedContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -116,8 +118,9 @@ function escapeHtml(s: string): string {
 export default function NewsDetailScreen() {
   const { ui, language } = useLanguage();
   const router = useRouter();
-  const params = useLocalSearchParams<{ id: string; section?: string }>();
+  const params = useLocalSearchParams<{ id: string; section?: string; source?: string }>();
   const id = params.id;
+  const canSave = params.source === 'que-hacer' || ['¿Qué hacer en NY?', 'QUÉ HACER EN NEW YORK', 'QUE HACER EN NY'].includes(params.section || '');
   const section = ui(params.section ?? 'Nota');
 
   const [article, setArticle] = useState<NewsArticle | null>(null);
@@ -147,7 +150,7 @@ export default function NewsDetailScreen() {
       <Text style={styles.headerTitle} numberOfLines={1}>
         {section}
       </Text>
-      <View style={{ width: 26 }} />
+      <View style={{ width: 44, height: 44 }}>{canSave && article && <SaveButton item={savedPlan(article)} />}</View>
     </View>
   );
 
