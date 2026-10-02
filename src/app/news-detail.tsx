@@ -123,19 +123,20 @@ export default function NewsDetailScreen() {
   const canSave = params.source === 'que-hacer' || ['¿Qué hacer en NY?', 'QUÉ HACER EN NEW YORK', 'QUE HACER EN NY'].includes(params.section || '');
   const section = ui(params.section ?? 'Nota');
 
-  const [article, setArticle] = useState<NewsArticle | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // El resultado se guarda junto al id pedido: al abrir otra nota, el anterior no aplica.
+  const [loaded, setLoaded] = useState<{ id: string; article?: NewsArticle; error?: string } | null>(null);
+  const current = loaded?.id === id ? loaded : null;
+  const article = current?.article ?? null;
+  const error = current?.error ?? null;
 
   useEffect(() => {
     let alive = true;
-    setArticle(null);
-    setError(null);
     fetchArticle(id)
       .then((a) => {
-        if (alive) setArticle(a);
+        if (alive) setLoaded({ id, article: a });
       })
       .catch((e) => {
-        if (alive) setError((e as Error).message);
+        if (alive) setLoaded({ id, error: (e as Error).message });
       });
     return () => {
       alive = false;
@@ -144,7 +145,7 @@ export default function NewsDetailScreen() {
 
   const header = (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()} hitSlop={10}>
         <Ionicons name="arrow-back" size={26} color="#D4AF37" />
       </TouchableOpacity>
       <Text style={styles.headerTitle} numberOfLines={1}>
@@ -161,7 +162,7 @@ export default function NewsDetailScreen() {
         <View style={styles.center}>
           <Ionicons name="cloud-offline-outline" size={44} color="#555" />
           <Text style={styles.errorText}>{ui('No se pudo cargar la nota.')}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={() => router.back()}>
+          <TouchableOpacity accessibilityRole="button" style={styles.retryBtn} onPress={() => router.back()}>
             <Text style={styles.retryText}>{ui('Volver')}</Text>
           </TouchableOpacity>
         </View>

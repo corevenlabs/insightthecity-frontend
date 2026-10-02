@@ -2,7 +2,7 @@ import { getExperienceTags } from '@/lib/experienceFilters';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useCallback, useEffect, useRef, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -242,23 +242,28 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
     ? Math.min(320, Math.max(260, windowWidth * 0.72))
     : (windowWidth - 50) / 2;
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const itemLimit = isNewsSection ? 5 : 4;
-      const page = await fetchNews(section, 1, itemLimit);
-      setItems(page.items.slice(0, itemLimit));
-    } catch {
-      setError('No se pudo cargar el contenido.');
-    } finally {
-      setLoading(false);
-    }
-  }, [isNewsSection, section]);
+  // reloadKey vuelve a disparar la carga al pulsar "Reintentar".
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let alive = true;
+    const itemLimit = isNewsSection ? 5 : 4;
+    fetchNews(section, 1, itemLimit)
+      .then((page) => {
+        if (!alive) return;
+        setItems(page.items.slice(0, itemLimit));
+        setError(null);
+      })
+      .catch(() => { if (alive) setError('No se pudo cargar el contenido.'); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [isNewsSection, section, reloadKey]);
+
+  const retry = () => {
+    setLoading(true);
+    setError(null);
+    setReloadKey((key) => key + 1);
+  };
 
   const openArticle = (item: NewsCard) => {
     router.push({
@@ -367,7 +372,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
           <TouchableOpacity
             accessibilityRole="button"
             style={styles.retryButton}
-            onPress={load}
+            onPress={retry}
             activeOpacity={0.72}
           >
             <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
@@ -510,7 +515,7 @@ export default function HomeScreen() {
             {t('home.guides')}
           </Text>
 
-          <TouchableOpacity style={styles.sectionHeaderAction} onPress={() => router.push('/guides')}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Ver todas las guías')} style={styles.sectionHeaderAction} onPress={() => router.push('/guides')}>
             <Text style={styles.seeMore}>{t('common.seeAll')}</Text>
             <Ionicons name="chevron-forward" size={16} color={COLORS.gold} />
           </TouchableOpacity>

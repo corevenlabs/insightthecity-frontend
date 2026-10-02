@@ -8,6 +8,7 @@ import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { confirmGuidePurchase, createGuidePurchase, fetchGuides, getGuideDownload, type Guide } from '../lib/guides';
+import { openStripePage } from '../lib/payments';
 
 const price = (guide: Guide) => `${guide.currency.toUpperCase()} $${(guide.priceCents / 100).toFixed(2)}`;
 
@@ -71,15 +72,21 @@ export default function GuidesScreen() {
       const result = await createGuidePurchase(guide.id, token);
       if (result.alreadyOwned) return void load();
       if (!result.checkoutUrl) throw new Error(ui('No se pudo iniciar la compra.'));
-      router.push({ pathname: '/checkout', params: { url: result.checkoutUrl, mode: 'guide', guideId: String(guide.id) } });
-    } catch (purchaseError) { setError((purchaseError as Error).message); setBusy(null); }
+      const payment = await openStripePage(result.checkoutUrl);
+      if (payment.result === 'success' && payment.sessionId) {
+        await confirmGuidePurchase(guide.id, payment.sessionId, token);
+        await load();
+        Alert.alert(ui('Compra confirmada'), ui('La guía ya está disponible en tu cuenta.'));
+      }
+    } catch (purchaseError) { setError((purchaseError as Error).message); }
+    finally { setBusy(null); }
   }
 
   return <SafeAreaView style={s.container}>
     <ScrollView contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={C.gold} colors={[C.gold]} />}>
       <View style={s.header}><TouchableOpacity style={s.back} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={ui('Volver')}><Ionicons name="arrow-back" size={24} color={C.gold} /></TouchableOpacity><Text style={s.title}>{ui('GUÍAS NYC')}</Text><View style={s.back} /></View>
       <Text style={s.subtitle}>{ui('Compra una guía individual o disfrútala incluida con tu membresía ITC Club.')}</Text>
-      <View style={s.search}><Ionicons name="search" size={20} color={C.secondary} /><TextInput value={search} onChangeText={setSearch} placeholder={ui('Buscar guía...')} placeholderTextColor={C.secondary} style={s.input} /></View>
+      <View style={s.search}><Ionicons name="search" size={20} color={C.secondary} /><TextInput value={search} onChangeText={setSearch} placeholder={ui('Buscar guía...')} accessibilityLabel={ui('Buscar guía...')} placeholderTextColor={C.secondary} style={s.input} /></View>
       {!!error && <Text style={s.error} accessibilityRole="alert">{error}</Text>}
       {loading && items.length === 0 ? <View style={s.loading} accessibilityLabel={ui('Cargando guías')}><ActivityIndicator color={C.gold} /></View> : filtered.map((guide) => {
         const available = owns(guide);

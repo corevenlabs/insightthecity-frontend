@@ -12,9 +12,6 @@
       "icon": "./assets/expo.icon",
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
-          "itcclub",
-          "itcclub",
-          "itcclub",
           "itcclub"
         ],
         "ITSAppUsesNonExemptEncryption": false
@@ -59,6 +56,17 @@
           "photosPermission": "Permite que Insight The City use una foto que elijas para tu perfil.",
           "cameraPermission": false,
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ITC Club usa tu ubicación solo cuando pides lugares cercanos en el chat, para mostrarte opciones cerca de ti. No guardamos tu ubicación.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "motionUsagePermission": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
         }
       ]
     ],

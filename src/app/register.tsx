@@ -24,12 +24,13 @@ const BLACK = '#0A0A0A';
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, t, ui } = useLanguage();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
 
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
@@ -47,10 +48,14 @@ export default function RegisterScreen() {
       setError(t('register.passwordError'));
       return;
     }
+    if (!acceptedLegal) {
+      setError(ui('Para crear tu cuenta debes aceptar los Términos y la Política de Privacidad.'));
+      return;
+    }
 
     setSubmitting(true);
     try {
-      await signUp(name.trim(), email.trim(), password, language);
+      await signUp(name.trim(), email.trim(), password, language, acceptedLegal);
       router.dismissAll();
       router.replace('/home' as any);
     } catch (err: any) {
@@ -75,7 +80,12 @@ export default function RegisterScreen() {
           automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
         >
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+              accessibilityRole="button"
+              accessibilityLabel={ui('Volver')}
+            >
               <Ionicons name="arrow-back" size={22} color="#D4AF37" />
             </TouchableOpacity>
 
@@ -97,8 +107,10 @@ export default function RegisterScreen() {
                 value={name}
                 onChangeText={setName}
                 placeholder={t('register.namePlaceholder')}
-                placeholderTextColor="#666"
+                placeholderTextColor="#8A8A8A"
                 autoCapitalize="words"
+                autoComplete="name"
+                accessibilityLabel={t('register.name')}
                 returnKeyType="next"
                 onSubmitEditing={() => emailRef.current?.focus()}
                 submitBehavior="submit"
@@ -111,10 +123,12 @@ export default function RegisterScreen() {
                 value={email}
                 onChangeText={setEmail}
                 placeholder="name@example.com"
-                placeholderTextColor="#666"
+                placeholderTextColor="#8A8A8A"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                autoComplete="email"
+                accessibilityLabel={t('register.email')}
                 returnKeyType="next"
                 onSubmitEditing={() => passwordRef.current?.focus()}
                 submitBehavior="submit"
@@ -127,8 +141,10 @@ export default function RegisterScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder={t('register.passwordPlaceholder')}
-                placeholderTextColor="#666"
+                placeholderTextColor="#8A8A8A"
                 secureTextEntry
+                autoComplete="new-password"
+                accessibilityLabel={t('register.password')}
                 returnKeyType="done"
                 onSubmitEditing={createAccount}
                 style={styles.input}
@@ -170,15 +186,47 @@ export default function RegisterScreen() {
                 })}
               </View>
 
-              {error && <Text style={styles.errorText}>{error}</Text>}
+              <Pressable
+                style={styles.consentRow}
+                onPress={() => setAcceptedLegal((value) => !value)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: acceptedLegal }}
+              >
+                <View style={[styles.checkbox, acceptedLegal && styles.checkboxActive]}>
+                  {acceptedLegal && <Ionicons name="checkmark" size={16} color={BLACK} />}
+                </View>
+                <Text style={styles.consentText}>
+                  {ui('Tengo 18 años o más y acepto los Términos y Condiciones y la Política de Privacidad de ITC Club.')}
+                </Text>
+              </Pressable>
+              <View style={styles.legalLinks}>
+                <Pressable
+                  accessibilityRole="link"
+                  hitSlop={8}
+                  onPress={() => router.push({ pathname: '/legal', params: { slug: 'terms' } })}
+                >
+                  <Text style={styles.legalLink}>{ui('Leer Términos y Condiciones')}</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="link"
+                  hitSlop={8}
+                  onPress={() => router.push({ pathname: '/legal', params: { slug: 'privacy' } })}
+                >
+                  <Text style={styles.legalLink}>{ui('Leer Política de Privacidad')}</Text>
+                </Pressable>
+              </View>
+
+              {error && <Text style={styles.errorText} accessibilityRole="alert" accessibilityLiveRegion="polite">{error}</Text>}
             </View>
           </View>
 
           <View style={styles.footer}>
             <TouchableOpacity
-              style={[styles.primaryButton, submitting && styles.primaryButtonDisabled]}
+              style={[styles.primaryButton, (submitting || !acceptedLegal) && styles.primaryButtonDisabled]}
               onPress={createAccount}
-              disabled={submitting}
+              disabled={submitting || !acceptedLegal}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: submitting || !acceptedLegal, busy: submitting }}
             >
               {submitting ? (
                 <ActivityIndicator color={BLACK} />
@@ -187,7 +235,7 @@ export default function RegisterScreen() {
               )}
             </TouchableOpacity>
 
-            <Pressable onPress={() => router.push('/login' as any)}>
+            <Pressable accessibilityRole="link" onPress={() => router.push('/login' as any)}>
               <Text style={styles.switchText}>
                 {t('register.hasAccount')} <Text style={styles.switchAccent}>{t('register.signIn')}</Text>
               </Text>
@@ -338,6 +386,47 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '900',
   },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginTop: 18,
+    paddingVertical: 6,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: GOLD,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  checkboxActive: {
+    backgroundColor: GOLD,
+  },
+  consentText: {
+    flex: 1,
+    color: '#EAEAEA',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  legalLinks: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: 18,
+    rowGap: 8,
+    marginTop: 8,
+    marginLeft: 36,
+    marginBottom: 6,
+  },
+  legalLink: {
+    color: GOLD,
+    fontSize: 14,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
   errorText: {
     color: '#FF6B6B',
     fontSize: 13,
@@ -346,7 +435,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   switchText: {
-    color: '#888',
+    color: '#A6A6A6',
     textAlign: 'center',
     marginTop: 18,
     fontWeight: '700',

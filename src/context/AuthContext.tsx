@@ -28,6 +28,14 @@ export type User = {
   avatar_url?: string | null;
   home_area?: string;
   interests?: string[];
+  // Copia de la suscripción en Stripe (la sincroniza el backend).
+  subscription_status?: string | null;
+  subscription_current_period_end?: string | null;
+  subscription_cancel_at_period_end?: boolean;
+  subscription_amount_cents?: number | null;
+  subscription_currency?: string | null;
+  subscription_interval?: string | null;
+  has_billing_account?: boolean;
 };
 
 type AuthContextValue = {
@@ -41,14 +49,18 @@ type AuthContextValue = {
   biometricLocked: boolean;
   biometricLabel: string;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string, language: AppLanguage) => Promise<void>;
+  /** acceptLegal: el usuario marcó la casilla de Términos y Privacidad */
+  signUp: (name: string, email: string, password: string, language: AppLanguage, acceptLegal: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   enableBiometric: () => Promise<boolean>;
   unlockWithBiometrics: () => Promise<void>;
   refreshUser: () => Promise<User | null>;
   updateProfile: (data: ProfileUpdate) => Promise<void>;
   uploadAvatar: (file: { uri: string; mimeType?: string | null; fileName?: string | null; file?: File; base64?: string | null }) => Promise<void>;
-  activatePremiumForDevelopment: () => Promise<User | null>;
+  /** Guarda un usuario devuelto por el servidor (p. ej. tras confirmar un pago). */
+  applyServerUser: (user: User) => Promise<void>;
+  /** Elimina la cuenta en el servidor (exige la contraseña) y cierra la sesión. */
+  deleteAccount: (password: string) => Promise<void>;
 };
 
 const TOKEN_KEY = 'itc_token';
@@ -56,7 +68,6 @@ const USER_KEY = 'itc_user';
 const BIOMETRIC_ENABLED_KEY = 'itc_biometric_enabled';
 const LAST_BACKGROUND_AT_KEY = 'itc_last_background_at';
 const BACKGROUND_LOCK_DELAY_MS = 30 * 60 * 1000;
-const DEV_PREMIUM_USER_KEY = 'itc_dev_premium_user';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -82,10 +93,6 @@ async function persist(token: string, user: User) {
     writeToken(token),
     AsyncStorage.setItem(USER_KEY, JSON.stringify(user)),
   ]);
-}
-
-async function restoreSimulatedPremium(user: User): Promise<User> {
-  return user;
 }
 
 // Lanza un Error con el mensaje del backend para mostrarlo en pantalla.
@@ -179,7 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(savedToken);
         if (savedUser) {
           const cachedUser = JSON.parse(savedUser) as User;
-          setUser(await restoreSimulatedPremium(cachedUser));
+          setUser(cachedUser);
         }
 
         // Revalida contra el backend; si el token expiró, cierra sesión.
@@ -198,7 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else if (res.ok) {
             const data = await res.json();
             if (data?.user) {
-              const refreshedUser = await restoreSimulatedPremium(data.user);
+              const refreshedUser = data.user as User;
               setUser(refreshedUser);
               await AsyncStorage.setItem(USER_KEY, JSON.stringify(refreshedUser));
             }
@@ -244,20 +251,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
-    const restoredUser = await restoreSimulatedPremium(u);
-    await persist(t, restoredUser);
+    await persist(t, u);
     setToken(t);
-    setUser(restoredUser);
+    setUser(u);
     setBiometricLocked(false);
   }, []);
 
   const signUp = useCallback(
-    async (name: string, email: string, password: string, language: AppLanguage) => {
+    async (name: string, email: string, password: string, language: AppLanguage, acceptLegal: boolean) => {
       const { token: t, user: u } = await postAuth('/api/users/register', {
         name,
         email,
         password,
         language,
+        acceptLegal,
       });
       await persist(t, u);
       setToken(t);
@@ -335,7 +342,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (res.ok) {
           const data = await res.json();
           if (data?.user) {
-            const restoredUser = await restoreSimulatedPremium(data.user);
+            const restoredUser = data.user as User;
             setUser(restoredUser);
             await AsyncStorage.setItem(USER_KEY, JSON.stringify(restoredUser));
           }
@@ -371,7 +378,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) return null;
       const data = await res.json();
       if (!data?.user || revision !== profileRevision.current) return null;
-      const refreshedUser = await restoreSimulatedPremium(data.user);
+      const refreshedUser = data.user as User;
       setUser(refreshedUser);
       await AsyncStorage.setItem(USER_KEY, JSON.stringify(refreshedUser));
       return refreshedUser;
@@ -380,26 +387,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
-  const activatePremiumForDevelopment = useCallback(async () => {
-    if (!token) return null;
+  const applyServerUser = useCallback(async (serverUser: User) => {
+    profileRevision.current += 1;
+    setUser(serverUser);
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(serverUser)).catch(() => undefined);
+  }, []);
+
+  const deleteAccount = useCallback(async (password: string) => {
+    if (!token) throw new Error('Inicia sesión para eliminar tu cuenta');
+    let response: Response;
     try {
-      const response = await fetch(`${API_URL}/api/users/me/activate-premium`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+      response = await fetch(`${API_URL}/api/users/me`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
       });
-      const data = await response.json();
-      if (!response.ok || !data?.user) return null;
-      const premiumUser = data.user as User;
-      await AsyncStorage.multiSet([
-        [USER_KEY, JSON.stringify(premiumUser)],
-        [DEV_PREMIUM_USER_KEY, String(premiumUser.id)],
-      ]);
-      setUser(premiumUser);
-      return premiumUser;
     } catch {
-      return null;
+      throw new Error('No se pudo conectar con el servidor. Revisa tu conexión.');
     }
-  }, [token]);
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.success) throw new Error(data?.message || 'No se pudo eliminar la cuenta.');
+    await signOut();
+  }, [token, signOut]);
 
   const saveProfileResponse = useCallback(async (response: Response) => {
     const data = await response.json();
@@ -451,7 +460,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshUser,
       updateProfile,
       uploadAvatar,
-      activatePremiumForDevelopment,
+      applyServerUser,
+      deleteAccount,
     }),
     [
       user,
@@ -469,7 +479,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshUser,
       updateProfile,
       uploadAvatar,
-      activatePremiumForDevelopment,
+      applyServerUser,
+      deleteAccount,
     ]
   );
 

@@ -1,4 +1,5 @@
 import { API_URL } from '../constants/api';
+import { CHECKOUT_RETURN_URL } from './payments';
 
 export type Guide = {
   id: number;
@@ -49,7 +50,9 @@ export async function getGuideDownload(id: number, token: string) {
 
 export async function createGuidePurchase(id: number, token: string) {
   const response = await fetch(`${API_URL}/api/guides/${id}/purchase-session`, {
-    method: 'POST', headers: { Authorization: `Bearer ${token}` },
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ returnUrl: CHECKOUT_RETURN_URL }),
   });
   return json<{ checkoutUrl?: string; sessionId?: string; alreadyOwned?: boolean }>(response, 'No se pudo iniciar la compra');
 }

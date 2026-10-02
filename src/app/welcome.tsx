@@ -21,7 +21,6 @@ const BLACK = '#050505';
 export default function WelcomeScreen() {
   const { t, ui } = useLanguage();
   const { loading, token } = useAuth();
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [content] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
@@ -73,6 +72,7 @@ export default function WelcomeScreen() {
           style={styles.primaryButton}
           activeOpacity={0.86}
           onPress={() => router.push('/login' as any)}
+          accessibilityRole="button"
         >
           <Text style={styles.primaryText}>{t('welcome.signIn')}</Text>
         </TouchableOpacity>
@@ -81,25 +81,35 @@ export default function WelcomeScreen() {
           style={styles.secondaryButton}
           activeOpacity={0.86}
           onPress={() => router.push('/register' as any)}
+          accessibilityRole="button"
         >
           <Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text>
         </TouchableOpacity>
 
-        <Pressable
-          style={styles.termsRow}
-          onPress={() => setAcceptedTerms((value) => !value)}
-        >
-          <View style={[styles.checkbox, acceptedTerms && styles.checkboxActive]}>
-            {acceptedTerms && <Ionicons name="checkmark" size={14} color={BLACK} />}
-          </View>
-          <Text style={styles.termsText}>
-            {t('welcome.terms')}
-          </Text>
-        </Pressable>
-
-        <Pressable onPress={() => router.replace('/home' as any)}>
+        <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.replace('/home' as any)}>
           <Text style={styles.guestText}>{t('welcome.guest')}</Text>
         </Pressable>
+
+        {/* Aviso visible antes de usar la app; la aceptación expresa se pide al crear la cuenta. */}
+        <Text style={styles.termsText}>
+          {ui('Al usar ITC Club aceptas nuestros Términos y Condiciones y nuestra Política de Privacidad.')}
+        </Text>
+        <View style={styles.termsRow}>
+          <Pressable
+            accessibilityRole="link"
+            hitSlop={8}
+            onPress={() => router.push({ pathname: '/legal', params: { slug: 'terms' } })}
+          >
+            <Text style={styles.termsLink}>{ui('Términos y Condiciones')}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="link"
+            hitSlop={8}
+            onPress={() => router.push({ pathname: '/legal', params: { slug: 'privacy' } })}
+          >
+            <Text style={styles.termsLink}>{ui('Política de Privacidad')}</Text>
+          </Pressable>
+        </View>
 
         <Text style={styles.subtitle}>
           {t('welcome.subtitle')}
@@ -167,27 +177,25 @@ const styles = StyleSheet.create({
   },
   termsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    marginTop: 18,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: GOLD,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxActive: {
-    backgroundColor: GOLD,
+    columnGap: 18,
+    rowGap: 6,
+    marginTop: 8,
   },
   termsText: {
     color: '#B8B8B8',
     fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    marginTop: 18,
+  },
+  termsLink: {
+    color: GOLD,
+    fontSize: 13,
     fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   guestText: {
     color: GOLD,
@@ -196,7 +204,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   subtitle: {
-    color: '#8E8E8E',
+    color: '#A6A6A6',
     fontSize: 13,
     lineHeight: 20,
     marginTop: 18,

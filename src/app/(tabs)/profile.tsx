@@ -8,6 +8,8 @@ import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, Sc
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, type AppLanguage } from '../../context/LanguageContext';
+import type { LegalSlug } from '../../lib/legal';
+import { createBillingPortal, formatDate, formatMoney, openStripePage } from '../../lib/payments';
 
 const GOLD = '#D4AF37';
 const BLACK = '#0A0A0A';
@@ -22,13 +24,14 @@ function initials(value: string) {
   return parts.length > 1 ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() : value.slice(0, 2).toUpperCase() || '?';
 }
 export default function ProfileScreen() {
-  const { user, isAuthenticated, signOut, refreshUser, updateProfile, uploadAvatar } = useAuth();
-  const { t, language, tagLabel } = useLanguage();
+  const { user, token, isAuthenticated, signOut, refreshUser, updateProfile, uploadAvatar } = useAuth();
+  const { t, ui, language, tagLabel } = useLanguage();
   const c = COPY[language];
   const [editing, setEditing] = useState(false);
   const [help, setHelp] = useState(false);
   const [membershipDetails, setMembershipDetails] = useState(false);
-  const [showCancellationInfo, setShowCancellationInfo] = useState(false);
+  const [portalBusy, setPortalBusy] = useState(false);
+  const [portalError, setPortalError] = useState('');
   const [saving, setSaving] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [error, setError] = useState('');
@@ -37,6 +40,17 @@ export default function ProfileScreen() {
   const [selectedLanguage, setSelectedLanguage] = useState<AppLanguage>('es');
   const [interests, setInterests] = useState<string[]>([]);
   useFocusEffect(useCallback(() => { void refreshUser(); }, [refreshUser]));
+  const openLegal = (slug: LegalSlug) => router.push({ pathname: '/legal', params: { slug } });
+  // Stripe Customer Portal: cambiar tarjeta, ver facturas o cancelar (cancelación en línea, NY GBL §527-a).
+  const manageSubscription = async () => {
+    if (!token || portalBusy) return;
+    setPortalBusy(true); setPortalError('');
+    try {
+      await openStripePage(await createBillingPortal(token));
+      await refreshUser();
+    } catch (err) { setPortalError(err instanceof Error ? err.message : ui('No se pudo abrir la gestión de la membresía.')); }
+    finally { setPortalBusy(false); }
+  };
   const openEditor = () => {
     setName(user?.name || ''); setArea(user?.home_area || ''); setInterests(user?.interests || []);
     setSelectedLanguage(user?.language || language); setError(''); setEditing(true);
@@ -55,6 +69,8 @@ export default function ProfileScreen() {
       if (Platform.OS !== 'web' && !requireOptionalNativeModule('ExponentImagePicker')) {
         throw new Error(language === 'es' ? 'Para cambiar tu foto necesitas la nueva versión de la app. Puedes seguir editando los demás datos.' : language === 'en' ? 'Changing your photo requires the new app version. You can still edit your other information.' : 'Para alterar a foto, instale a nova versão do app. Você pode editar os demais dados.');
       }
+      // require diferido a propósito: builds anteriores no incluyen el módulo nativo y un import estático fallaría al abrir el perfil.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const ImagePicker = require('expo-image-picker') as typeof import('expo-image-picker');
       const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.75, base64: Platform.OS !== 'web' });
       if (result.canceled) return;
@@ -79,8 +95,8 @@ export default function ProfileScreen() {
       <View style={styles.guestAvatar}><Ionicons name="person-outline" size={44} color={GOLD} /></View>
       <Text style={styles.guestTitle}>{t('profile.signedOut')}</Text>
       <Text style={styles.guestSubtitle}>{t('profile.signedOutSubtitle')}</Text>
-      <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/login')}><Text style={styles.primaryText}>{t('welcome.signIn')}</Text></TouchableOpacity>
-      <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push('/register')}><Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text></TouchableOpacity>
+      <TouchableOpacity accessibilityRole="button" style={styles.primaryButton} onPress={() => router.push('/login')}><Text style={styles.primaryText}>{t('welcome.signIn')}</Text></TouchableOpacity>
+      <TouchableOpacity accessibilityRole="button" style={styles.secondaryButton} onPress={() => router.push('/register')}><Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text></TouchableOpacity>
     </SafeAreaView>
   );
   return (
@@ -116,8 +132,16 @@ export default function ProfileScreen() {
         <Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => user.is_premium ? setMembershipDetails(true) : router.push('/club-form')}><Text style={styles.primaryText}>{user.is_premium ? c.manage : t('profile.joinClub')}</Text></Pressable>
       </View>
       <View style={styles.card}>
+        <Text style={styles.sectionTitle}>{ui('Legal y privacidad')}</Text>
+        {row('document-text-outline', ui('Términos y Condiciones'), '', () => openLegal('terms'))}
+        {row('shield-checkmark-outline', ui('Política de Privacidad'), '', () => openLegal('privacy'))}
+        {row('card-outline', ui('Términos de la membresía'), '', () => openLegal('subscription'))}
+        {row('accessibility-outline', ui('Accesibilidad'), '', () => openLegal('accessibility'))}
+      </View>
+      <View style={styles.card}>
         {row('help-buoy-outline', c.help, '', () => setHelp(true))}
         <Pressable accessibilityRole="button" onPress={signOut} style={styles.infoRow}><Ionicons name="log-out-outline" size={21} color="#FF8080" /><Text style={styles.logoutText}>{t('profile.signOut')}</Text></Pressable>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/delete-account')} style={styles.infoRow}><Ionicons name="trash-outline" size={21} color="#FF8080" /><Text style={styles.logoutText}>{ui('Eliminar cuenta')}</Text></Pressable>
       </View>
     </ScrollView>
       <Modal visible={editing} animationType="slide" onRequestClose={() => { if (!saving && !photoBusy) setEditing(false); }}>
@@ -129,7 +153,7 @@ export default function ProfileScreen() {
             <Text style={styles.label}>{t('profile.name')}</Text><TextInput value={name} onChangeText={setName} maxLength={100} editable={!saving} style={styles.input} accessibilityLabel={t('profile.name')} autoComplete="name" />
             <Text style={styles.label}>{t('profile.email')}</Text><Text style={styles.value}>{user.email}</Text>
             <Text style={styles.label}>{t('register.language')}</Text><View style={styles.tags}>{(['es', 'en', 'pt'] as const).map((item) => <Pressable key={item} onPress={() => setSelectedLanguage(item)} disabled={saving} accessibilityRole="button" accessibilityState={{ selected: selectedLanguage === item }} style={[styles.tag, selectedLanguage === item && styles.selectedTag]}><Text style={[styles.tagText, selectedLanguage === item && styles.selectedTagText]}>{({ es: 'Español', en: 'English', pt: 'Português' })[item]}</Text></Pressable>)}</View>
-            <Text style={styles.label}>{c.area}</Text><TextInput value={area} onChangeText={setArea} maxLength={100} editable={!saving} style={styles.input} accessibilityLabel={c.area} placeholder="Manhattan, Brooklyn, New Jersey…" placeholderTextColor="#777" />
+            <Text style={styles.label}>{c.area}</Text><TextInput value={area} onChangeText={setArea} maxLength={100} editable={!saving} style={styles.input} accessibilityLabel={c.area} placeholder="Manhattan, Brooklyn, New Jersey…" placeholderTextColor="#8A8A8A" />
             <Text style={styles.label}>{c.choose}</Text><View style={styles.tags}>{[...new Set([...INTERESTS, ...interests])].map((item) => <Pressable key={item} disabled={saving} onPress={() => setInterests((current) => current.includes(item) ? current.filter((value) => value !== item) : current.length < 12 ? [...current, item] : current)} accessibilityRole="button" accessibilityState={{ selected: interests.includes(item) }} style={[styles.tag, interests.includes(item) && styles.selectedTag]}><Text style={[styles.tagText, interests.includes(item) && styles.selectedTagText]}>{tagLabel(item)}</Text></Pressable>)}</View>
             {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
             <Pressable disabled={saving || photoBusy || !name.trim()} accessibilityRole="button" onPress={save} style={[styles.primaryButton, { marginTop: 24, opacity: saving || photoBusy || !name.trim() ? 0.5 : 1 }]}><Text style={styles.primaryText}>{saving ? c.saving : c.save}</Text></Pressable>
@@ -137,7 +161,7 @@ export default function ProfileScreen() {
         </KeyboardAvoidingView></SafeAreaView></SafeAreaProvider>
       </Modal>
       <Modal visible={help} transparent animationType="fade" onRequestClose={() => setHelp(false)}>
-        <View style={styles.modalBackdrop}><View style={styles.helpCard}><Text style={styles.sectionTitle}>{c.help}</Text><Text style={styles.helpText}>{c.helpBody}</Text><Pressable style={styles.primaryButton} onPress={() => { setHelp(false); router.push('/chat'); }}><Text style={styles.primaryText}>{c.chat}</Text></Pressable><Pressable style={styles.photoButton} onPress={() => setHelp(false)}><Text style={styles.secondaryText}>{c.cancel}</Text></Pressable></View></View>
+        <View style={styles.modalBackdrop}><View style={styles.helpCard}><Text style={styles.sectionTitle}>{c.help}</Text><Text style={styles.helpText}>{c.helpBody}</Text><Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => { setHelp(false); router.push('/chat'); }}><Text style={styles.primaryText}>{c.chat}</Text></Pressable><Pressable accessibilityRole="button" style={styles.photoButton} onPress={() => setHelp(false)}><Text style={styles.secondaryText}>{c.cancel}</Text></Pressable></View></View>
       </Modal>
       <Modal visible={membershipDetails} animationType="slide" onRequestClose={() => setMembershipDetails(false)}>
         <SafeAreaProvider><SafeAreaView style={styles.container}>
@@ -149,18 +173,33 @@ export default function ProfileScreen() {
           <ScrollView contentContainerStyle={styles.membershipDetailsContent}>
             <View style={[styles.card, styles.membershipCard, styles.membershipDetailsCard]}>
               <View style={styles.membershipBrand}><Text style={styles.membershipBrandItc}>ITC </Text><Text style={styles.membershipBrandClub}>CLUB</Text></View>
-              <Text style={styles.membershipDetailsStatus}>{c.active}</Text>
-              <Text style={styles.planDescription}>{language === 'es' ? 'Tu membresía y sus beneficios' : language === 'en' ? 'Your membership and benefits' : 'Sua assinatura e seus benefícios'}</Text>
-              {[
-                [language === 'es' ? 'Precio' : language === 'en' ? 'Price' : 'Preço', language === 'es' ? 'Pendiente de confirmar' : language === 'en' ? 'Pending confirmation' : 'Pendente de confirmação'],
-                [language === 'es' ? 'Duración' : language === 'en' ? 'Billing period' : 'Período', language === 'es' ? 'Pendiente de confirmar' : language === 'en' ? 'Pending confirmation' : 'Pendente de confirmação'],
-                [language === 'es' ? 'Próxima renovación' : language === 'en' ? 'Next renewal' : 'Próxima renovação', language === 'es' ? 'Pendiente de confirmar' : language === 'en' ? 'Pending confirmation' : 'Pendente de confirmação'],
-              ].map(([label, value]) => <View key={label} style={styles.membershipDetailRow}><Text style={styles.rowLabel}>{label}</Text><Text style={styles.membershipDetailValue}>{value}</Text></View>)}
+              <Text style={styles.membershipDetailsStatus}>
+                {user.subscription_cancel_at_period_end ? ui('Cancelada · activa hasta el fin del período') : user.subscription_status === 'past_due' ? ui('Pago pendiente') : c.active}
+              </Text>
+              <Text style={styles.planDescription}>{ui('Tu membresía y sus beneficios')}</Text>
+              {user.has_billing_account && user.subscription_amount_cents != null ? [
+                [ui('Precio'), `${formatMoney(user.subscription_amount_cents, user.subscription_currency || 'usd', language)} / ${ui(({ day: 'día', week: 'semana', month: 'mes', year: 'año' } as Record<string, string>)[user.subscription_interval || 'month'] ?? 'mes')}`],
+                [ui('Renovación'), user.subscription_cancel_at_period_end ? ui('Desactivada') : ui('Automática')],
+                [user.subscription_cancel_at_period_end ? ui('Acceso hasta') : ui('Próxima renovación'), user.subscription_current_period_end ? formatDate(user.subscription_current_period_end, language) : '—'],
+              ].map(([label, value]) => <View key={label} style={styles.membershipDetailRow}><Text style={styles.rowLabel}>{label}</Text><Text style={styles.membershipDetailValue}>{value}</Text></View>) : (
+                <Text style={styles.membershipNote}>{ui('Tu membresía fue activada por el equipo de ITC Club y no tiene cobros asociados.')}</Text>
+              )}
             </View>
-            <Text style={styles.membershipNote}>{language === 'es' ? 'El precio y las fechas se mostrarán cuando conectemos los datos de tu suscripción.' : language === 'en' ? 'Price and dates will appear once your subscription details are connected.' : 'O preço e as datas aparecerão quando conectarmos os dados da assinatura.'}</Text>
-            <View style={styles.membershipDetailsSpacer} />
-            <Pressable accessibilityRole="button" onPress={() => setShowCancellationInfo((current) => !current)} style={styles.cancelMembershipLink}><Text style={styles.cancelMembershipText}>{language === 'es' ? 'Cancelar membresía' : language === 'en' ? 'Cancel membership' : 'Cancelar assinatura'}</Text></Pressable>
-            {showCancellationInfo && <Text style={styles.membershipNote}>{language === 'es' ? 'Todavía no puedes cancelar desde esta pantalla. Activaremos esta opción al conectar la gestión de suscripciones.' : language === 'en' ? 'You cannot cancel from this screen yet. This option will be enabled when subscription management is connected.' : 'Ainda não é possível cancelar nesta tela. Esta opção será ativada quando conectarmos a gestão de assinaturas.'}</Text>}
+            {user.has_billing_account && (
+              <>
+                <Text style={styles.membershipNote}>
+                  {user.subscription_cancel_at_period_end
+                    ? ui('No se te volverá a cobrar. Puedes reactivar la renovación desde Administrar membresía.')
+                    : ui('Tu membresía se renueva automáticamente hasta que la canceles. Si cancelas, conservas el acceso hasta el final del período pagado.')}
+                </Text>
+                <View style={styles.membershipDetailsSpacer} />
+                {!!portalError && <Text style={styles.error} accessibilityRole="alert">{portalError}</Text>}
+                <Pressable accessibilityRole="button" accessibilityState={{ busy: portalBusy }} disabled={portalBusy} onPress={manageSubscription} style={styles.primaryButton}>
+                  {portalBusy ? <ActivityIndicator color={BLACK} /> : <Text style={styles.primaryText}>{ui('ADMINISTRAR O CANCELAR MEMBRESÍA')}</Text>}
+                </Pressable>
+                <Text style={styles.membershipNote}>{ui('Se abre el portal seguro de Stripe, donde puedes cancelar, cambiar tu tarjeta o ver tus recibos.')}</Text>
+              </>
+            )}
           </ScrollView>
         </SafeAreaView></SafeAreaProvider>
       </Modal>

@@ -12,6 +12,7 @@ import type { Experience } from '../../constants/experiences';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { fetchExperiences } from '../../lib/experiences';
+import { fetchPlan, formatMoney, type Plan } from '../../lib/payments';
 
 const GOLD = '#D4AF37';
 const benefits = [
@@ -62,13 +63,16 @@ function PremiumCard({ experience }: { experience: Experience }) {
 export default function ClubScreen() {
   const router = useRouter();
   const { user, loading, refreshUser } = useAuth();
-  const { t, ui } = useLanguage();
+  const { t, ui, language } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
+  // Precio real de Stripe: nunca anunciar un precio distinto al que se cobra.
+  const [plan, setPlan] = useState<Plan | null>(null);
 
   useFocusEffect(useCallback(() => {
     void refreshUser();
     void fetchExperiences().then(setExperiences).catch(() => undefined);
+    void fetchPlan().then(setPlan).catch(() => undefined);
   }, [refreshUser]));
 
   const premiumExperiences = useMemo(
@@ -127,8 +131,10 @@ export default function ClubScreen() {
         <TouchableOpacity style={styles.joinButton} onPress={() => router.push('/club-form')} accessibilityRole="button">
           <Text style={styles.joinButtonText}>{t('club.join')}</Text>
         </TouchableOpacity>
-        <Text style={styles.price}>{t('club.from')} <Text style={styles.priceBold}>$4.99</Text> {t('club.month')}</Text>
-        <Text style={styles.cancel}>{t('club.cancel')}</Text>
+        {plan && plan.interval === 'month' && (
+          <Text style={styles.price}>{t('club.from')} <Text style={styles.priceBold}>{formatMoney(plan.amountCents, plan.currency, language)}</Text> {t('club.month')}</Text>
+        )}
+        <Text style={styles.cancel}>{ui('Renovación automática. Cancela cuando quieras.')}</Text>
       </View>
     </ScrollView>
   );
@@ -152,7 +158,7 @@ const styles = StyleSheet.create({
   joinButtonText: { color: '#000', fontWeight: '700', fontSize: 15 },
   price: { color: '#AAA', textAlign: 'center', marginTop: 16 },
   priceBold: { color: '#FFF', fontWeight: '700' },
-  cancel: { color: '#666', fontSize: 12, textAlign: 'center', marginTop: 5 },
+  cancel: { color: '#A6A6A6', fontSize: 12, textAlign: 'center', marginTop: 5 },
   memberContent: { padding: 20, paddingBottom: 120 },
   memberHeader: { flexDirection: 'row', backgroundColor: '#121212', borderRadius: 20, padding: 18, borderWidth: 1, borderColor: '#3A3115', marginBottom: 28 },
   memberIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: GOLD, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
@@ -160,7 +166,7 @@ const styles = StyleSheet.create({
   memberEyebrow: { color: GOLD, fontSize: 11, letterSpacing: 1.1, fontWeight: '700', marginBottom: 5 },
   memberTitle: { color: '#FFF', fontSize: 25, fontWeight: '700' },
   memberSubtitle: { color: '#A8A8A8', fontSize: 14, lineHeight: 20, marginTop: 5 },
-  filterLabel: { color: '#777', fontSize: 11, letterSpacing: 1.2, fontWeight: '700', marginBottom: 10 },
+  filterLabel: { color: '#A6A6A6', fontSize: 11, letterSpacing: 1.2, fontWeight: '700', marginBottom: 10 },
   filters: { gap: 8, paddingRight: 20, paddingBottom: 4 },
   filterChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 17, borderRadius: 22, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292929' },
   filterChipActive: { backgroundColor: GOLD, borderColor: GOLD },

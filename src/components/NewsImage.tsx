@@ -1,7 +1,7 @@
 import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleProp, StyleSheet, View, type ImageStyle } from 'react-native';
 
 type NewsImageProps = {
@@ -12,11 +12,9 @@ type NewsImageProps = {
 
 export function NewsImage({ uri, style, accessibilityLabel }: NewsImageProps) {
   const { ui } = useLanguage();
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    setFailed(false);
-  }, [uri]);
+  // Se recuerda qué URL falló: si cambia la URL, se vuelve a intentar.
+  const [failedUri, setFailedUri] = useState<string | null>(null);
+  const failed = uri !== null && failedUri === uri;
 
   if (!uri || failed) {
     return (
@@ -35,7 +33,7 @@ export function NewsImage({ uri, style, accessibilityLabel }: NewsImageProps) {
       recyclingKey={uri}
       transition={160}
       accessibilityLabel={accessibilityLabel}
-      onError={() => setFailed(true)}
+      onError={() => setFailedUri(uri)}
     />
   );
 }

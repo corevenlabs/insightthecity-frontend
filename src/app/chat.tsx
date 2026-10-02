@@ -42,7 +42,7 @@ type AppItem = { id: string | number; kind: 'experience' | 'news'; title: string
 type Message = { id: string; from: 'user' | 'bot'; text: string; writing?: boolean; places?: Place[]; appItems?: AppItem[] };
 
 function TypingDots({ label }: { label: string }) {
-  const dots = useRef([new Animated.Value(0.3), new Animated.Value(0.3), new Animated.Value(0.3)]).current;
+  const [dots] = useState(() => [new Animated.Value(0.3), new Animated.Value(0.3), new Animated.Value(0.3)]);
   useEffect(() => {
     const animation = Animated.loop(Animated.stagger(140, dots.map((opacity) => Animated.sequence([
       Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
@@ -110,9 +110,10 @@ export default function ChatScreen() {
       setSending(false);
     };
   }, [loadHistory]));
+  const isWriting = Boolean(writing);
   useEffect(() => {
-    if (messages.length) requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: !writing }));
-  }, [messages, sending]);
+    if (messages.length) requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: !isWriting }));
+  }, [messages, sending, isWriting]);
 
   useEffect(() => {
     if (!writing) return;

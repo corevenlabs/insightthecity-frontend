@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_URL } from '../constants/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -60,10 +60,10 @@ export default function ForgotPasswordScreen() {
         <Text style={styles.subtitle}>{step === 'done' ? c.success : step === 'confirm' ? c.sent : c.intro}</Text>
         {step !== 'done' && <>
           <Text style={styles.label}>{c.email}</Text>
-          <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" editable={step === 'request' && !busy} placeholder="name@example.com" placeholderTextColor="#777" accessibilityLabel={c.email} />
+          <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" editable={step === 'request' && !busy} placeholder="name@example.com" placeholderTextColor="#8A8A8A" accessibilityLabel={c.email} />
           {step === 'confirm' && <>
             <Text style={styles.label}>{c.code}</Text>
-            <TextInput style={styles.input} value={code} onChangeText={(value) => setCode(value.replace(/\D/g, '').slice(0, 8))} keyboardType="number-pad" maxLength={8} autoComplete="one-time-code" placeholder="00000000" placeholderTextColor="#777" accessibilityLabel={c.code} />
+            <TextInput style={styles.input} value={code} onChangeText={(value) => setCode(value.replace(/\D/g, '').slice(0, 8))} keyboardType="number-pad" maxLength={8} autoComplete="one-time-code" placeholder="00000000" placeholderTextColor="#8A8A8A" accessibilityLabel={c.code} />
             <Text style={styles.label}>{c.newPassword}</Text>
             <TextInput style={styles.input} value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" accessibilityLabel={c.newPassword} />
             <Text style={styles.label}>{c.confirm}</Text>

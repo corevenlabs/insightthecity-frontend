@@ -113,7 +113,7 @@ export default function LoginScreen() {
           automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
         >
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()} style={styles.backButton}>
               <Ionicons name="arrow-back" size={22} color="#D4AF37" />
             </TouchableOpacity>
 
@@ -135,10 +135,12 @@ export default function LoginScreen() {
                 value={email}
                 onChangeText={setEmail}
                 placeholder="name@example.com"
-                placeholderTextColor="#666"
+                placeholderTextColor="#8A8A8A"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                autoComplete="email"
+                accessibilityLabel={t('login.email')}
                 returnKeyType="next"
                 onSubmitEditing={() => passwordRef.current?.focus()}
                 submitBehavior="submit"
@@ -151,8 +153,10 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="••••••••"
-                placeholderTextColor="#666"
+                placeholderTextColor="#8A8A8A"
                 secureTextEntry
+                autoComplete="current-password"
+                accessibilityLabel={t('login.password')}
                 returnKeyType="done"
                 onSubmitEditing={enterApp}
                 style={styles.input}
@@ -167,7 +171,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.footer}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={[styles.primaryButton, submitting && styles.primaryButtonDisabled]}
             onPress={enterApp}
             disabled={submitting}
@@ -202,7 +206,7 @@ export default function LoginScreen() {
               </>
             )}
 
-            <Pressable onPress={() => router.push('/register' as any)}>
+            <Pressable accessibilityRole="link" onPress={() => router.push('/register' as any)}>
               <Text style={styles.switchText}>
                 {t('login.noAccount')} <Text style={styles.switchAccent}>{t('login.createAccount')}</Text>
               </Text>

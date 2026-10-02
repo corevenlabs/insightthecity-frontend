@@ -1,321 +1,224 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { API_URL } from '../constants/api';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { useAuth } from '../context/AuthContext';
-import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
+import { createSubscriptionCheckout, fetchPlan, formatMoney, openStripePage, type Plan } from '../lib/payments';
 
-// ✅ FIX 1: StyleSheet FUERA del componente
-// Adentro se recreaba en cada keystroke → crash con apellido
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#0A0A0A',
-    },
-    content: {
-        padding: 20,
-        paddingTop: 12,
-        paddingBottom: 150,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 20,
-    },
-    backButton: {
-        width: 48,
-        height: 48,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    headerTitle: {
-        color: '#D4AF37',
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-    subtitle: {
-        color: '#AAA',
-        textAlign: 'center',
-        marginBottom: 30,
-    },
-    card: {
-        backgroundColor: '#111111',
-        borderRadius: 16,
-        padding: 18,
-        marginBottom: 20,
-    },
-    sectionTitle: {
-        color: '#D4AF37',
-        fontSize: 14,
-        fontWeight: 'bold',
-        marginBottom: 16,
-    },
-    input: {
-        backgroundColor: '#1A1A1A',
-        borderWidth: 1,
-        borderColor: '#222',
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        paddingVertical: 14,
-        color: '#FFF',
-        marginBottom: 12,
-    },
-    paymentButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#1A1A1A',
-        borderRadius: 12,
-        padding: 16,
-    },
-    paymentText: {
-        color: '#FFF',
-        marginLeft: 10,
-        fontWeight: '600',
-    },
-    paymentInfo: {
-        marginTop: 12,
-        padding: 14,
-        backgroundColor: '#0F0F0F',
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#222',
-    },
-    infoText: {
-        color: '#999',
-        fontSize: 12,
-        lineHeight: 18,
-    },
-    planName: {
-        color: '#FFF',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    planPrice: {
-        color: '#D4AF37',
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginTop: 8,
-    },
-    planDescription: {
-        color: '#999',
-        marginTop: 10,
-        lineHeight: 20,
-    },
-    joinButton: {
-        backgroundColor: '#D4AF37',
-        paddingVertical: 18,
-        borderRadius: 14,
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    joinButtonDisabled: {
-        backgroundColor: '#8a7020',
-    },
-    joinButtonText: {
-        color: '#000',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    note: {
-        color: '#666',
-        fontSize: 11,
-        textAlign: 'center',
-        marginTop: 10,
-    },
-});
+const GOLD = '#D4AF37';
+const BLACK = '#0A0A0A';
 
+const INTERVALS: Record<Plan['interval'], string> = { day: 'día', week: 'semana', month: 'mes', year: 'año' };
+
+// Alta en ITC Club. La ley de renovación automática de New York (GBL §527-a) exige
+// mostrar precio, período y renovación de forma clara antes de pagar y obtener un
+// consentimiento afirmativo específico: por eso la casilla separada.
 export default function ClubFormScreen() {
-  const { ui } = useLanguage();
-    const { user, token } = useAuth();
-    const [showPayment, setShowPayment] = useState(false);
-    const [loading, setLoading] = useState(false);
+  const { ui, language } = useLanguage();
+  const { user, token } = useAuth();
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const [planError, setPlanError] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
-    // ✅ FIX 2: Estado para los inputs del formulario
-    const [formData, setFormData] = useState({
-        nombre: user?.name ?? '',
-        email: user?.email ?? '',
-        telefono: '',
-        ciudad: '',
-    });
+  useEffect(() => {
+    fetchPlan()
+      .then(setPlan)
+      .catch(() => setPlanError(ui('No se pudo cargar el precio. Revisa tu conexión e inténtalo de nuevo.')));
+  }, [ui]);
 
-    const handleChange = (field: keyof typeof formData, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
+  const price = plan ? formatMoney(plan.amountCents, plan.currency, language) : '';
+  const period = plan ? ui(INTERVALS[plan.interval] ?? plan.interval) : '';
+  const canSubscribe = Boolean(plan && consent && token && !loading);
 
-    // ✅ FIX 3: Validación antes de ir a Stripe, email real del input
-    const handlePayment = async () => {
-        const { nombre, email, telefono, ciudad } = formData;
+  const subscribe = async () => {
+    if (!token || !plan || !consent || loading) return;
+    setLoading(true);
+    setMessage('');
+    try {
+      const checkoutUrl = await createSubscriptionCheckout(token);
+      const result = await openStripePage(checkoutUrl);
+      if (result.result === 'success' && result.sessionId) {
+        router.replace({ pathname: '/success', params: { session_id: result.sessionId } });
+        return;
+      }
+      setMessage(ui('No se completó el pago. No se te cobró nada.'));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : ui('No se pudo iniciar el pago. Intenta de nuevo.'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        if (!token || !user) {
-            Alert.alert(ui("Inicia sesión"), ui("Necesitas una cuenta para activar tu membresía."), [
-                { text: ui("Cancelar"), style: 'cancel' },
-                { text: ui("Iniciar sesión"), onPress: () => router.push('/login') },
-            ]);
-            return;
-        }
+  const header = (
+    <View style={styles.header}>
+      <Pressable
+        onPress={() => router.back()}
+        style={styles.backButton}
+        accessibilityRole="button"
+        accessibilityLabel={ui('Volver')}
+        hitSlop={8}
+      >
+        <Ionicons name="arrow-back" size={24} color={GOLD} />
+      </Pressable>
+      <Text style={styles.headerTitle} accessibilityRole="header">ITC CLUB</Text>
+      <View style={styles.backButton} />
+    </View>
+  );
 
-        if (!nombre.trim() || !email.trim() || !telefono.trim() || !ciudad.trim()) {
-            Alert.alert(ui("Campos incompletos"), ui("Por favor completa todos los campos antes de continuar."));
-            return;
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            Alert.alert(ui("Email inválido"), ui("Por favor ingresa un correo electrónico válido."));
-            return;
-        }
-
-        try {
-            setLoading(true);
-
-            const res = await fetch(`${API_URL}/api/payment/create-subscription`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                // Se conserva el email para compatibilidad con el backend actualmente desplegado.
-                // La versión nueva del backend usa el email del token autenticado.
-                body: JSON.stringify({ email: email.trim() }),
-            });
-
-            const data = await res.json();
-
-            if (data.checkout_url) {
-                router.push({
-                    pathname: "/checkout",
-                    params: { url: data.checkout_url },
-                });
-            } else {
-                Alert.alert('Error', ui("No se pudo generar el link de pago. Intenta de nuevo."));
-            }
-
-        } catch (error) {
-            console.log(error);
-            Alert.alert(ui("Error de conexión"), ui("Verifica tu conexión a internet e intenta de nuevo."));
-        } finally {
-            setLoading(false);
-        }
-    };
-
+  if (!user || !token) {
     return (
-        <SafeAreaView style={styles.container}>
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-        >
-            {/* HEADER */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#D4AF37" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>ITC CLUB</Text>
-                <View style={{ width: 48 }} />
-            </View>
-
-            <Text style={styles.subtitle}>{ui("Completa tus datos para unirte al club.")}</Text>
-
-            {/* INFORMACIÓN PERSONAL */}
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>{ui("INFORMACIÓN PERSONAL")}</Text>
-
-                {/* ✅ Inputs controlados con su estado */}
-                <TextInput
-                    style={styles.input}
-                    placeholder={ui("Nombre completo")}
-                    placeholderTextColor="#666"
-                    value={formData.nombre}
-                    onChangeText={(val) => handleChange('nombre', val)}
-                    autoCorrect={false}       // ✅ evita correcciones inesperadas
-                    autoCapitalize="words"
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder={ui("Correo electrónico")}
-                    placeholderTextColor="#666"
-                    keyboardType="email-address"
-                    value={formData.email}
-                    onChangeText={(val) => handleChange('email', val)}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder={ui("Teléfono")}
-                    placeholderTextColor="#666"
-                    keyboardType="phone-pad"
-                    value={formData.telefono}
-                    onChangeText={(val) => handleChange('telefono', val)}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder={ui("Ciudad")}
-                    placeholderTextColor="#666"
-                    value={formData.ciudad}
-                    onChangeText={(val) => handleChange('ciudad', val)}
-                    autoCorrect={false}
-                />
-            </View>
-
-            {/* MÉTODO DE PAGO */}
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>{ui("MÉTODO DE PAGO")}</Text>
-
-                <TouchableOpacity
-                    style={styles.paymentButton}
-                    onPress={() => setShowPayment(!showPayment)}
-                >
-                    <Ionicons
-                        name={showPayment ? 'checkmark-circle' : 'shield-checkmark-outline'}
-                        size={22}
-                        color="#D4AF37"
-                    />
-                    <Text style={styles.paymentText}>
-                        {showPayment ? ui("Pago seguro activado") : ui("Pago seguro con Stripe")}
-                    </Text>
-                </TouchableOpacity>
-
-                {showPayment && (
-                    <View style={styles.paymentInfo}>
-                        <Text style={styles.infoText}>{ui("Serás redirigido a una página segura donde podrás pagar con tarjeta, Apple Pay o Google Pay. No almacenamos información de pago en la app.")}</Text>
-                    </View>
-                )}
-            </View>
-
-            {/* PLAN */}
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>{ui("PLAN")}</Text>
-                <Text style={styles.planName}>ITC Club</Text>
-                <Text style={styles.planPrice}>{ui("$4.99 / mes")}</Text>
-                <Text style={styles.planDescription}>{ui("Acceso a beneficios exclusivos, descuentos y experiencias especiales.")}</Text>
-            </View>
-
-            {/* BOTÓN FINAL */}
-            <TouchableOpacity
-                style={[styles.joinButton, loading && styles.joinButtonDisabled]}
-                onPress={handlePayment}
-                disabled={loading}
-            >
-                <Text style={styles.joinButtonText}>
-                    {loading ? ui("PROCESANDO...") : ui("CONTINUAR AL PAGO")}
-                </Text>
-            </TouchableOpacity>
-
-            <Text style={styles.note}>{ui("Pago seguro procesado por Stripe. Puedes cancelar en cualquier momento.")}</Text>
-        </ScrollView>
-        </SafeAreaView>
+      <SafeAreaView style={styles.container}>
+        {header}
+        <View style={styles.centered}>
+          <Text style={styles.title}>{ui('Necesitas una cuenta')}</Text>
+          <Text style={styles.body}>{ui('Crea una cuenta o inicia sesión para unirte a ITC Club. La membresía queda asociada a tu cuenta.')}</Text>
+          <Pressable style={styles.primaryButton} accessibilityRole="button" onPress={() => router.push('/login')}>
+            <Text style={styles.primaryText}>{ui('INICIAR SESIÓN')}</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} accessibilityRole="button" onPress={() => router.push('/register')}>
+            <Text style={styles.secondaryText}>{ui('CREAR CUENTA')}</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     );
+  }
+
+  if (user.is_premium) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {header}
+        <View style={styles.centered}>
+          <Ionicons name="checkmark-circle" size={56} color={GOLD} />
+          <Text style={styles.title}>{ui('Ya eres miembro de ITC Club')}</Text>
+          <Text style={styles.body}>{ui('Puedes ver o cancelar tu membresía en Perfil > Mi membresía.')}</Text>
+          <Pressable style={styles.primaryButton} accessibilityRole="button" onPress={() => router.replace('/profile')}>
+            <Text style={styles.primaryText}>{ui('IR A MI PERFIL')}</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {header}
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>{ui('PLAN')}</Text>
+          <Text style={styles.planName}>ITC Club</Text>
+          {plan ? (
+            <Text style={styles.planPrice}>{`${price} / ${period}`}</Text>
+          ) : planError ? (
+            <Text style={styles.errorText} accessibilityRole="alert">{planError}</Text>
+          ) : (
+            <ActivityIndicator color={GOLD} style={{ alignSelf: 'flex-start', marginTop: 10 }} accessibilityLabel={ui('Cargando…')} />
+          )}
+          <Text style={styles.body}>{ui('Acceso a beneficios exclusivos, descuentos y experiencias especiales.')}</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>{ui('TU CUENTA')}</Text>
+          <Text style={styles.body}>{ui('La membresía se asociará a tu cuenta:')}</Text>
+          <Text style={styles.accountEmail}>{user.email}</Text>
+          <Text style={styles.note}>{ui('Pagarás en la página segura de Stripe con tarjeta, Apple Pay o Google Pay. No guardamos los datos de tu tarjeta.')}</Text>
+        </View>
+
+        {plan && (
+          <View style={styles.renewalBox}>
+            <View style={styles.renewalHeading}>
+              <Ionicons name="refresh-circle-outline" size={22} color={GOLD} />
+              <Text style={styles.renewalTitle}>{ui('Renovación automática')}</Text>
+            </View>
+            <Text style={styles.renewalText}>
+              {ui('Se te cobrarán {price} hoy y luego cada {period}, de forma automática, hasta que canceles.', { price, period })}
+            </Text>
+            <Text style={styles.renewalText}>
+              {ui('Puedes cancelar cuando quieras en Perfil > Mi membresía. La cancelación aplica al final del período pagado y conservas el acceso hasta entonces.')}
+            </Text>
+            <Pressable
+              accessibilityRole="link"
+              hitSlop={8}
+              onPress={() => router.push({ pathname: '/legal', params: { slug: 'subscription' } })}
+            >
+              <Text style={styles.link}>{ui('Leer los Términos de la membresía')}</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {plan && (
+          <Pressable
+            style={styles.consentRow}
+            onPress={() => setConsent((value) => !value)}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: consent }}
+          >
+            <View style={[styles.checkbox, consent && styles.checkboxActive]}>
+              {consent && <Ionicons name="checkmark" size={16} color={BLACK} />}
+            </View>
+            <Text style={styles.consentText}>
+              {ui('Acepto que mi membresía se renueve automáticamente por {price} cada {period} hasta que la cancele, y acepto los Términos de la membresía.', { price, period })}
+            </Text>
+          </Pressable>
+        )}
+
+        {!!message && (
+          <Text style={styles.errorText} accessibilityRole="alert" accessibilityLiveRegion="polite">{message}</Text>
+        )}
+
+        <Pressable
+          style={[styles.primaryButton, !canSubscribe && styles.buttonDisabled]}
+          onPress={subscribe}
+          disabled={!canSubscribe}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !canSubscribe, busy: loading }}
+        >
+          {loading ? (
+            <ActivityIndicator color={BLACK} />
+          ) : (
+            <Text style={styles.primaryText}>
+              {plan ? ui('SUSCRIBIRME POR {price} / {period}', { price, period: period.toUpperCase() }) : ui('CONTINUAR AL PAGO')}
+            </Text>
+          )}
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: BLACK },
+  content: { paddingHorizontal: 20, paddingBottom: 48 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, marginBottom: 12 },
+  backButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { color: GOLD, fontSize: 20, fontWeight: '800' },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28, gap: 14 },
+  title: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', textAlign: 'center' },
+  card: { backgroundColor: '#111111', borderRadius: 16, padding: 18, marginBottom: 16 },
+  sectionTitle: { color: GOLD, fontSize: 13, fontWeight: '800', letterSpacing: 1, marginBottom: 10 },
+  planName: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
+  planPrice: { color: GOLD, fontSize: 26, fontWeight: '800', marginTop: 6 },
+  body: { color: '#C9C9C9', fontSize: 15, lineHeight: 22, marginTop: 8, textAlign: 'left' },
+  accountEmail: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', marginTop: 4 },
+  note: { color: '#A6A6A6', fontSize: 13, lineHeight: 19, marginTop: 12 },
+  renewalBox: { borderWidth: 1, borderColor: GOLD, borderRadius: 16, padding: 18, marginBottom: 16, backgroundColor: '#15120A', gap: 8 },
+  renewalHeading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  renewalTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  renewalText: { color: '#EDEDED', fontSize: 15, lineHeight: 22 },
+  link: { color: GOLD, fontSize: 14, fontWeight: '700', textDecorationLine: 'underline', marginTop: 4 },
+  consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 8, marginBottom: 12 },
+  checkbox: { width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: GOLD, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  checkboxActive: { backgroundColor: GOLD },
+  consentText: { flex: 1, color: '#EAEAEA', fontSize: 14, lineHeight: 20 },
+  errorText: { color: '#FF8A8A', fontSize: 14, lineHeight: 20, marginBottom: 12 },
+  primaryButton: { minHeight: 56, backgroundColor: GOLD, borderRadius: 14, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, alignSelf: 'stretch' },
+  buttonDisabled: { opacity: 0.45 },
+  primaryText: { color: '#000', fontWeight: '800', fontSize: 15, textAlign: 'center' },
+  secondaryButton: { minHeight: 52, borderRadius: 14, borderWidth: 1, borderColor: GOLD, alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch' },
+  secondaryText: { color: GOLD, fontWeight: '800', fontSize: 15 },
+});

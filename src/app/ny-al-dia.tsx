@@ -30,7 +30,7 @@ export default function NyAlDiaScreen() {
   const renderHeader = () => (
     <View>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()} hitSlop={10}>
           <Ionicons name="arrow-back" size={26} color="#D4AF37" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{ui("NY al día")}</Text>
@@ -40,7 +40,7 @@ export default function NyAlDiaScreen() {
       <Text style={styles.subtitle}>{ui("Noticias, alertas y lo más importante para estar al día en Nueva York.")}</Text>
 
       {featured && (
-        <TouchableOpacity style={styles.mainCard} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title} style={styles.mainCard} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
           <NewsImage
             uri={featured.image}
             style={styles.mainImage}
@@ -66,7 +66,7 @@ export default function NyAlDiaScreen() {
   );
 
   const renderItem = ({ item }: { item: NewsCard }) => (
-    <TouchableOpacity style={styles.newsCard} onPress={() => openArticle(item.id)} activeOpacity={0.85}>
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel={item.title} style={styles.newsCard} onPress={() => openArticle(item.id)} activeOpacity={0.85}>
       <NewsImage
         uri={item.image}
         style={styles.newsImage}
@@ -91,7 +91,7 @@ export default function NyAlDiaScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()} hitSlop={10}>
             <Ionicons name="arrow-back" size={26} color="#D4AF37" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{ui("NY al día")}</Text>
@@ -109,7 +109,7 @@ export default function NyAlDiaScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()} hitSlop={10}>
             <Ionicons name="arrow-back" size={26} color="#D4AF37" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{ui("NY al día")}</Text>
@@ -118,7 +118,7 @@ export default function NyAlDiaScreen() {
         <View style={styles.center}>
           <Ionicons name="cloud-offline-outline" size={44} color="#555" />
           <Text style={styles.errorText}>{ui('No se pudo cargar el contenido.')}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={feed.retry}>
+          <TouchableOpacity accessibilityRole="button" style={styles.retryBtn} onPress={feed.retry}>
             <Text style={styles.retryText}>{ui("Reintentar")}</Text>
           </TouchableOpacity>
         </View>

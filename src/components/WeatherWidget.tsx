@@ -1,7 +1,7 @@
 import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useState, type ComponentProps } from 'react';
+import { useEffect, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
   ImageBackground,
@@ -38,21 +38,27 @@ export function WeatherWidget() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      setWeather(await fetchCurrentWeather());
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // reloadKey vuelve a disparar la carga al pulsar "Reintentar".
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let alive = true;
+    fetchCurrentWeather()
+      .then((current) => {
+        if (!alive) return;
+        setWeather(current);
+        setError(false);
+      })
+      .catch(() => { if (alive) setError(true); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [reloadKey]);
+
+  const retry = () => {
+    setLoading(true);
+    setError(false);
+    setReloadKey((key) => key + 1);
+  };
 
   return (
     <View style={styles.section}>
@@ -85,7 +91,7 @@ export function WeatherWidget() {
               <Text style={styles.errorText}>{ui("No pudimos actualizar el clima.")}</Text>
               <TouchableOpacity
                 style={styles.retry}
-                onPress={load}
+                onPress={retry}
                 accessibilityRole="button"
                 activeOpacity={0.7}
               >
@@ -220,5 +226,5 @@ const styles = StyleSheet.create({
   },
   detailValue: { color: '#FFF', fontSize: 14, fontWeight: '800' },
   detailLabel: { color: '#D0D0D0', fontSize: 10, fontWeight: '600' },
-  source: { color: '#5F5F5F', fontSize: 9, textAlign: 'right', marginTop: 7 },
+  source: { color: '#A6A6A6', fontSize: 11, textAlign: 'right', marginTop: 7 },
 });
