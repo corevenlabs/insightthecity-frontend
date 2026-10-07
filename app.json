@@ -65,7 +65,7 @@
           "locationWhenInUsePermission": "ITC Club usa tu ubicación solo cuando pides lugares cercanos en el chat, para mostrarte opciones cerca de ti. No guardamos tu ubicación.",
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,
-          "motionUsagePermission": false,
+          "motionUsagePermission": "ITC Club no usa los datos de movimiento de tu dispositivo. Este permiso solo existe porque lo incluye el componente de ubicación del sistema; la app nunca lo solicita.",
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false
         }
