@@ -86,6 +86,14 @@ export async function createBillingPortal(token: string): Promise<string> {
 
 const LOCALES = { es: 'es-US', en: 'en-US', pt: 'pt-BR' } as const;
 
+export async function changeSubscriptionRenewal(token: string, cancelAtPeriodEnd: boolean) {
+  const response = await fetch(`${API_URL}/api/payment/renewal`, {
+    method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cancelAtPeriodEnd, confirm: true }),
+  });
+  return json<{ user: User; changed: boolean; emailSent: boolean }>(response, 'No se pudo actualizar la renovación. Revisa tu membresía e inténtalo nuevamente.');
+}
+
 export function formatMoney(amountCents: number, currency: string, language: keyof typeof LOCALES) {
   try {
     return new Intl.NumberFormat(LOCALES[language], { style: 'currency', currency: currency.toUpperCase() }).format(amountCents / 100);

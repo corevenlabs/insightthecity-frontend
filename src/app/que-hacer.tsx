@@ -31,7 +31,7 @@ export default function QueHacerScreen() {
   const backHeader = (
     <View style={styles.header}>
       <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()} hitSlop={10}>
-        <Ionicons name="arrow-back" size={26} color="#D4AF37" />
+        <Ionicons name="arrow-back" size={26} color="#FDDD56" />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>{ui("¿Qué hacer en NY?")}</Text>
       <View style={{ width: 26 }} />
@@ -92,7 +92,7 @@ export default function QueHacerScreen() {
       <SafeAreaView style={styles.container}>
         {backHeader}
         <View style={styles.center}>
-          <ActivityIndicator color="#D4AF37" size="large" />
+          <ActivityIndicator color="#FDDD56" size="large" />
         </View>
       </SafeAreaView>
     );
@@ -128,11 +128,11 @@ export default function QueHacerScreen() {
         onEndReached={feed.loadMore}
         onEndReachedThreshold={0.5}
         refreshControl={
-          <RefreshControl refreshing={feed.refreshing} onRefresh={feed.refresh} tintColor="#D4AF37" />
+          <RefreshControl refreshing={feed.refreshing} onRefresh={feed.refresh} tintColor="#FDDD56" />
         }
         ListFooterComponent={
           feed.loadingMore ? (
-            <ActivityIndicator color="#D4AF37" style={{ marginVertical: 24 }} />
+            <ActivityIndicator color="#FDDD56" style={{ marginVertical: 24 }} />
           ) : (
             <View style={{ height: 100 }} />
           )
@@ -145,7 +145,7 @@ export default function QueHacerScreen() {
 const COLORS = {
   background: '#050505',
   card: '#121212',
-  gold: '#D4AF37',
+  gold: '#FDDD56',
   white: '#FFFFFF',
   secondary: '#A6A6A6',
 };

@@ -42,7 +42,7 @@ export function BenefitPreview({ experience, width }: { experience: Experience; 
         <View style={s.region}><Ionicons name="location-outline" size={16} color="#FFFFFF" /><Text style={s.description}>{experience.region ?? 'NY'}</Text></View>
       </View>
     </TouchableOpacity>
-    {!!benefit && <View style={s.badge} pointerEvents="none"><Ionicons name="pricetag" size={14} color="#D4AF37" /><Text style={s.badgeText} numberOfLines={1}>{benefit}</Text></View>}
+    {!!benefit && <View style={s.badge} pointerEvents="none"><Ionicons name="pricetag" size={14} color="#FDDD56" /><Text style={s.badgeText} numberOfLines={1}>{benefit}</Text></View>}
     <SaveButton item={savedExperience(experience)} />
     {photos.length > 1 && <>
       <View style={s.indicators}>{photos.map((photo, i) => <TouchableOpacity key={photo} style={[s.dotTap, { width: Math.min(32, (width - 16) / photos.length) }]}
@@ -65,5 +65,5 @@ const s = StyleSheet.create({
   indicators: { position: 'absolute', bottom: 0, left: 8, flexDirection: 'row' },
   dotTap: { width: 32, height: 36, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.35)' },
-  active: { backgroundColor: '#D4AF37' },
+  active: { backgroundColor: '#FDDD56' },
 });

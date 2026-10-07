@@ -30,24 +30,24 @@ export function LanguagePicker() {
   };
   return <>
     <Pressable accessibilityRole="button" accessibilityLabel={`${t('register.language')}: ${LANGUAGE_NAMES[language]}`} onPress={() => { setFailed(false); setVisible(true); }} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-      <Ionicons name="globe-outline" size={21} color="#D4AF37" accessible={false} />
+      <Ionicons name="globe-outline" size={21} color="#FDDD56" accessible={false} />
       <Text style={styles.label}>{t('register.language')}</Text>
       <Text style={styles.value}>{LANGUAGE_NAMES[language]}</Text>
-      <Ionicons name="chevron-forward" size={18} color="#D4AF37" accessible={false} />
+      <Ionicons name="chevron-forward" size={18} color="#FDDD56" accessible={false} />
     </Pressable>
     <Modal visible={visible} animationType="none" onRequestClose={close}>
       <SafeAreaProvider><SafeAreaView style={styles.screen}>
         <View style={styles.header}>
           <Text style={styles.title} accessibilityRole="header">{ui('Selecciona tu idioma')}</Text>
           <Pressable accessibilityRole="button" accessibilityLabel={ui('Cerrar')} disabled={pending !== null} onPress={close} style={({ pressed }) => [styles.close, pressed && styles.pressed]}>
-            <Ionicons name="close" size={25} color="#D4AF37" accessible={false} />
+            <Ionicons name="close" size={25} color="#FDDD56" accessible={false} />
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.hint}>{ui('El cambio se aplica a toda la interfaz.')}</Text>
           {(Object.keys(LANGUAGE_NAMES) as AppLanguage[]).map((item) => <Pressable key={item} accessibilityRole="radio" aria-checked={item === language} aria-busy={pending === item} aria-disabled={pending !== null} accessibilityLabel={LANGUAGE_NAMES[item]} accessibilityState={{ checked: item === language, disabled: pending !== null, busy: pending === item }} disabled={pending !== null} onPress={() => void select(item)} style={({ pressed }) => [styles.option, item === language && styles.selected, pressed && styles.pressed]}>
             <Text style={[styles.optionText, item === language && styles.selectedText]}>{LANGUAGE_NAMES[item]}</Text>
-            {pending === item ? <ActivityIndicator color="#D4AF37" /> : item === language ? <Ionicons name="checkmark-circle" size={24} color="#D4AF37" accessible={false} /> : <View style={styles.circle} />}
+            {pending === item ? <ActivityIndicator color="#FDDD56" /> : item === language ? <Ionicons name="checkmark-circle" size={24} color="#FDDD56" accessible={false} /> : <View style={styles.circle} />}
           </Pressable>)}
           {pending && <Text style={styles.hint} accessibilityLiveRegion="polite">{ui('Guardando…')}</Text>}
           {failed && <Text style={styles.error} accessibilityRole="alert">{ui('No se pudo cambiar el idioma. Revisa tu conexión e inténtalo de nuevo.')}</Text>}
@@ -65,8 +65,8 @@ const styles = StyleSheet.create({
   close: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 20, paddingBottom: 48 }, hint: { color: '#A6A6A6', fontSize: 16, lineHeight: 24, marginBottom: 24 },
   option: { minHeight: 64, borderRadius: 16, borderWidth: 1, borderColor: '#333', backgroundColor: '#121212', padding: 18, marginBottom: 12, flexDirection: 'row', gap: 16, alignItems: 'center' },
-  selected: { borderColor: '#D4AF37', backgroundColor: 'rgba(212,175,55,0.08)' },
-  optionText: { color: '#FFF', fontSize: 18, flex: 1 }, selectedText: { color: '#D4AF37', fontWeight: '700' },
+  selected: { borderColor: '#FDDD56', backgroundColor: 'rgba(253,221,86,0.08)' },
+  optionText: { color: '#FFF', fontSize: 18, flex: 1 }, selectedText: { color: '#FDDD56', fontWeight: '700' },
   circle: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: '#777' },
   pressed: { opacity: 0.7 }, error: { color: '#FF8080', fontSize: 15, lineHeight: 22, marginTop: 12 },
 });

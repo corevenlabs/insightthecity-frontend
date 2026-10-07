@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_URL } from '../constants/api';
 import { useLanguage } from '../context/LanguageContext';
 
-const GOLD = '#D4AF37';
+const GOLD = '#FDDD56';
 const COPY = {
   es: { title: 'Recupera tu contraseña', intro: 'Ingresa tu correo y te enviaremos un código de 8 dígitos.', email: 'Correo electrónico', send: 'ENVIAR CÓDIGO', code: 'Código de recuperación', newPassword: 'Nueva contraseña', confirm: 'Confirmar contraseña', save: 'CAMBIAR CONTRASEÑA', sent: 'Si existe una cuenta con ese correo, recibirás un código. Revisa también el correo no deseado.', success: 'Contraseña actualizada. Ya puedes iniciar sesión.', retry: 'Enviar otro código', mismatch: 'Las contraseñas no coinciden.', short: 'La contraseña debe tener al menos 8 caracteres.', invalidEmail: 'Ingresa un correo válido.', invalidCode: 'Ingresa el código de 8 dígitos.', error: 'No pudimos completar la solicitud. Inténtalo de nuevo.', back: 'Volver al inicio de sesión' },
   en: { title: 'Reset your password', intro: 'Enter your email and we will send you an 8-digit code.', email: 'Email address', send: 'SEND CODE', code: 'Recovery code', newPassword: 'New password', confirm: 'Confirm password', save: 'CHANGE PASSWORD', sent: 'If an account exists for this email, you will receive a code. Check your spam folder too.', success: 'Password updated. You can now sign in.', retry: 'Send another code', mismatch: 'Passwords do not match.', short: 'Password must be at least 8 characters.', invalidEmail: 'Enter a valid email address.', invalidCode: 'Enter the 8-digit code.', error: 'We could not complete this request. Please try again.', back: 'Back to sign in' },

@@ -22,7 +22,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 const COLORS = {
   background: '#050505', surface: '#121212', raised: '#181818', border: '#292929',
-  gold: '#D4AF37', goldSoft: '#F0D778', text: '#FFFFFF', muted: '#B8B8B8', black: '#080808',
+  gold: '#FDDD56', goldSoft: '#F0D778', text: '#FFFFFF', muted: '#B8B8B8', black: '#080808',
 };
 
 type Place = {
@@ -246,7 +246,7 @@ export default function ChatScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
         <View style={styles.header}>
           <Pressable accessibilityRole="button" accessibilityLabel={ui("Volver")} hitSlop={8} onPress={() => router.back()} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
-            <Ionicons name="arrow-back" size={24} color="#D4AF37" />
+            <Ionicons name="arrow-back" size={24} color="#FDDD56" />
           </Pressable>
           <View style={styles.identity}>
             <Text style={styles.assistantName}>YORK<Text style={styles.brandI}>i</Text></Text>

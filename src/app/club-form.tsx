@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { createSubscriptionCheckout, fetchPlan, formatMoney, openStripePage, type Plan } from '../lib/payments';
 
-const GOLD = '#D4AF37';
+const GOLD = '#FDDD56';
 const BLACK = '#0A0A0A';
 
 const INTERVALS: Record<Plan['interval'], string> = { day: 'día', week: 'semana', month: 'mes', year: 'año' };

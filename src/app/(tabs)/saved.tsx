@@ -21,7 +21,7 @@ export default function SavedScreen() {
         </Text>
       </View>
 
-      {!ready ? <ActivityIndicator color="#D4AF37" style={{ marginTop: 40 }} /> : items.length > 0 ? (
+      {!ready ? <ActivityIndicator color="#FDDD56" style={{ marginTop: 40 }} /> : items.length > 0 ? (
         <ScrollView contentContainerStyle={{ paddingVertical: 20, gap: 14, paddingBottom: 120 }}>
           <AdaptiveGrid>{items.map(item => <View key={item.key} style={{ borderRadius: 14, overflow: 'hidden', backgroundColor: '#121212' }}>
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={item.title} onPress={() => router.push(item.kind === 'experience'
@@ -35,7 +35,7 @@ export default function SavedScreen() {
         </ScrollView>
       ) : <View style={styles.emptyState}>
         <View style={styles.iconCircle}>
-          <Ionicons name="bookmark-outline" size={30} color="#D4AF37" />
+          <Ionicons name="bookmark-outline" size={30} color="#FDDD56" />
         </View>
         <Text style={styles.emptyTitle}>{ui('Aún no tienes elementos guardados')}</Text>
         <Text style={styles.emptyText}>
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     marginTop: 22,
     paddingHorizontal: 20,
     borderRadius: 23,
-    backgroundColor: '#D4AF37',
+    backgroundColor: '#FDDD56',
   },
   exploreButtonText: {
     color: '#050505',

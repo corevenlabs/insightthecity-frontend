@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -20,11 +20,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
-const GOLD = '#D4AF37';
+const GOLD = '#FDDD56';
 const BLACK = '#0A0A0A';
 
 export default function LoginScreen() {
   const { t, ui } = useLanguage();
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
   const {
     biometricAvailable,
     biometricEnabled,
@@ -43,7 +44,7 @@ export default function LoginScreen() {
 
   const enterAuthenticatedApp = () => {
     router.dismissAll();
-    router.replace('/home' as any);
+    router.replace(returnTo === 'membership' ? '/profile?membership=1' : returnTo === 'benefits' ? '/club' : '/home');
   };
 
   const enterApp = async () => {
@@ -114,7 +115,7 @@ export default function LoginScreen() {
         >
           <View style={styles.header}>
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={22} color="#D4AF37" />
+              <Ionicons name="arrow-back" size={22} color="#FDDD56" />
             </TouchableOpacity>
 
             <View style={styles.logoPill}>

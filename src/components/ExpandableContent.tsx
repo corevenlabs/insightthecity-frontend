@@ -15,14 +15,14 @@ export function ExpandableSection({ title, children }: PropsWithChildren<{ title
         accessibilityState={{ expanded }}
       >
         <Text style={styles.title}>{title}</Text>
-        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="#D4AF37" accessible={false} />
+        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="#FDDD56" accessible={false} />
       </TouchableOpacity>
       {expanded && children}
     </View>
   );
 }
 
-export function ExpandableText({ text, style, color = '#D4AF37' }: {
+export function ExpandableText({ text, style, color = '#FDDD56' }: {
   text: string;
   style?: StyleProp<TextStyle>;
   color?: string;

@@ -8,6 +8,6 @@ export function ExperienceTags({ tags }: { tags: string[] }) {
 
 const styles = StyleSheet.create({
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, flexShrink: 1 },
-  tag: { borderWidth: 1, borderColor: '#D4AF37', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 4, maxWidth: '100%' },
-  text: { color: '#D4AF37', fontSize: 11, fontWeight: '700' },
+  tag: { borderWidth: 1, borderColor: '#FDDD56', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 4, maxWidth: '100%' },
+  text: { color: '#FDDD56', fontSize: 11, fontWeight: '700' },
 });

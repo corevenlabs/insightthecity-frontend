@@ -32,9 +32,9 @@ export function EventCard({ title, category, tags }: EventCardProps) {
 const styles = StyleSheet.create({
   eventCard: { width: 180, backgroundColor: '#121212', borderRadius: 18, padding: 12, marginRight: 14 },
   eventImage: { width: '100%', height: 100, borderRadius: 12, marginBottom: 10 },
-  category: { color: '#D4A017', fontSize: 11, fontWeight: '700' },
+  category: { color: '#FDDD56', fontSize: 11, fontWeight: '700' },
   eventTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '600', marginTop: 6 },
   eventTime: { color: '#A6A6A6', marginTop: 4 },
-  freeBadge: { backgroundColor: '#D4A017', alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginTop: 10 },
+  freeBadge: { backgroundColor: '#FDDD56', alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginTop: 10 },
   freeText: { color: '#000', fontSize: 10, fontWeight: '700' },
 });

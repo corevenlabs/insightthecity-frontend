@@ -1,7 +1,9 @@
+import { HomeSearch } from '../../components/HomeSearch';
+import { matchesPlanTags } from '../../lib/homeSearch';
 import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
 import { HomePromotion } from '../../components/HomePromotion';
 import { BenefitPreview } from '../../components/BenefitPreview';
-import { getExperienceTags } from '@/lib/experienceFilters';
+import { getExperienceTags, matchesExperienceTags } from '@/lib/experienceFilters';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -9,6 +11,7 @@ import { useCallback, useEffect, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
@@ -186,9 +189,10 @@ type HomeNewsSectionProps = {
   section: 'ny-al-dia' | 'que-hacer';
   title: string;
   route: '/ny-al-dia' | '/que-hacer';
+  tags?: string[];
 };
 
-function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
+function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionProps) {
   const { t, ui, language } = useLanguage();
   const { planWidth } = useResponsiveLayout();
   const [items, setItems] = useState<NewsCard[]>([]);
@@ -199,20 +203,31 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
 
   // reloadKey vuelve a disparar la carga al pulsar "Reintentar".
   const [reloadKey, setReloadKey] = useState(0);
+  const filteringPlans = !isNewsSection && tags.length > 0;
 
   useEffect(() => {
     let alive = true;
     const itemLimit = isNewsSection ? 5 : 4;
-    fetchNews(section, 1, itemLimit)
-      .then((page) => {
+    const load = async () => {
+      const first = await fetchNews(section, 1, filteringPlans ? 20 : itemLimit);
+      const loaded = [...first.items];
+      if (filteringPlans) for (let page = 2; page <= first.totalPages && alive; page++) {
+        loaded.push(...(await fetchNews(section, page, 20)).items);
+      }
+      return loaded;
+    };
+    load()
+      .then((loaded) => {
         if (!alive) return;
-        setItems(page.items.slice(0, itemLimit));
+        setItems(loaded);
         setError(null);
       })
       .catch(() => { if (alive) setError('No se pudo cargar el contenido.'); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [isNewsSection, section, reloadKey]);
+  }, [isNewsSection, section, reloadKey, filteringPlans]);
+
+  const visibleItems = isNewsSection ? items : items.filter(item => matchesPlanTags(item, tags)).slice(0, 4);
 
   const retry = () => {
     setLoading(true);
@@ -237,7 +252,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
 
   const renderNewsLayout = () => (
     <View style={styles.newsHomeList}>
-      {items.map((item) => (
+      {visibleItems.map((item) => (
         <TouchableOpacity key={item.id} accessibilityRole="button"
           accessibilityLabel={`${item.title}, ${formatDate(item.date, language)}`}
           style={styles.newsHomeCard} onPress={() => openArticle(item)} activeOpacity={0.72}>
@@ -264,7 +279,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
       contentContainerStyle={styles.plansCarouselContent}
       accessibilityRole="list"
     >
-      {items.map((item) => (
+      {visibleItems.map((item) => (
         <TouchableOpacity
           key={item.id}
           accessibilityRole="button"
@@ -319,7 +334,7 @@ function HomeNewsSection({ section, title, route }: HomeNewsSectionProps) {
             <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
-      ) : items.length === 0 ? (
+      ) : visibleItems.length === 0 ? (
         <Text style={styles.emptyText}>{ui("Todavía no hay publicaciones en esta sección.")}</Text>
       ) : (
         isNewsSection ? renderNewsLayout() : renderPlansCarousel()
@@ -336,29 +351,44 @@ export default function HomeScreen() {
   const [clubBenefits, setClubBenefits] = useState<Experience[]>([]);
   const [recommendations, setRecommendations] = useState<Experience[]>([]);
   const [guides, setGuides] = useState<Guide[]>([]);
+  const [catalog, setCatalog] = useState<Experience[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState(false);
+  const [catalogRetry, setCatalogRetry] = useState(0);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchActive = searchOpen && searchQuery.trim().length > 0;
 
   useFocusEffect(useCallback(() => {
-    void refreshUser();
-    void Promise.all([fetchExperiences(), fetchGuides()])
-      .then(([experiences, guides]) => {
-        setClubBenefits(experiences.filter((experience) => experience.access === 'premium'));
-        const curated = experiences.filter(
-          (experience) => experience.section === 'top_today' && experience.access !== 'premium',
-        );
-        setRecommendations(
-          curated.length > 0
-            ? curated
-            : experiences.filter((experience) => experience.access !== 'premium'),
-        );
-        setGuides(guides);
-      })
-      .catch(() => undefined);
-  }, [refreshUser]));
+    let alive = true;
+    setCatalogLoading(true); setCatalogError(false);
+    void refreshUser().catch(() => undefined);
+    void Promise.allSettled([fetchExperiences(), fetchGuides()]).then(([experienceResult, guideResult]) => {
+      if (!alive) return;
+      if (experienceResult.status === 'fulfilled') {
+        const experiences = experienceResult.value;
+        setCatalog(experiences);
+        setClubBenefits(experiences.filter(item => item.access === 'premium'));
+        const curated = experiences.filter(item => item.section === 'top_today' && item.access !== 'premium');
+        setRecommendations(curated.length > 0 ? curated : experiences.filter(item => item.access !== 'premium'));
+      }
+      if (guideResult.status === 'fulfilled') setGuides(guideResult.value);
+      setCatalogError(experienceResult.status === 'rejected' || guideResult.status === 'rejected');
+      setCatalogLoading(false);
+    });
+    return () => { alive = false; };
+  // Retry changes the focus callback so a failed catalogue load can be repeated.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshUser, catalogRetry]));
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}
+      onTouchStart={() => { if (searchOpen) { setSearchOpen(false); Keyboard.dismiss(); } }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         contentContainerStyle={[styles.content, { paddingHorizontal: gutter }]}
       >
         {/* HEADER */}
@@ -375,19 +405,12 @@ export default function HomeScreen() {
           <HeaderWeather />
         </View>
 
-        <TouchableOpacity
-          style={styles.searchBar}
-          activeOpacity={0.78}
-          accessibilityRole="button"
-          accessibilityLabel={ui('Buscar lugares, eventos y guías')}
-          onPress={() => router.push('/explore')}
-        >
-          <Ionicons name="search-outline" size={24} color={COLORS.secondary} />
-          <Text style={styles.searchPlaceholder} numberOfLines={1}>
-            {ui('Buscar lugares, eventos y guías')}
-          </Text>
-        </TouchableOpacity>
+        <HomeSearch key={user?.id ?? 'guest'} experiences={catalog} guides={guides} tags={selectedTags}
+          isOpen={searchOpen} onOpenChange={setSearchOpen}
+          catalogLoading={catalogLoading} catalogError={catalogError} onRetryCatalog={() => setCatalogRetry(value => value + 1)}
+          onTagsChange={setSelectedTags} query={searchQuery} onQueryChange={setSearchQuery} />
 
+        <View style={searchActive ? { display: 'none' } : undefined}>
         <HomePromotion />
 
         {/* BENEFICIOS ITC CLUB */}
@@ -413,7 +436,7 @@ export default function HomeScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.benefitsCarousel}
         >
-          {clubBenefits.map((experience) => (
+          {clubBenefits.filter(item => matchesExperienceTags(item, selectedTags)).map((experience) => (
             <BenefitPreview
               key={`${experience.id}:${experience.image}:${(experience.images ?? []).join('|')}`}
               experience={experience}
@@ -421,6 +444,7 @@ export default function HomeScreen() {
             />
           ))}
         </ScrollView>
+        {selectedTags.length > 0 && !clubBenefits.some(item => matchesExperienceTags(item, selectedTags)) && <Text style={styles.emptyText}>{ui('No hay beneficios con estos filtros.')}</Text>}
 
         {/* ITC RECOMIENDA */}
 
@@ -440,10 +464,12 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        <RecommendationsCarousel experiences={recommendations} />
+        <RecommendationsCarousel experiences={recommendations.filter(item => matchesExperienceTags(item, selectedTags))} />
 
+        {selectedTags.length > 0 && !recommendations.some(item => matchesExperienceTags(item, selectedTags)) && <Text style={styles.emptyText}>{ui('No hay recomendaciones con estos filtros.')}</Text>}
         {/* QUE HACER EN NEW YORK */}
         <HomeNewsSection
+          tags={selectedTags}
           section="que-hacer"
           title={ui("QUÉ HACER EN NEW YORK")}
           route="/que-hacer"
@@ -484,6 +510,7 @@ export default function HomeScreen() {
           route="/ny-al-dia"
         />
 
+        </View>
 
       </ScrollView>
 
@@ -494,7 +521,7 @@ export default function HomeScreen() {
 const COLORS = {
   background: '#050505',
   card: '#121212',
-  gold: '#D4AF37',
+  gold: '#FDDD56',
   white: '#FFFFFF',
   secondary: '#A6A6A6',
 };
@@ -707,7 +734,7 @@ clubWhite: {
 },
 
 clubGold: {
-  color: '#D4A017',
+  color: '#FDDD56',
 },
 
   clubDescription: {
@@ -810,7 +837,7 @@ clubGold: {
     justifyContent: 'center',
     paddingHorizontal: 6,
     borderRadius: 5,
-    backgroundColor: '#D4AF37',
+    backgroundColor: '#FDDD56',
   },
 
   benefitBadgeText: {
@@ -1246,8 +1273,8 @@ clubGold: {
   dropImageContainer: { width: '100%', aspectRatio: 2.35, borderRadius: 14, overflow: 'hidden' },
   dropImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   dropContent: { paddingTop: 12 },
-  dropMeta: { color: '#D4AF37', fontSize: 11, fontWeight: '600', marginBottom: 6 },
+  dropMeta: { color: '#FDDD56', fontSize: 11, fontWeight: '600', marginBottom: 6 },
   dropTitle: { color: COLORS.white, fontSize: 23, lineHeight: 28, fontWeight: '700' },
-  dropBadge: { position: 'absolute', top: 10, left: 10, backgroundColor: '#D4AF37', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  dropBadge: { position: 'absolute', top: 10, left: 10, backgroundColor: '#FDDD56', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   dropBadgeText: { color: '#000000', fontSize: 11, fontWeight: '800' },
 });

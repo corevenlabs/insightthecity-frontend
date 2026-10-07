@@ -55,7 +55,7 @@ export default function ExploreScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={ui("Volver")}>
-            <Ionicons name="arrow-back" size={24} color="#D4AF37" />
+            <Ionicons name="arrow-back" size={24} color="#FDDD56" />
           </TouchableOpacity>
           <Text style={styles.title}>{t('explore.title')}</Text>
           <View style={styles.iconButton} />
@@ -79,7 +79,7 @@ export default function ExploreScreen() {
         <Text style={styles.results}>{t('explore.results', { count: filteredEvents.length })}</Text>
 
         {loading ? (
-          <View style={styles.state}><ActivityIndicator color="#D4AF37" /></View>
+          <View style={styles.state}><ActivityIndicator color="#FDDD56" /></View>
         ) : filteredEvents.length === 0 ? (
           <View style={styles.state}>
             <Ionicons name="location-outline" size={30} color="#777" />
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   tabsContainer: { marginBottom: 15 },
   tabsContent: { paddingRight: 10 },
   tab: { minHeight: 44, justifyContent: 'center', backgroundColor: '#1A1A1A', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, marginRight: 10 },
-  activeTab: { backgroundColor: '#D4AF37' },
+  activeTab: { backgroundColor: '#FDDD56' },
   tabText: { color: '#AAA', fontWeight: '600' },
   activeTabText: { color: '#000' },
   results: { color: '#888', marginBottom: 15 },
@@ -147,14 +147,14 @@ const styles = StyleSheet.create({
   cardContent: { padding: 16 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   categoryRow: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  category: { flexShrink: 1, color: '#D4AF37', fontWeight: '700' },
-  regionBadge: { minWidth: 38, paddingHorizontal: 9, paddingVertical: 5, alignItems: 'center', borderRadius: 999, backgroundColor: '#D4AF37' },
+  category: { flexShrink: 1, color: '#FDDD56', fontWeight: '700' },
+  regionBadge: { minWidth: 38, paddingHorizontal: 9, paddingVertical: 5, alignItems: 'center', borderRadius: 999, backgroundColor: '#FDDD56' },
   regionBadgeText: { color: '#050505', fontSize: 11, fontWeight: '900' },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  freeBadge: { backgroundColor: '#D4AF37' },
-  premiumBadge: { backgroundColor: '#303030', borderWidth: 1, borderColor: '#D4AF37' },
+  freeBadge: { backgroundColor: '#FDDD56' },
+  premiumBadge: { backgroundColor: '#303030', borderWidth: 1, borderColor: '#FDDD56' },
   badgeText: { color: '#000', fontSize: 11, fontWeight: '700' },
-  premiumBadgeText: { color: '#D4AF37' },
+  premiumBadgeText: { color: '#FDDD56' },
   eventTitle: { color: '#FFF', fontSize: 18, fontWeight: '700', marginTop: 12 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8 },
   location: { flex: 1, color: '#AAA' },

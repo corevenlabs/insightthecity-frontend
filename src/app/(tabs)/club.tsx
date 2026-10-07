@@ -15,7 +15,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { fetchExperiences } from '../../lib/experiences';
 import { fetchPlan, formatMoney, type Plan } from '../../lib/payments';
 
-const GOLD = '#D4AF37';
+const GOLD = '#FDDD56';
 const benefits = [
   ['pricetag', 'Ahorros y descuentos', 'en atracciones, restaurantes y más.'],
   ['gift', 'Experiencias exclusivas', 'y giveaways.'],

@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../context/AuthContext';
 
-const GOLD = '#D4AF37';
+const GOLD = '#FDDD56';
 const BLACK = '#050505';
 
 export function BiometricLockScreen() {

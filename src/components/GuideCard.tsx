@@ -44,7 +44,7 @@ const s = StyleSheet.create({
   badge: { borderWidth: 1, borderColor: '#999999', borderRadius: 99, paddingHorizontal: 12,
     paddingVertical: 4, alignItems: 'center', justifyContent: 'center' },
   club: { borderColor: '#A98B30' },
-  clubText: { color: '#D4AF37', fontSize: 12, lineHeight: 16, fontWeight: '700' },
+  clubText: { color: '#FDDD56', fontSize: 12, lineHeight: 16, fontWeight: '700' },
   price: { color: '#FFFFFF', fontSize: 13, lineHeight: 16, fontWeight: '700' },
   arrow: { marginHorizontal: 7 },
 });

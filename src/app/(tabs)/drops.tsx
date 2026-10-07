@@ -60,7 +60,7 @@ export default function DropsScreen() {
       >
         <View style={styles.header}>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={26} color="#D4AF37" />
+            <Ionicons name="arrow-back" size={26} color="#FDDD56" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
             <Text style={styles.city}>CITY </Text>
@@ -95,7 +95,7 @@ export default function DropsScreen() {
             <ExperienceTags tags={getExperienceTags(featured)} />
             <Text style={styles.heroTitle}> {featured.title} </Text>
             <MemberBenefitSummary experience={featured} />
-            <ExpandableText key={featured.id} text={featured.description} style={styles.heroDescription} color="#D4A017" />
+            <ExpandableText key={featured.id} text={featured.description} style={styles.heroDescription} color="#FDDD56" />
             <Text style={styles.location}>
               {featured.location}
             </Text>
@@ -174,7 +174,7 @@ function MiniDropCard({ id, image, title, subtitle, tags, access, showBenefitOnC
 const COLORS = {
   background: '#050505',
   card: '#121212',
-  gold: '#D4A017',
+  gold: '#FDDD56',
   white: '#FFFFFF',
   secondary: '#A6A6A6',
 };

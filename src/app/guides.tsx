@@ -16,10 +16,10 @@ const price = (guide: Guide) => `${guide.currency.toUpperCase()} $${(guide.price
 export default function GuidesScreen() {
   const { ui } = useLanguage();
   const { user, token } = useAuth();
-  const params = useLocalSearchParams<{ purchaseSession?: string; guideId?: string }>();
+  const params = useLocalSearchParams<{ purchaseSession?: string; guideId?: string; searchQuery?: string }>();
   const confirmedSession = useRef<string | null>(null);
   const [items, setItems] = useState<Guide[]>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(typeof params.searchQuery === 'string' ? params.searchQuery : '');
   const [busy, setBusy] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -109,7 +109,7 @@ export default function GuidesScreen() {
   </SafeAreaView>;
 }
 
-const C = { bg: '#050505', card: '#121212', gold: '#D4AF37', white: '#FFFFFF', secondary: '#A6A6A6', green: '#72D59B' };
+const C = { bg: '#050505', card: '#121212', gold: '#FDDD56', white: '#FFFFFF', secondary: '#A6A6A6', green: '#72D59B' };
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg }, content: { paddingHorizontal: 12, paddingTop: 20, paddingBottom: 120 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, back: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },

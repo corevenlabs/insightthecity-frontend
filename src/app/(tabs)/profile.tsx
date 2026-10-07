@@ -1,8 +1,9 @@
+import { SubscriptionRenewal } from '../../components/SubscriptionRenewal';
 import { LanguagePicker } from '../../components/LanguagePicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { requireOptionalNativeModule } from 'expo';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -11,7 +12,7 @@ import { useLanguage, type AppLanguage } from '../../context/LanguageContext';
 import type { LegalSlug } from '../../lib/legal';
 import { createBillingPortal, formatDate, formatMoney, openStripePage } from '../../lib/payments';
 
-const GOLD = '#D4AF37';
+const GOLD = '#FDDD56';
 const BLACK = '#0A0A0A';
 const INTERESTS = ['Museos', 'Experiencias', 'Broadway', 'Gastronomía', 'Arte', 'Miradores', 'Música', 'Familia'];
 const COPY = {
@@ -24,13 +25,17 @@ function initials(value: string) {
   return parts.length > 1 ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() : value.slice(0, 2).toUpperCase() || '?';
 }
 export default function ProfileScreen() {
-  const { user, token, isAuthenticated, signOut, refreshUser, updateProfile, uploadAvatar } = useAuth();
+  const { user, token, isAuthenticated, signOut, refreshUser, updateProfile, uploadAvatar, applyServerUser } = useAuth();
   const { t, ui, language, tagLabel } = useLanguage();
   const c = COPY[language];
+  const { membership } = useLocalSearchParams<{ membership?: string }>();
   const [editing, setEditing] = useState(false);
   const [help, setHelp] = useState(false);
   const [membershipDetails, setMembershipDetails] = useState(false);
+  const [membershipLoading, setMembershipLoading] = useState(false);
+  const [membershipLoadError, setMembershipLoadError] = useState(false);
   const [portalBusy, setPortalBusy] = useState(false);
+  const [renewalBusy, setRenewalBusy] = useState(false);
   const [portalError, setPortalError] = useState('');
   const [saving, setSaving] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
@@ -39,11 +44,22 @@ export default function ProfileScreen() {
   const [area, setArea] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState<AppLanguage>('es');
   const [interests, setInterests] = useState<string[]>([]);
-  useFocusEffect(useCallback(() => { void refreshUser(); }, [refreshUser]));
+  const openMembership = useCallback(async () => {
+    setMembershipDetails(true); setMembershipLoading(true); setMembershipLoadError(false);
+    try { const current = await refreshUser(); if (!current) setMembershipLoadError(true); }
+    catch { setMembershipLoadError(true); }
+    finally { setMembershipLoading(false); }
+  }, [refreshUser]);
+  useFocusEffect(useCallback(() => {
+    if (membership === '1' && isAuthenticated) {
+      router.setParams({ membership: undefined });
+      void openMembership();
+    } else { void refreshUser(); }
+  }, [membership, isAuthenticated, openMembership, refreshUser]));
   const openLegal = (slug: LegalSlug) => router.push({ pathname: '/legal', params: { slug } });
   // Stripe Customer Portal: cambiar tarjeta, ver facturas o cancelar (cancelación en línea, NY GBL §527-a).
   const manageSubscription = async () => {
-    if (!token || portalBusy) return;
+    if (!token || portalBusy || renewalBusy) return;
     setPortalBusy(true); setPortalError('');
     try {
       await openStripePage(await createBillingPortal(token));
@@ -99,6 +115,8 @@ export default function ProfileScreen() {
       <TouchableOpacity accessibilityRole="button" style={styles.secondaryButton} onPress={() => router.push('/register')}><Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text></TouchableOpacity>
     </SafeAreaView>
   );
+  const hasBilling = user.has_billing_account === true || !!user.subscription_status;
+  const manualMembership = user.is_premium && user.has_billing_account === false && !user.subscription_status;
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.pageHeader}><Text style={styles.pageTitle}>{c.title}</Text><Pressable accessibilityRole="button" accessibilityLabel={c.edit} onPress={openEditor} style={styles.settings}><Ionicons name="settings-outline" size={25} color={GOLD} /></Pressable></View>
@@ -126,10 +144,10 @@ export default function ProfileScreen() {
         </Pressable>
       </View>
       <View style={[styles.card, styles.membershipCard]}>
-        <View style={styles.membershipHeading}><Text style={styles.sectionTitle}>{c.membership}</Text><Text style={styles.status}>{user.is_premium ? c.active : t('profile.free')}</Text></View>
+        <View style={styles.membershipHeading}><Text style={styles.sectionTitle}>{c.membership}</Text><Text style={styles.status}>{user.is_premium && user.subscription_cancel_at_period_end ? ui('Renovación cancelada') : user.is_premium ? c.active : t('profile.free')}</Text></View>
         <Text style={styles.planTitle}>{user.is_premium ? 'ITC CLUB' : t('profile.freeAccount')}</Text>
         <Text style={styles.planDescription}>{user.is_premium ? c.plan : t('profile.joinClubSubtitle')}</Text>
-        <Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => user.is_premium ? setMembershipDetails(true) : router.push('/club-form')}><Text style={styles.primaryText}>{user.is_premium ? c.manage : t('profile.joinClub')}</Text></Pressable>
+        <Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => user.is_premium || hasBilling ? void openMembership() : router.push('/club-form')}><Text style={styles.primaryText}>{user.is_premium || hasBilling ? c.manage : t('profile.joinClub')}</Text></Pressable>
       </View>
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>{ui('Legal y privacidad')}</Text>
@@ -163,10 +181,10 @@ export default function ProfileScreen() {
       <Modal visible={help} transparent animationType="fade" onRequestClose={() => setHelp(false)}>
         <View style={styles.modalBackdrop}><View style={styles.helpCard}><Text style={styles.sectionTitle}>{c.help}</Text><Text style={styles.helpText}>{c.helpBody}</Text><Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => { setHelp(false); router.push('/chat'); }}><Text style={styles.primaryText}>{c.chat}</Text></Pressable><Pressable accessibilityRole="button" style={styles.photoButton} onPress={() => setHelp(false)}><Text style={styles.secondaryText}>{c.cancel}</Text></Pressable></View></View>
       </Modal>
-      <Modal visible={membershipDetails} animationType="slide" onRequestClose={() => setMembershipDetails(false)}>
+      <Modal visible={membershipDetails} animationType="slide" onRequestClose={() => { if (!renewalBusy && !portalBusy) setMembershipDetails(false); }}>
         <SafeAreaProvider><SafeAreaView style={styles.container}>
           <View style={styles.pageHeader}>
-            <Pressable accessibilityRole="button" accessibilityLabel={language === 'es' ? 'Volver al perfil' : language === 'en' ? 'Back to profile' : 'Voltar ao perfil'} hitSlop={12} onPress={() => setMembershipDetails(false)} style={styles.settings}><Ionicons name="arrow-back" size={25} color={GOLD} /></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel={language === 'es' ? 'Volver al perfil' : language === 'en' ? 'Back to profile' : 'Voltar ao perfil'} hitSlop={12} disabled={renewalBusy || portalBusy} onPress={() => setMembershipDetails(false)} style={styles.settings}><Ionicons name="arrow-back" size={25} color={GOLD} /></Pressable>
             <Text style={[styles.pageTitle, styles.centeredTitle]}>{c.membership}</Text>
             <View style={styles.settings} />
           </View>
@@ -174,32 +192,37 @@ export default function ProfileScreen() {
             <View style={[styles.card, styles.membershipCard, styles.membershipDetailsCard]}>
               <View style={styles.membershipBrand}><Text style={styles.membershipBrandItc}>ITC </Text><Text style={styles.membershipBrandClub}>CLUB</Text></View>
               <Text style={styles.membershipDetailsStatus}>
-                {user.subscription_cancel_at_period_end ? ui('Cancelada · activa hasta el fin del período') : user.subscription_status === 'past_due' ? ui('Pago pendiente') : c.active}
+                {user.subscription_status === 'canceled' ? ui('Finalizada') : user.subscription_cancel_at_period_end ? ui('Renovación cancelada') : user.subscription_status === 'past_due' ? ui('Pago pendiente') : user.is_premium ? c.active : t('profile.free')}
               </Text>
               <Text style={styles.planDescription}>{ui('Tu membresía y sus beneficios')}</Text>
-              {user.has_billing_account && user.subscription_amount_cents != null ? [
-                [ui('Precio'), `${formatMoney(user.subscription_amount_cents, user.subscription_currency || 'usd', language)} / ${ui(({ day: 'día', week: 'semana', month: 'mes', year: 'año' } as Record<string, string>)[user.subscription_interval || 'month'] ?? 'mes')}`],
-                [ui('Renovación'), user.subscription_cancel_at_period_end ? ui('Desactivada') : ui('Automática')],
-                [user.subscription_cancel_at_period_end ? ui('Acceso hasta') : ui('Próxima renovación'), user.subscription_current_period_end ? formatDate(user.subscription_current_period_end, language) : '—'],
+              {!membershipLoading && hasBilling ? [
+                [ui('Precio'), user.subscription_amount_cents == null ? ui('No disponible') : `${formatMoney(user.subscription_amount_cents, user.subscription_currency || 'usd', language)} / ${ui(({ day: 'día', week: 'semana', month: 'mes', year: 'año' } as Record<string, string>)[user.subscription_interval || 'month'] ?? 'mes')}`],
+                [ui('Renovación'), user.subscription_status === 'canceled' || user.subscription_status === 'unpaid' || user.subscription_status === 'incomplete_expired' || user.subscription_cancel_at_period_end ? ui('Desactivada') : ui('Automática')],
+                [user.subscription_status === 'canceled' ? ui('Finalizada') : user.subscription_cancel_at_period_end ? ui('Acceso hasta') : ui('Próxima renovación'), user.subscription_current_period_end ? formatDate(user.subscription_current_period_end, language) : '—'],
               ].map(([label, value]) => <View key={label} style={styles.membershipDetailRow}><Text style={styles.rowLabel}>{label}</Text><Text style={styles.membershipDetailValue}>{value}</Text></View>) : (
-                <Text style={styles.membershipNote}>{ui('Tu membresía fue activada por el equipo de ITC Club y no tiene cobros asociados.')}</Text>
+                membershipLoading ? <ActivityIndicator color={GOLD} accessibilityLabel={ui('Actualizando membresía')} /> : manualMembership ? <>
+                  {[
+                    [ui('Tipo de acceso'), ui('Otorgado por ITC Club')],
+                    [ui('Renovación automática'), ui('No aplica')],
+                    [ui('Suscripción de pago'), ui('No hay una suscripción asociada')],
+                  ].map(([label, value]) => <View key={label} style={styles.membershipDetailRow}><Text style={styles.rowLabel}>{label}</Text><Text style={styles.membershipDetailValue}>{value}</Text></View>)}
+                  <Text style={styles.membershipNote}>{ui('Tienes acceso a los beneficios del Club. No hay una renovación automática que cancelar en esta cuenta. Si realizaste un pago, contacta con soporte para revisar la vinculación de tu suscripción.')}</Text>
+                  <Pressable style={styles.secondaryButton} accessibilityRole="button" onPress={() => { setMembershipDetails(false); router.push('/club'); }}><Text style={styles.secondaryText}>{ui('VER BENEFICIOS')}</Text></Pressable>
+                </> : <Text style={styles.membershipNote}>{ui('No se pudieron confirmar los datos de facturación de tu membresía. Actualiza la información o contacta con soporte si ya realizaste un pago.')}</Text>
               )}
             </View>
-            {user.has_billing_account && (
+            {!membershipLoading && hasBilling && (
               <>
-                <Text style={styles.membershipNote}>
-                  {user.subscription_cancel_at_period_end
-                    ? ui('No se te volverá a cobrar. Puedes reactivar la renovación desde Administrar membresía.')
-                    : ui('Tu membresía se renueva automáticamente hasta que la canceles. Si cancelas, conservas el acceso hasta el final del período pagado.')}
-                </Text>
-                <View style={styles.membershipDetailsSpacer} />
+                {token && <SubscriptionRenewal user={user} token={token} onUpdate={applyServerUser} onBusy={setRenewalBusy} disabled={portalBusy} />}
                 {!!portalError && <Text style={styles.error} accessibilityRole="alert">{portalError}</Text>}
-                <Pressable accessibilityRole="button" accessibilityState={{ busy: portalBusy }} disabled={portalBusy} onPress={manageSubscription} style={styles.primaryButton}>
-                  {portalBusy ? <ActivityIndicator color={BLACK} /> : <Text style={styles.primaryText}>{ui('ADMINISTRAR O CANCELAR MEMBRESÍA')}</Text>}
+                <Pressable accessibilityRole="button" accessibilityState={{ busy: portalBusy }} disabled={portalBusy || renewalBusy} onPress={manageSubscription} style={styles.primaryButton}>
+                  {portalBusy ? <ActivityIndicator color={BLACK} /> : <Text style={styles.primaryText}>{ui('ADMINISTRAR PAGOS')}</Text>}
                 </Pressable>
-                <Text style={styles.membershipNote}>{ui('Se abre el portal seguro de Stripe, donde puedes cancelar, cambiar tu tarjeta o ver tus recibos.')}</Text>
+                <Text style={styles.membershipNote}>{ui('Cambia tu tarjeta o consulta tus recibos en el portal seguro de Stripe.')}</Text>
               </>
             )}
+            {membershipLoadError && <Text style={styles.error} accessibilityRole="alert">{ui('No se pudo actualizar la membresía. La información mostrada puede estar desactualizada.')}</Text>}
+            {!membershipLoading && !renewalBusy && !portalBusy && <Pressable style={styles.photoButton} accessibilityRole="button" onPress={() => void openMembership()}><Ionicons name="refresh-outline" size={20} color={GOLD} /><Text style={styles.secondaryText}>{ui('Actualizar membresía')}</Text></Pressable>}
           </ScrollView>
         </SafeAreaView></SafeAreaProvider>
       </Modal>
@@ -220,7 +243,7 @@ const styles = StyleSheet.create({
   interestRow: { paddingVertical: 14, gap: 12 },
   interestHeading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
-  tag: { borderRadius: 20, borderWidth: 1, borderColor: '#74602B', paddingHorizontal: 12, paddingVertical: 10, backgroundColor: 'rgba(212,175,55,0.06)' },
+  tag: { borderRadius: 20, borderWidth: 1, borderColor: '#74602B', paddingHorizontal: 12, paddingVertical: 10, backgroundColor: 'rgba(253,221,86,0.06)' },
   tagText: { color: GOLD, fontSize: 13 }, selectedTag: { backgroundColor: GOLD }, selectedTagText: { color: BLACK, fontWeight: '700' },
   membershipCard: { borderWidth: 1, borderColor: GOLD }, membershipHeading: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   status: { color: GOLD, fontSize: 12 }, planTitle: { color: '#FFF', fontSize: 22, fontWeight: '700', marginBottom: 6 },

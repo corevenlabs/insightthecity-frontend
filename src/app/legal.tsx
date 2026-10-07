@@ -8,7 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { fetchLegalDocument, LEGAL_SLUGS, type LegalDocument, type LegalSlug } from '../lib/legal';
 import { formatDate } from '../lib/payments';
 
-const GOLD = '#D4AF37';
+const GOLD = '#FDDD56';
 
 const TITLES: Record<LegalSlug, string> = {
   terms: 'Términos y Condiciones',

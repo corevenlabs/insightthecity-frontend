@@ -185,9 +185,9 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   chatLauncher: { position: 'absolute', bottom: 85, right: 20, width: 220, height: 68, zIndex: 999 },
-  morphingChatButton: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#D4AF37', elevation: 6 },
+  morphingChatButton: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#FDDD56', elevation: 6 },
   morphingChatTap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
-  speechTail: { position: 'absolute', bottom: -5, right: 23, width: 12, height: 12, backgroundColor: '#D4AF37', transform: [{ rotate: '45deg' }] },
+  speechTail: { position: 'absolute', bottom: -5, right: 23, width: 12, height: 12, backgroundColor: '#FDDD56', transform: [{ rotate: '45deg' }] },
   yorkiLine: { color: '#0A0A0A', fontSize: 19, lineHeight: 25, fontWeight: '800' },
   yorkWhite: { color: '#FFF', textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
   iBlack: { color: '#0A0A0A' },

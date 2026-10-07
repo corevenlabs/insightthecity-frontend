@@ -55,7 +55,7 @@ export default function SuccessScreen() {
   if (status === 'confirming') {
     return (
       <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={styles.container}>
-        <ActivityIndicator color="#D4AF37" size="large" />
+        <ActivityIndicator color="#FDDD56" size="large" />
         <Text style={[styles.subtitle, { marginTop: 24 }]} accessibilityLiveRegion="polite">
           {ui('Confirmando tu pago con Stripe…')}
         </Text>
@@ -67,7 +67,7 @@ export default function SuccessScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={styles.container}>
       <Animated.View style={[styles.iconContainer, { transform: [{ scale: scaleAnim }] }]}>
-        <Ionicons name={active ? 'checkmark-circle' : 'time-outline'} size={100} color="#D4AF37" accessible={false} />
+        <Ionicons name={active ? 'checkmark-circle' : 'time-outline'} size={100} color="#FDDD56" accessible={false} />
       </Animated.View>
       <Animated.View style={{ opacity: fadeAnim }}>
         <Text style={styles.title} accessibilityRole="header">
@@ -95,9 +95,9 @@ export default function SuccessScreen() {
 const styles = StyleSheet.create({
   container: { flexGrow: 1, width: '100%', maxWidth: 620, alignSelf: 'center', backgroundColor: '#0A0A0A', alignItems: 'center', justifyContent: 'center', padding: 30 },
   iconContainer: { marginBottom: 30 },
-  title: { color: '#D4AF37', fontSize: 28, fontWeight: '700', textAlign: 'center', marginBottom: 16 },
+  title: { color: '#FDDD56', fontSize: 28, fontWeight: '700', textAlign: 'center', marginBottom: 16 },
   subtitle: { color: '#C4C4C4', fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 50 },
   buttonContainer: { width: '100%' },
-  button: { minHeight: 54, backgroundColor: '#D4AF37', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  button: { minHeight: 54, backgroundColor: '#FDDD56', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   buttonText: { color: '#000', fontWeight: '700', fontSize: 15 },
 });

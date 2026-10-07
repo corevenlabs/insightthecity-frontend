@@ -107,7 +107,7 @@ export default function ExperienceDetailScreen() {
           {!['ny_al_dia', 'guias'].includes(experience.section || '') && <SaveButton item={savedExperience(experience)} />}
           <View style={styles.heroOverlay} pointerEvents="box-none">
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={22} color="#D4AF37" />
+              <Ionicons name="arrow-back" size={22} color="#FDDD56" />
             </TouchableOpacity>
 
             {requiresPremium && photos.length > 1 && <View style={styles.photoCount}>
@@ -126,7 +126,7 @@ export default function ExperienceDetailScreen() {
             <Text style={styles.regionMetaText}>{experience.region ?? 'NY'}</Text>
           </View>
           <View style={styles.metaPill}>
-            <Ionicons name="calendar-outline" size={15} color="#D4AF37" />
+            <Ionicons name="calendar-outline" size={15} color="#FDDD56" />
             <Text style={styles.metaText}>{experience.date}</Text>
           </View>
         </View>
@@ -135,7 +135,7 @@ export default function ExperienceDetailScreen() {
           <Ionicons
             name={isPaidEvent ? 'ticket-outline' : isLocked ? 'lock-closed' : requiresPremium ? 'lock-open' : 'gift-outline'}
             size={15}
-            color={!isPaidEvent && isLocked ? '#D4AF37' : '#050505'}
+            color={!isPaidEvent && isLocked ? '#FDDD56' : '#050505'}
           />
           <Text style={[styles.accessText, !isPaidEvent && isLocked && styles.premiumText]}>
             {isPaidEvent
@@ -175,7 +175,7 @@ export default function ExperienceDetailScreen() {
         <ExpandableSection key={`${experience.id}-includes`} title={ui("Qué incluye")}>
         {experience.includes.map((item) => (
           <View key={item} style={styles.includeRow}>
-            <Ionicons name="checkmark-circle" size={18} color="#D4AF37" />
+            <Ionicons name="checkmark-circle" size={18} color="#FDDD56" />
             <Text style={styles.includeText}>{item}</Text>
           </View>
         ))}
@@ -206,7 +206,7 @@ export default function ExperienceDetailScreen() {
           {benefitLoading ? <ActivityIndicator color={COLORS.background} /> : <Ionicons
             name={isPaidEvent ? 'ticket-outline' : isLocked ? 'lock-closed' : requiresPremium ? 'checkmark-circle' : 'gift-outline'}
             size={18}
-            color={!isPaidEvent && isLocked ? '#D4AF37' : '#050505'}
+            color={!isPaidEvent && isLocked ? '#FDDD56' : '#050505'}
           />}
           <Text style={[styles.ctaText, !isPaidEvent && isLocked && styles.lockedText]}>
             {isPaidEvent
@@ -255,7 +255,7 @@ export default function ExperienceDetailScreen() {
 const COLORS = {
   background: '#050505',
   card: '#121212',
-  gold: '#D4AF37',
+  gold: '#FDDD56',
   white: '#FFFFFF',
   secondary: '#A6A6A6',
 };
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   benefitCard: { marginHorizontal: 20, marginTop: 20, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: COLORS.gold, backgroundColor: COLORS.card },
   benefitHeading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   benefitLabel: { color: COLORS.gold, fontSize: 12, fontWeight: '900' },
-  benefitTitle: { color: '#D4AF37', fontSize: 15, lineHeight: 21, fontWeight: '700', marginTop: 10, alignSelf: 'flex-start', maxWidth: '100%', backgroundColor: 'rgba(212,175,55,0.12)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  benefitTitle: { color: '#FDDD56', fontSize: 15, lineHeight: 21, fontWeight: '700', marginTop: 10, alignSelf: 'flex-start', maxWidth: '100%', backgroundColor: 'rgba(253,221,86,0.12)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   benefitDetails: { color: COLORS.secondary, fontSize: 14, lineHeight: 21, marginTop: 8 },
   addressCard: { marginHorizontal: 20, marginTop: 20 },
   addressTitle: { color: COLORS.white, fontSize: 20, fontWeight: '800', marginBottom: 10 },

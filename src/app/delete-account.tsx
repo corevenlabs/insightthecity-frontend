@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
-const GOLD = '#D4AF37';
+const GOLD = '#FDDD56';
 const RED = '#FF8080';
 
 // Eliminación de cuenta desde la app (App Store 5.1.1(v) / Google Play).

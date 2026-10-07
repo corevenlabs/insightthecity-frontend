@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
-const GOLD = '#D4AF37';
+const GOLD = '#FDDD56';
 const BLACK = '#050505';
 
 export default function WelcomeScreen() {

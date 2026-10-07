@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage, type AppLanguage } from '../context/LanguageContext';
 
-const GOLD = '#D4AF37';
+const GOLD = '#FDDD56';
 const BLACK = '#0A0A0A';
 
 export default function RegisterScreen() {
@@ -86,7 +86,7 @@ export default function RegisterScreen() {
               accessibilityRole="button"
               accessibilityLabel={ui('Volver')}
             >
-              <Ionicons name="arrow-back" size={22} color="#D4AF37" />
+              <Ionicons name="arrow-back" size={22} color="#FDDD56" />
             </TouchableOpacity>
 
             <View style={styles.logoPill}>

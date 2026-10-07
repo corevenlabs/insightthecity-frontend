@@ -49,7 +49,7 @@ function buildHtml(article: NewsArticle, language: AppLanguage): string {
     max-height: 320px;
     object-fit: cover;
   }
-  .kicker { color: #D4AF37; font-size: 12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+  .kicker { color: #FDDD56; font-size: 12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
   h1.title { color: #FFFFFF; font-size: 27px; line-height: 1.25; font-weight: 800; margin: 8px 0 6px; }
   .date { color: #8A8A8A; font-size: 13px; font-weight: 700; margin-bottom: 22px; }
   .content img, .content video, .content iframe {
@@ -77,12 +77,12 @@ function buildHtml(article: NewsArticle, language: AppLanguage): string {
   .content h2 { font-size: 22px; }
   .content h3 { font-size: 19px; }
   .content p { margin: 0 0 16px; }
-  .content a { color: #D4AF37; text-decoration: none; }
+  .content a { color: #FDDD56; text-decoration: none; }
   .content ul, .content ol { padding-left: 22px; margin: 0 0 16px; }
   .content li { margin-bottom: 8px; }
   .content blockquote {
     margin: 18px 0; padding: 4px 0 4px 16px;
-    border-left: 3px solid #D4AF37; color: #C7C7C7; font-style: italic;
+    border-left: 3px solid #FDDD56; color: #C7C7C7; font-style: italic;
   }
   .content figure { margin: 16px 0; }
   .content figcaption { color: #7E7E7E; font-size: 13px; text-align: center; margin-top: 6px; }
@@ -149,7 +149,7 @@ export default function NewsDetailScreen() {
   const header = (
     <View style={styles.header}>
       <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()} hitSlop={10}>
-        <Ionicons name="arrow-back" size={26} color="#D4AF37" />
+        <Ionicons name="arrow-back" size={26} color="#FDDD56" />
       </TouchableOpacity>
       <Text style={styles.headerTitle} numberOfLines={1}>
         {section}
@@ -171,7 +171,7 @@ export default function NewsDetailScreen() {
         </View>
       ) : !article ? (
         <View style={styles.center}>
-          <ActivityIndicator color="#D4AF37" size="large" />
+          <ActivityIndicator color="#FDDD56" size="large" />
         </View>
       ) : (
         <WebView
@@ -192,7 +192,7 @@ export default function NewsDetailScreen() {
           startInLoadingState
           renderLoading={() => (
             <View style={styles.loadingOverlay}>
-              <ActivityIndicator color="#D4AF37" size="large" />
+              <ActivityIndicator color="#FDDD56" size="large" />
             </View>
           )}
         />
@@ -203,7 +203,7 @@ export default function NewsDetailScreen() {
 
 const COLORS = {
   background: '#050505',
-  gold: '#D4AF37',
+  gold: '#FDDD56',
   white: '#FFFFFF',
   secondary: '#A6A6A6',
 };

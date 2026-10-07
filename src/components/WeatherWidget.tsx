@@ -17,7 +17,7 @@ import {
   type CurrentWeather,
 } from '../lib/weather';
 
-const GOLD = '#D4A017';
+const GOLD = '#FDDD56';
 const NYC_WEATHER_IMAGE =
   'https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?auto=format&fit=crop&w=1200&q=85';
 
