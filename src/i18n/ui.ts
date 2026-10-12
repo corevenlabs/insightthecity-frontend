@@ -2,6 +2,62 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Descubre New York con beneficios exclusivos": {"en": "Discover New York with exclusive benefits", "pt": "Descubra New York com benefícios exclusivos"},
+  "Cobro al suscribirte. Renovación automática cada {period}.": {"en": "Charged when you subscribe. Automatically renews every {period}.", "pt": "Cobrança ao assinar. Renovação automática a cada {period}."},
+  "Cancela en Perfil → Mi membresía. Conservas tus beneficios hasta finalizar el período pagado.": {"en": "Cancel in Profile → My membership. Keep your benefits until the paid period ends.", "pt": "Cancele em Perfil → Minha assinatura. Seus benefícios continuam até o fim do período pago."},
+  "Privacidad": {"en": "Privacy", "pt": "Privacidade"},
+
+  "Beneficios sujetos a disponibilidad y condiciones.": {"en": "Benefits subject to availability and terms.", "pt": "Benefícios sujeitos à disponibilidade e condições."},
+  "Cobro al suscribirte. Renovación automática cada {period} hasta que canceles.": {"en": "Charged when you subscribe. Automatically renews every {period} until you cancel.", "pt": "Cobrança ao assinar. Renovação automática a cada {period} até você cancelar."},
+  "Cancela en Perfil > Mi membresía; acceso hasta finalizar el período pagado.": {"en": "Cancel in Profile > My membership; access continues until the paid period ends.", "pt": "Cancele em Perfil > Minha assinatura; acesso até o fim do período pago."},
+
+  "CONTINUAR A LA SUSCRIPCIÓN": {"en": "CONTINUE TO SUBSCRIPTION", "pt": "CONTINUAR PARA A ASSINATURA"},
+
+  "Cada beneficio está sujeto a disponibilidad y condiciones. La membresía no incluye todos los eventos ni consumos.": {"en": "Benefits are subject to availability and terms. Membership does not include every event or purchase.", "pt": "Os benefícios estão sujeitos à disponibilidade e condições. A assinatura não inclui todos os eventos nem consumos."},
+
+  "No se pudieron cargar los beneficios. Toca para reintentar.": {"en": "Could not load benefits. Tap to try again.", "pt": "Não foi possível carregar os benefícios. Toque para tentar novamente."},
+
+  "Beneficios incluidos con tu membresía": {"en": "Benefits included with your membership", "pt": "Benefícios incluídos na sua assinatura"},
+
+  "Reanudar banners": {"en": "Resume banners", "pt": "Retomar banners"},
+
+  "Pausar banners": {"en": "Pause banners", "pt": "Pausar banners"},
+
+  "Siguiente beneficio": {"en": "Next benefit", "pt": "Próximo benefício"},
+
+  "Beneficio anterior": {"en": "Previous benefit", "pt": "Benefício anterior"},
+
+  "No hay beneficios disponibles en este momento. Vuelve a consultar antes de suscribirte.": {"en": "There are no benefits available right now. Check again before subscribing.", "pt": "Não há benefícios disponíveis no momento. Confira novamente antes de assinar."},
+
+  "Consulta la disponibilidad y las condiciones de este beneficio.": {"en": "Check availability and terms for this benefit.", "pt": "Consulte a disponibilidade e as condições deste benefício."},
+
+  "Ver beneficio": {"en": "View benefit", "pt": "Ver benefício"},
+
+  "Ver la membresía no genera ningún cobro. Cada beneficio tiene sus propias condiciones.": {"en": "Viewing membership does not charge you. Each benefit has its own terms.", "pt": "Ver a assinatura não gera cobrança. Cada benefício tem suas próprias condições."},
+
+  "Ver membresía y beneficios": {"en": "View membership and benefits", "pt": "Ver assinatura e benefícios"},
+
+  "Obtén cupones, descuentos y beneficios exclusivos para canjear en restaurantes y eventos participantes.": {"en": "Get coupons, discounts and exclusive benefits to redeem at participating restaurants and events.", "pt": "Obtenha cupons, descontos e benefícios exclusivos para resgatar em restaurantes e eventos participantes."},
+
+  "Continuar gratis": {"en": "Continue for free", "pt": "Continuar grátis"},
+
+  "Sin suscripción ni cobros por continuar gratis.": {"en": "No subscription or charge to continue for free.", "pt": "Sem assinatura nem cobrança para continuar grátis."},
+
+  "Explora lugares, eventos y contenido gratuito. También puedes consultar los beneficios del Club; obtener y canjear sus cupones requiere membresía.": {"en": "Explore places, events and free content. You can also view Club benefits; getting and redeeming their coupons requires membership.", "pt": "Explore lugares, eventos e conteúdo gratuito. Você também pode ver os benefícios do Clube; obter e resgatar seus cupons exige assinatura."},
+
+  "ACCESO GRATIS": {"en": "FREE ACCESS", "pt": "ACESSO GRÁTIS"},
+
+  "Elige cómo explorar la ciudad. Puedes continuar gratis o conocer los beneficios de la membresía.": {"en": "Choose how to explore the city. Continue for free or discover membership benefits.", "pt": "Escolha como explorar a cidade. Continue grátis ou conheça os benefícios da assinatura."},
+
+  "Bienvenido a ITC": {"en": "Welcome to ITC", "pt": "Bem-vindo ao ITC"},
+
+  "Cancela en Perfil > Mi membresía. Conservas tus beneficios hasta finalizar el período pagado.": {"en": "Cancel in Profile > My membership. Keep your benefits until the paid period ends.", "pt": "Cancele em Perfil > Minha assinatura. Seus benefícios continuam até o fim do período pago."},
+
+  "Se cobra al suscribirte y se renueva automáticamente cada {period} hasta que canceles.": {"en": "You are charged when you subscribe, then automatically every {period} until you cancel.", "pt": "A cobrança ocorre ao assinar e se renova automaticamente a cada {period} até você cancelar."},
+
+  "Membresía de pago": {"en": "Paid membership", "pt": "Assinatura paga"},
+
+
   "Selecciona tu idioma": {
     "en": "Choose your language",
     "pt": "Escolha seu idioma"

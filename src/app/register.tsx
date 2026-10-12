@@ -57,7 +57,7 @@ export default function RegisterScreen() {
     try {
       await signUp(name.trim(), email.trim(), password, language, acceptedLegal);
       router.dismissAll();
-      router.replace('/home' as any);
+      router.replace('/choose-access' as any);
     } catch (err: any) {
       setError(err?.message ?? t('register.genericError'));
     } finally {

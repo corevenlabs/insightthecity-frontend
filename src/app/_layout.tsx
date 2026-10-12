@@ -13,13 +13,15 @@ import {
   useFonts
 } from '@expo-google-fonts/spline-sans';
 
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 import { LanguageProvider, useLanguage } from '../context/LanguageContext';
 import { BiometricLockScreen } from '../components/BiometricLockScreen';
 
 function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean }) {
   const router = useRouter();
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const pathname = usePathname();
   const [inviteMessage, setInviteMessage] = useState<'intro' | 'help' | null>(null);
   const [typedCount, setTypedCount] = useState(0);
   const [bubbleProgress] = useState(() => new Animated.Value(0));
@@ -80,7 +82,7 @@ function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean
     };
   }, [visible, animate, bubbleProgress, introduction, helpQuestion]);
 
-  if (!visible) return null;
+  if (!visible || (pathname === '/club' && !user?.is_premium)) return null;
   const openChat = () => router.push('/chat');
   const introPrefix = `${introduction} `;
   const introPrefixCount = Math.min(typedCount, introPrefix.length);
@@ -136,6 +138,7 @@ export default function RootLayout() {
     '/login',
     '/forgot-password',
     '/register',
+    '/choose-access',
     '/chat',
     '/checkout-return',
     '/success',
@@ -158,6 +161,7 @@ export default function RootLayout() {
           <Stack.Screen name="login" />
           <Stack.Screen name="forgot-password" />
           <Stack.Screen name="register" />
+          <Stack.Screen name="choose-access" options={{ gestureEnabled: false }} />
           <Stack.Screen
             name="(tabs)"
             options={{ gestureEnabled: false }}

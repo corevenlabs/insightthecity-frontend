@@ -1,3 +1,5 @@
+import { MemberBenefitBanner } from '../../components/MemberBenefitBanner';
+import { MembershipPrice } from '../../components/MembershipPrice';
 import { AdaptiveGrid } from '../../components/AdaptiveGrid';
 import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { ExperienceTags } from '@/components/ExperienceTags';
@@ -6,25 +8,16 @@ import { getExperienceTags, matchesExperienceTags } from '@/lib/experienceFilter
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Experience } from '../../constants/experiences';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { fetchExperiences } from '../../lib/experiences';
-import { fetchPlan, formatMoney, type Plan } from '../../lib/payments';
+import { fetchPlan, type Plan } from '../../lib/payments';
 
 const GOLD = '#FDDD56';
-const benefits = [
-  ['pricetag', 'Ahorros y descuentos', 'en atracciones, restaurantes y más.'],
-  ['gift', 'Experiencias exclusivas', 'y giveaways.'],
-  ['notifications', 'Alertas de eventos y pop-ups', 'antes que todos.'],
-  ['flash', 'City Drops', 'por tiempo limitado.'],
-  ['map', 'Guías especiales', 'creadas por expertos locales.'],
-  ['star', 'Acceso anticipado', 'a eventos y experiencias.'],
-] as const;
-
 function PremiumCard({ experience }: { experience: Experience }) {
   const { ui } = useLanguage();
   const router = useRouter();
@@ -64,17 +57,35 @@ function PremiumCard({ experience }: { experience: Experience }) {
 export default function ClubScreen() {
   const router = useRouter();
   const { user, loading, refreshUser } = useAuth();
-  const { t, ui, language } = useLanguage();
+  const { t, ui } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   // Precio real de Stripe: nunca anunciar un precio distinto al que se cobra.
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [planError, setPlanError] = useState(false);
+  const [contentError, setContentError] = useState(false);
+  const [contentLoading, setContentLoading] = useState(true);
+  const [attempt, setAttempt] = useState(0);
+  const [layoutHeight, setLayoutHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [footerHeight, setFooterHeight] = useState(0);
+  // Fit the banner between measured copy and pricing; allow scrolling for large text.
+  const bannerHeight = Math.min(280, Math.max(150, layoutHeight - headerHeight - footerHeight - 40));
 
   useFocusEffect(useCallback(() => {
+    let active = true;
+    // Retry revision intentionally refreshes both panel content and pricing.
+    void attempt;
     void refreshUser();
-    void fetchExperiences().then(setExperiences).catch(() => undefined);
-    void fetchPlan().then(setPlan).catch(() => undefined);
-  }, [refreshUser]));
+    setContentLoading(true);
+    setContentError(false);
+    setPlanError(false);
+    void fetchExperiences().then(value => { if (active) setExperiences(value); })
+      .catch(() => { if (active) setContentError(true); })
+      .finally(() => { if (active) setContentLoading(false); });
+    void fetchPlan().then(value => { if (active) setPlan(value); }).catch(() => { if (active) setPlanError(true); });
+    return () => { active = false; };
+  }, [refreshUser, attempt]));
 
   const premiumExperiences = useMemo(
     () => experiences.filter((experience) => experience.access === 'premium'), [experiences]
@@ -112,53 +123,68 @@ export default function ClubScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <ImageBackground
-        source={{ uri: 'https://img.magnific.com/fotos-premium/vistas-nueva-york-empire-state-building-noche_772417-160.jpg' }}
-        style={styles.hero}
-      >
-        <Text style={styles.header}>ITC <Text style={styles.gold}>CLUB</Text></Text>
-        <Text style={styles.subtitle}>{t('club.hero')}</Text>
-      </ImageBackground>
-      <View style={styles.card}>
-        {benefits.map(([icon, title, subtitle], index) => (
-          <View key={title} style={[styles.benefitRow, index !== benefits.length - 1 && styles.separator]}>
-            <View style={styles.iconContainer}><Ionicons name={icon} size={20} color="#000" /></View>
-            <View style={styles.textContainer}>
-              <Text style={styles.benefitTitle}>{ui(title)}</Text>
-              <Text style={styles.benefitSubtitle}>{ui(subtitle)}</Text>
-            </View>
-          </View>
-        ))}
+    <View style={styles.offerLayout} onLayout={event => setLayoutHeight(event.nativeEvent.layout.height)}>
+      <ScrollView style={styles.offerPreview} contentContainerStyle={styles.offerPreviewContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.offerHero} onLayout={event => setHeaderHeight(event.nativeEvent.layout.height)}>
+          <Text style={styles.offerLogo}>ITC <Text style={styles.gold}>CLUB</Text></Text>
+          <Text style={styles.offerSubtitle}>{ui('Descubre New York con beneficios exclusivos')}</Text>
+        </View>
+        {contentLoading ? <Text style={styles.previewCopy}>{ui('Cargando…')}</Text> : contentError ?
+          <TouchableOpacity accessibilityRole="button" style={styles.retryButton} onPress={() => setAttempt(value => value + 1)}><Text style={styles.gold}>{ui('No se pudieron cargar los beneficios. Toca para reintentar.')}</Text></TouchableOpacity> :
+          <MemberBenefitBanner height={bannerHeight} items={premiumExperiences.filter(item => Boolean(item.memberBenefit?.trim()) && !['sold_out', 'paused'].includes(item.couponStatus || ''))} />}
+      <View style={styles.offerFooter} onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}>
+        <MembershipPrice compact dense plan={plan} error={planError} retry={() => setAttempt(value => value + 1)} />
+        <Text style={styles.offerConditions}>{ui('Beneficios sujetos a disponibilidad y condiciones.')}</Text>
         <TouchableOpacity style={styles.joinButton} onPress={() => router.push('/club-form')} accessibilityRole="button">
-          <Text style={styles.joinButtonText}>{t('club.join')}</Text>
+          <Text style={styles.joinButtonText}>{ui('CONTINUAR A LA SUSCRIPCIÓN')}</Text>
         </TouchableOpacity>
-        {plan && plan.interval === 'month' && (
-          <Text style={styles.price}>{t('club.from')} <Text style={styles.priceBold}>{formatMoney(plan.amountCents, plan.currency, language)}</Text> {t('club.month')}</Text>
-        )}
-        <Text style={styles.cancel}>{ui('Renovación automática. Cancela cuando quieras.')}</Text>
+        <View style={styles.offerLegalLinks}>
+          <TouchableOpacity accessibilityRole="link" style={styles.offerTerms} onPress={() => router.push({ pathname: '/legal', params: { slug: 'subscription' } })}>
+            <Text style={styles.offerTermsText}>{ui('Términos de la membresía')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity accessibilityRole="link" style={styles.offerTerms} onPress={() => router.push({ pathname: '/legal', params: { slug: 'privacy' } })}>
+            <Text style={styles.offerTermsText}>{ui('Privacidad')}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  offerLayout: { flex: 1, width: '100%', maxWidth: 680, alignSelf: 'center', paddingHorizontal: 16 },
+  offerPreview: { flex: 1 },
+  offerPreviewContent: { paddingTop: 8, paddingBottom: 16 },
+  offerHero: { paddingTop: 16, paddingBottom: 24, paddingHorizontal: 8, alignItems: 'center' },
+  offerLogo: { color: '#FFF', fontSize: 30, fontWeight: '900', lineHeight: 36 },
+  offerSubtitle: { color: '#FFF', fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 8, fontWeight: '600' },
+  offerFooter: { marginTop: 16, paddingHorizontal: 16, paddingTop: 16, backgroundColor: '#111', borderWidth: 1, borderColor: '#282828', borderRadius: 18 },
+  offerFooterDetails: { flexGrow: 0, flexShrink: 1 },
+  offerConditions: { color: '#AAA', fontSize: 12, lineHeight: 17, marginBottom: 3, textAlign: 'center' },
+  offerLegalLinks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 16 },
+  offerTerms: { minHeight: 48, alignItems: 'center', justifyContent: 'center', paddingVertical: 8 },
+  offerTermsText: { color: GOLD, fontSize: 12, lineHeight: 17, textAlign: 'center' },
+  screenTitle: { color: '#FFF', fontSize: 17, fontWeight: '700', textAlign: 'center', paddingVertical: 12, marginBottom: 4 },
+  previewHeading: { color: '#FFF', fontSize: 23, fontWeight: '800', marginTop: 24, marginBottom: 10 },
+  previewCopy: { color: '#BBB', fontSize: 14, lineHeight: 22, marginBottom: 16 },
+  retryButton: { minHeight: 44, justifyContent: 'center', paddingVertical: 12 },
   container: { flex: 1, backgroundColor: '#0A0A0A' },
-  content: { width: '100%', maxWidth: 680, alignSelf: 'center', padding: 20, paddingTop: 60, paddingBottom: 110 },
-  hero: { paddingTop: 80, paddingBottom: 60, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  header: { color: '#FFF', fontSize: 46, fontWeight: '900', textAlign: 'center', marginBottom: 12 },
+  content: { width: '100%', maxWidth: 680, alignSelf: 'center', padding: 20, paddingTop: 8, paddingBottom: 110 },
+  hero: { minHeight: 138, paddingVertical: 24, paddingHorizontal: 12, marginBottom: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 16 },
+  header: { color: '#FFF', fontSize: 34, fontWeight: '900', textAlign: 'center', marginBottom: 8 },
   gold: { color: GOLD },
-  subtitle: { color: '#FFF', textAlign: 'center', fontSize: 16, lineHeight: 24, marginBottom: 30, opacity: 0.9 },
-  card: { backgroundColor: '#111', borderRadius: 16, borderWidth: 1, borderColor: '#222', padding: 20, marginTop: 20 },
+  subtitle: { color: '#FFF', textAlign: 'center', fontSize: 15, lineHeight: 22, fontWeight: '600' },
+  card: { backgroundColor: '#111', borderRadius: 16, borderWidth: 1, borderColor: '#222', padding: 18, marginTop: 10 },
   benefitRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
   separator: { borderBottomWidth: 1, borderBottomColor: '#222' },
   iconContainer: { width: 44, height: 44, borderRadius: 22, backgroundColor: GOLD, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
   textContainer: { flex: 1 },
   benefitTitle: { color: '#FFF', fontSize: 15, fontWeight: '700', marginBottom: 3 },
   benefitSubtitle: { color: '#999', fontSize: 13, lineHeight: 18 },
-  joinButton: { minHeight: 54, backgroundColor: GOLD, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 22 },
-  joinButtonText: { color: '#000', fontWeight: '700', fontSize: 15 },
+  joinButton: { minHeight: 52, paddingVertical: 12, paddingHorizontal: 8, backgroundColor: GOLD, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 6 },
+  joinButtonText: { color: '#000', fontWeight: '700', fontSize: 13, textAlign: 'center' },
   price: { color: '#AAA', textAlign: 'center', marginTop: 16 },
   priceBold: { color: '#FFF', fontWeight: '700' },
   cancel: { color: '#A6A6A6', fontSize: 12, textAlign: 'center', marginTop: 5 },
