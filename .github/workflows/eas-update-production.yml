@@ -17,8 +17,8 @@ jobs:
       - run: npm ci
 
       - name: Publicar el update en producción
-        run: npx eas-cli@latest update --channel production --message "Production ${GITHUB_SHA}" --non-interactive
+        run: npx eas-cli@latest update --channel production --environment production --message "Production ${GITHUB_SHA}" --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_API_URL: https://itc-backend-1031252664334.us-east1.run.app
-          EXPO_PUBLIC_ENABLE_PREMIUM_SIMULATION: "true"
+          EXPO_PUBLIC_ENABLE_PREMIUM_SIMULATION: "false"
