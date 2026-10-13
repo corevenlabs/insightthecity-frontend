@@ -13,6 +13,8 @@ export type Experience = {
   location: string;
   region?: ExperienceRegion;
   access: ExperienceAccess;
+  /** Derived from the activated partner associated with this publication. */
+  partnerOffer?: 'founding' | 'strategic' | null;
   description: string;
   includes: string[];
   showBenefitOnCard?: boolean;

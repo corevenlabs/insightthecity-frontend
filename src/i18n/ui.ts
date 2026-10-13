@@ -2,6 +2,14 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Colaboración comercial pagada: este negocio paga por participar en ITC Club. Algunas compras o reservas también pueden generarnos comisiones.": {
+    "en": "Paid commercial partnership: this business pays to participate in ITC Club. Some purchases or reservations may also earn us commissions.",
+    "pt": "Colaboração comercial paga: este negócio paga para participar do ITC Club. Algumas compras ou reservas também podem gerar comissões para nós."
+  },
+  "Colaboración comercial: este socio ofrece beneficios exclusivos a miembros de ITC Club. Algunas compras o reservas pueden generarnos comisiones.": {
+    "en": "Commercial partnership: this partner offers exclusive benefits to ITC Club members. Some purchases or reservations may earn us commissions.",
+    "pt": "Colaboração comercial: este parceiro oferece benefícios exclusivos aos membros do ITC Club. Algumas compras ou reservas podem gerar comissões para nós."
+  },
   "Descubre New York con beneficios exclusivos": {"en": "Discover New York with exclusive benefits", "pt": "Descubra New York com benefícios exclusivos"},
   "Cobro al suscribirte. Renovación automática cada {period}.": {"en": "Charged when you subscribe. Automatically renews every {period}.", "pt": "Cobrança ao assinar. Renovação automática a cada {period}."},
   "Cancela en Perfil → Mi membresía. Conservas tus beneficios hasta finalizar el período pagado.": {"en": "Cancel in Profile → My membership. Keep your benefits until the paid period ends.", "pt": "Cancele em Perfil → Minha assinatura. Seus benefícios continuam até o fim do período pago."},

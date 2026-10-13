@@ -1,3 +1,4 @@
+import { partnerDisclosure } from '../lib/partnerDisclosure';
 import { ClubLogo } from '../components/ClubLogo';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { SaveButton } from '../components/SaveButton';
@@ -64,6 +65,7 @@ export default function ExperienceDetailScreen() {
   }
 
   const requiresPremium = experience.access === 'premium';
+  const disclosure = requiresPremium ? partnerDisclosure(experience.partnerOffer) : null;
   const isLocked = requiresPremium && !user?.is_premium;
   const isPaidEvent = Boolean(experience.isPaidEvent && experience.ticketUrl);
   const ticketCta = ui(experience.ticketCta?.trim() || '') || ui("COMPRAR BOLETOS");
@@ -225,6 +227,8 @@ export default function ExperienceDetailScreen() {
                 : ui("BENEFICIO DISPONIBLE")}
           </Text>
         </TouchableOpacity>
+
+        {disclosure && <Text style={styles.partnerDisclosure}>{ui(disclosure)}</Text>}
 
         {!!benefitError && <Text style={styles.ctaError} accessibilityRole="alert">{benefitError}</Text>}
 
@@ -454,6 +458,7 @@ const styles = StyleSheet.create({
   lockedText: {
     color: COLORS.gold,
   },
+  partnerDisclosure: { color: '#B8B8B8', fontSize: 13, lineHeight: 19, marginHorizontal: 20, marginTop: 12 },
   ctaError: { color: '#FFB4AB', marginHorizontal: 20, marginTop: 12, fontSize: 14, lineHeight: 20 },
   modalScrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.84)' },
   modalScrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20 },
