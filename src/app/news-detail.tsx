@@ -89,6 +89,50 @@ function buildHtml(article: NewsArticle, language: AppLanguage): string {
   .content figcaption { color: #7E7E7E; font-size: 13px; text-align: center; margin-top: 6px; }
   .content table { width: 100% !important; display: block; overflow-x: auto; }
   .content strong, .content b { color: #FFFFFF; }
+  /* Related posts arrive with WordPress theme colors and desktop spacing. */
+  .content .tx-post {
+    display: block; width: 100%; max-width: 100%;
+    margin: 24px 0; padding: 0; overflow: hidden;
+    background: #111111; border: 1px solid #292929; border-radius: 16px;
+  }
+  .content .tx-post .post-thumb { margin: 0; width: 100%; }
+  .content .tx-post .post-thumb > a { display: block; line-height: 0; }
+  .content .tx-post .post-thumb img {
+    display: block; width: 100% !important; height: auto !important;
+    margin: 0 !important; border-radius: 0;
+  }
+  .content .tx-post .post-content { padding: 16px; }
+  .content .post-cat {
+    display: inline-flex; align-items: center; min-height: 44px;
+    max-width: 100%; padding: 8px 12px; margin: 0 0 12px;
+    background: #1B1B13 !important; color: #FDDD56 !important;
+    border: 1px solid #3B3520; border-radius: 10px;
+    font-size: 12px !important; font-weight: 700; line-height: 1.4;
+    letter-spacing: .3px; text-transform: uppercase; text-decoration: none;
+  }
+  .content .tx-post .post-title {
+    font-size: 20px; line-height: 1.35; margin: 0 0 12px;
+  }
+  .content .tx-post .post-title a {
+    display: block; color: #FFFFFF !important; text-decoration: none;
+  }
+  .content .tx-post .post-meta,
+  .content .tx-post .post-meta__author {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    color: #AAAAAA; font-size: 12px; line-height: 1.5;
+  }
+  .content .tx-post .post-meta { gap: 12px; margin-top: 8px; }
+  .content .tx-post .post-meta a { color: #AAAAAA; }
+  .content .tx-post .post-meta .date { margin: 0; font-size: 12px; }
+  .content .tx-post .avatar { display: flex; align-items: center; }
+  .content .tx-post .avatar img {
+    width: 20px !important; height: 20px !important;
+    margin: 0 !important; border-radius: 50%; object-fit: cover;
+  }
+  .content .tx-post a:focus-visible {
+    outline: 2px solid #FDDD56; outline-offset: -2px;
+  }
+  .content .tx-post a:active { opacity: .75; }
   hr { border: none; border-top: 1px solid #1F1F1F; margin: 26px 0; }
 </style>
 </head>
