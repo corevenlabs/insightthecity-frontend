@@ -2,6 +2,10 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "ITC Club puede recibir una comisión si reservas o compras a través de este enlace, sin costo adicional para ti.": {
+    "en": "ITC Club may receive a commission if you book or purchase through this link, at no additional cost to you.",
+    "pt": "O ITC Club pode receber uma comissão se você reservar ou comprar por este link, sem custo adicional para você."
+  },
   "Colaboración comercial pagada: este negocio paga por participar en ITC Club. Algunas compras o reservas también pueden generarnos comisiones.": {
     "en": "Paid commercial partnership: this business pays to participate in ITC Club. Some purchases or reservations may also earn us commissions.",
     "pt": "Colaboração comercial paga: este negócio paga para participar do ITC Club. Algumas compras ou reservas também podem gerar comissões para nós."

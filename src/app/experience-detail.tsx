@@ -65,11 +65,11 @@ export default function ExperienceDetailScreen() {
   }
 
   const requiresPremium = experience.access === 'premium';
-  const disclosure = requiresPremium ? partnerDisclosure(experience.partnerOffer) : null;
   const isLocked = requiresPremium && !user?.is_premium;
   const isPaidEvent = Boolean(experience.isPaidEvent && experience.ticketUrl);
   const ticketCta = ui(experience.ticketCta?.trim() || '') || ui("COMPRAR BOLETOS");
   const benefitAction = experience.benefitAction || 'none';
+  const disclosure = requiresPremium ? partnerDisclosure(experience.partnerOffer, isPaidEvent || (benefitAction === 'external' && Boolean(experience.benefitUrl))) : null;
   const couponUnavailable = benefitAction === 'qr' && ['sold_out', 'paused'].includes(experience.couponStatus || '');
   const hasBenefitAction = requiresPremium && !isLocked && !couponUnavailable && (benefitAction === 'qr' || (benefitAction === 'external' && Boolean(experience.benefitUrl)));
   const benefitCta = ui(experience.benefitCta?.trim() || '') || ui('OBTENER BENEFICIO');
