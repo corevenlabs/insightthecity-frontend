@@ -1,3 +1,4 @@
+import { ClubLogo } from '../components/ClubLogo';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { SaveButton } from '../components/SaveButton';
 import { savedExperience } from '../context/SavedContext';
@@ -235,7 +236,7 @@ export default function ExperienceDetailScreen() {
             <TouchableOpacity style={styles.modalClose} onPress={() => setBenefitCode(null)} accessibilityRole="button" accessibilityLabel={ui('Cerrar código QR')} hitSlop={8}>
               <Ionicons name="close" size={24} color={COLORS.white} />
             </TouchableOpacity>
-            <Text style={styles.qrEyebrow}>ITC CLUB</Text>
+            <ClubLogo width={96} style={{ alignSelf: "center" }} />
             <Text style={styles.qrTitle}>{ui('Tu beneficio está listo')}</Text>
             <Text style={styles.qrSubtitle}>{benefitCode?.benefit || experience.memberBenefit}</Text>
             {benefitCode?.qrDataUrl && <View style={styles.qrFrame}>

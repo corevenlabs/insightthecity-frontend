@@ -1,3 +1,4 @@
+import { ClubLogo } from './ClubLogo';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -32,14 +33,13 @@ export function HomePromotion() {
     ]).start(({ finished }) => { if (finished) setHidden(true); });
   }
   if (hidden) return null;
-  const brand = <><Text style={{ color: '#FFFFFF' }}>ITC </Text><Text style={{ color: '#FDDD56' }}>CLUB</Text></>;
   return <Animated.View pointerEvents={closing ? 'none' : 'auto'} accessibilityElementsHidden={closing}
     importantForAccessibility={closing ? 'no-hide-descendants' : 'auto'}
     style={{ overflow: 'hidden', marginTop: progress.interpolate({ inputRange: [0, 1], outputRange: [0, 16] }),
       height: closing ? progress.interpolate({ inputRange: [0, 1], outputRange: [0, height] }) : undefined }}>
     <View style={s.banner} onLayout={event => { if (!closing) setHeight(event.nativeEvent.layout.height); }}>
       <Animated.View style={[s.row, compact && { flexWrap: 'wrap', paddingVertical: 8 }, { opacity: contents }]}>
-        <Text style={s.brand} numberOfLines={1}>{brand}</Text>
+        <ClubLogo width={66} />
         <Text style={[s.message, compact && { flexBasis: '45%' }]} numberOfLines={compact ? 2 : 1}>{ui('Beneficios cerca de ti')}</Text>
         <TouchableOpacity style={s.button} accessibilityRole="button" accessibilityLabel={ui('Ver beneficios')} onPress={() => router.push('/club')}>
           <Text style={s.buttonText} numberOfLines={1}>{ui('Ver más')}</Text>
@@ -49,7 +49,7 @@ export function HomePromotion() {
         </TouchableOpacity>
       </Animated.View>
       {closing && <Animated.View pointerEvents="none" style={[s.logo, { opacity: logo, transform: [{ scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.88, 1] }) }] }]}>
-        <Text style={s.brand}>{brand}</Text>
+        <ClubLogo width={90} />
       </Animated.View>}
     </View>
   </Animated.View>;

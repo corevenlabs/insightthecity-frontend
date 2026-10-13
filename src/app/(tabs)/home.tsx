@@ -1,3 +1,4 @@
+import { ClubLogo } from '../../components/ClubLogo';
 import { HomeSearch } from '../../components/HomeSearch';
 import { matchesPlanTags } from '../../lib/homeSearch';
 import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
@@ -395,7 +396,7 @@ export default function HomeScreen() {
 
         <View style={[styles.header, (width < 360 || fontScale > 1.35) && { flexWrap: 'wrap', rowGap: 8 }]}>
           <View style={styles.headerIdentity}>
-            <Text style={styles.headerBrand} numberOfLines={1}><Text style={styles.headerBrandWhite}>ITC </Text><Text style={styles.headerBrandGold}>CLUB</Text></Text>
+            <ClubLogo width={72} header />
             <View style={styles.headerDivider} />
             <Text style={styles.greeting} numberOfLines={1}>
               {name ? t('home.hello', { name }) : t('home.helloGuest')}

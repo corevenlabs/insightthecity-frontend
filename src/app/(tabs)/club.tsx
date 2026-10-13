@@ -1,3 +1,4 @@
+import { ClubLogo } from '../../components/ClubLogo';
 import { MemberBenefitBanner } from '../../components/MemberBenefitBanner';
 import { MembershipPrice } from '../../components/MembershipPrice';
 import { AdaptiveGrid } from '../../components/AdaptiveGrid';
@@ -100,9 +101,9 @@ export default function ClubScreen() {
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <ScrollView contentContainerStyle={styles.memberContent} showsVerticalScrollIndicator={false}>
           <View style={styles.memberHeader}>
-            <Text style={styles.memberLogo} accessibilityLabel="ITC CLUB">ITC <Text style={styles.gold}>CLUB</Text></Text>
+            <ClubLogo width={108} header />
             <View style={styles.memberHeaderText}>
-              <Text style={styles.memberEyebrow}>{t('club.active')}</Text>
+              <Text style={styles.memberEyebrow}>{t('club.active').replace(/^ITC\s*CLUB\s*·\s*/i, '')}</Text>
               <Text style={styles.memberTitle}>{t('club.exclusiveContent')}</Text>
               <Text style={styles.memberSubtitle}>{t('club.memberSubtitle')}</Text>
             </View>
@@ -126,7 +127,7 @@ export default function ClubScreen() {
     <View style={styles.offerLayout} onLayout={event => setLayoutHeight(event.nativeEvent.layout.height)}>
       <ScrollView style={styles.offerPreview} contentContainerStyle={styles.offerPreviewContent} showsVerticalScrollIndicator={false}>
         <View style={styles.offerHero} onLayout={event => setHeaderHeight(event.nativeEvent.layout.height)}>
-          <Text style={styles.offerLogo}>ITC <Text style={styles.gold}>CLUB</Text></Text>
+          <ClubLogo width={90} header />
           <Text style={styles.offerSubtitle}>{ui('Descubre New York con beneficios exclusivos')}</Text>
         </View>
         {contentLoading ? <Text style={styles.previewCopy}>{ui('Cargando…')}</Text> : contentError ?

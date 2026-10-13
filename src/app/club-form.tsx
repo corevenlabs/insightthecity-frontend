@@ -1,3 +1,4 @@
+import { ClubLogo } from '../components/ClubLogo';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -65,7 +66,7 @@ export default function ClubFormScreen() {
       >
         <Ionicons name="arrow-back" size={24} color={GOLD} />
       </Pressable>
-      <Text style={styles.headerTitle} accessibilityRole="header">ITC CLUB</Text>
+      <ClubLogo width={72} header />
       <View style={styles.backButton} />
     </View>
   );
@@ -111,7 +112,7 @@ export default function ClubFormScreen() {
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>{ui('PLAN')}</Text>
-          <Text style={styles.planName}>ITC Club</Text>
+          <ClubLogo width={108} header />
           {plan ? (
             <Text style={styles.planPrice}>{`${price} / ${period}`}</Text>
           ) : planError ? (

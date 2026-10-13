@@ -1,3 +1,4 @@
+import { ClubLogo } from '../../components/ClubLogo';
 import { SubscriptionRenewal } from '../../components/SubscriptionRenewal';
 import { LanguagePicker } from '../../components/LanguagePicker';
 import { Ionicons } from '@expo/vector-icons';
@@ -126,7 +127,7 @@ export default function ProfileScreen() {
           {user.avatar_url ? <Image source={{ uri: user.avatar_url }} style={styles.avatarPhoto} contentFit="cover" /> : <Text style={styles.avatarText}>{initials(user.name || user.email)}</Text>}
         </Pressable>
         <Text style={styles.name}>{user.name || user.email.split('@')[0]}</Text>
-        <View style={[styles.badge, user.is_premium ? styles.badgePremium : styles.badgeFree]}><Text style={[styles.badgeText, user.is_premium && styles.badgeTextPremium]}>{user.is_premium ? 'ITC CLUB' : t('profile.freeAccount')}</Text></View>
+        <View style={[styles.badge, user.is_premium ? styles.badgePremium : styles.badgeFree]}>{user.is_premium ? <ClubLogo width={72} /> : <Text style={styles.badgeText}>{t('profile.freeAccount')}</Text>}</View>
         <Pressable style={styles.editButton} onPress={openEditor} accessibilityRole="button"><Text style={styles.secondaryText}>{c.edit}</Text></Pressable>
       </View>
       <View style={styles.card}>
@@ -145,7 +146,7 @@ export default function ProfileScreen() {
       </View>
       <View style={[styles.card, styles.membershipCard]}>
         <View style={styles.membershipHeading}><Text style={styles.sectionTitle}>{c.membership}</Text><Text style={styles.status}>{user.is_premium && user.subscription_cancel_at_period_end ? ui('Renovación cancelada') : user.is_premium ? c.active : t('profile.free')}</Text></View>
-        <Text style={styles.planTitle}>{user.is_premium ? 'ITC CLUB' : t('profile.freeAccount')}</Text>
+        {user.is_premium ? <ClubLogo width={108} header /> : <Text style={styles.planTitle}>{t('profile.freeAccount')}</Text>}
         <Text style={styles.planDescription}>{user.is_premium ? c.plan : t('profile.joinClubSubtitle')}</Text>
         <Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => user.is_premium || hasBilling ? void openMembership() : router.push('/club-form')}><Text style={styles.primaryText}>{user.is_premium || hasBilling ? c.manage : t('profile.joinClub')}</Text></Pressable>
       </View>
@@ -190,7 +191,7 @@ export default function ProfileScreen() {
           </View>
           <ScrollView contentContainerStyle={styles.membershipDetailsContent}>
             <View style={[styles.card, styles.membershipCard, styles.membershipDetailsCard]}>
-              <View style={styles.membershipBrand}><Text style={styles.membershipBrandItc}>ITC </Text><Text style={styles.membershipBrandClub}>CLUB</Text></View>
+              <View style={styles.membershipBrand}><ClubLogo width={132} header /></View>
               <Text style={styles.membershipDetailsStatus}>
                 {user.subscription_status === 'canceled' ? ui('Finalizada') : user.subscription_cancel_at_period_end ? ui('Renovación cancelada') : user.subscription_status === 'past_due' ? ui('Pago pendiente') : user.is_premium ? c.active : t('profile.free')}
               </Text>

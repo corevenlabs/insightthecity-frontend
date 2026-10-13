@@ -1,3 +1,4 @@
+import { ClubLogo } from '../components/ClubLogo';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -19,7 +20,7 @@ export default function ChooseAccessScreen() {
   }, [attempt]);
   return <SafeAreaView style={styles.container}>
     <ScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.logo}>ITC <Text style={styles.gold}>CLUB</Text></Text>
+      <ClubLogo width={132} header />
       <Text style={styles.title}>{ui('Bienvenido a ITC')}</Text>
       <Text style={styles.body}>{ui('Elige cómo explorar la ciudad. Puedes continuar gratis o conocer los beneficios de la membresía.')}</Text>
       <View style={styles.card}>
@@ -31,7 +32,7 @@ export default function ChooseAccessScreen() {
       </View>
       <View style={[styles.card, styles.club]}>
         <Ionicons name="ticket-outline" size={30} color="#FDDD56" />
-        <Text style={styles.heading}>ITC CLUB</Text>
+        <ClubLogo width={96} header />
         <Text style={styles.body}>{ui('Obtén cupones, descuentos y beneficios exclusivos para canjear en restaurantes y eventos participantes.')}</Text>
         <MembershipPrice plan={plan} error={error} retry={() => { setError(false); setAttempt(value => value + 1); }} />
         <Pressable accessibilityRole="button" style={styles.primary} onPress={() => router.replace('/club')}><Text style={styles.primaryText}>{ui('Ver membresía y beneficios')}</Text></Pressable>
