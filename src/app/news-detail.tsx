@@ -11,6 +11,7 @@ import { WebView } from 'react-native-webview';
 
 import { translateUi, type AppLanguage } from '../i18n/ui';
 import { fetchArticle, formatDate, type NewsArticle } from '../lib/news';
+import { articleImagesScript } from '../lib/newsImages';
 
 // Envuelve el HTML del artículo (de WordPress) en un documento con los estilos
 // de la app: fondo negro, dorado, tipografía del sistema, imágenes responsivas.
@@ -106,6 +107,7 @@ function buildHtml(article: NewsArticle, language: AppLanguage): string {
       fallback.textContent = ${JSON.stringify(translateUi(language, 'Imagen no disponible'))};
       image.replaceWith(fallback);
     }, true);
+    ${articleImagesScript}
   </script>
 </body>
 </html>`;
