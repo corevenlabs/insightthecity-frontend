@@ -127,7 +127,7 @@ export default function ProfileScreen() {
           {user.avatar_url ? <Image source={{ uri: user.avatar_url }} style={styles.avatarPhoto} contentFit="cover" /> : <Text style={styles.avatarText}>{initials(user.name || user.email)}</Text>}
         </Pressable>
         <Text style={styles.name}>{user.name || user.email.split('@')[0]}</Text>
-        <View style={[styles.badge, user.is_premium ? styles.badgePremium : styles.badgeFree]}>{user.is_premium ? <ClubLogo width={72} /> : <Text style={styles.badgeText}>{t('profile.freeAccount')}</Text>}</View>
+        {user.is_premium ? <ClubLogo width={72} style={{ marginTop: 10 }} /> : <View style={[styles.badge, styles.badgeFree]}><Text style={styles.badgeText}>{t('profile.freeAccount')}</Text></View>}
         <Pressable style={styles.editButton} onPress={openEditor} accessibilityRole="button"><Text style={styles.secondaryText}>{c.edit}</Text></Pressable>
       </View>
       <View style={styles.card}>
@@ -310,16 +310,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: GOLD,
   },
-  badgePremium: {
-    backgroundColor: GOLD,
-  },
   badgeText: {
     color: GOLD,
     fontSize: 13,
     fontWeight: '700',
-  },
-  badgeTextPremium: {
-    color: BLACK,
   },
   card: {
     backgroundColor: '#1A1A1A',
