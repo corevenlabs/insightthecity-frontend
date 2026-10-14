@@ -3,6 +3,7 @@ import { SubscriptionRenewal } from '../../components/SubscriptionRenewal';
 import { LanguagePicker } from '../../components/LanguagePicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { PrivateAvatar } from '../../components/PrivateAvatar';
 import { requireOptionalNativeModule } from 'expo';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -124,7 +125,7 @@ export default function ProfileScreen() {
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32, width: '100%', maxWidth: 680, alignSelf: 'center' }}>
       <View style={styles.header}>
         <Pressable onPress={openEditor} accessibilityRole="button" accessibilityLabel={c.edit} style={styles.avatar}>
-          {user.avatar_url ? <Image source={{ uri: user.avatar_url }} style={styles.avatarPhoto} contentFit="cover" /> : <Text style={styles.avatarText}>{initials(user.name || user.email)}</Text>}
+          {user.avatar_url?.startsWith('/api/users/me/avatar?') ? <PrivateAvatar url={user.avatar_url} token={token} style={styles.avatarPhoto} /> : user.avatar_url ? <Image source={{ uri: user.avatar_url }} style={styles.avatarPhoto} contentFit="cover" /> : <Text style={styles.avatarText}>{initials(user.name || user.email)}</Text>}
         </Pressable>
         <Text style={styles.name}>{user.name || user.email.split('@')[0]}</Text>
         {user.is_premium ? <ClubLogo width={72} style={{ marginTop: 10 }} /> : <View style={[styles.badge, styles.badgeFree]}><Text style={styles.badgeText}>{t('profile.freeAccount')}</Text></View>}
