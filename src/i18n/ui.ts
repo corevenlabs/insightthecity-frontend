@@ -2,6 +2,11 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Solicitud de eliminación recibida": {"en": "Deletion request received", "pt": "Solicitação de exclusão recebida"},
+  "Tu cuenta está bloqueada y la eliminación está en proceso. Te enviaremos un correo cuando termine. Si no recibes la confirmación en 48 horas, contacta a ITC Club.": {"en": "Your account is blocked and deletion is in progress. We will email you when it is complete. If you do not receive confirmation within 48 hours, contact ITC Club.", "pt": "Sua conta está bloqueada e a exclusão está em andamento. Enviaremos um e-mail quando terminar. Se não receber a confirmação em 48 horas, entre em contato com o ITC Club."},
+  "Solicitamos la cancelación de tu membresía en Stripe antes de borrar la cuenta. Si ocurre un problema, reintentamos y te confirmamos cuando termine.": {"en": "We request cancellation of your Stripe membership before deleting the account. If a problem occurs, we retry and confirm when complete.", "pt": "Solicitamos o cancelamento da sua assinatura no Stripe antes de excluir a conta. Se houver um problema, tentaremos novamente e confirmaremos a conclusão."},
+  "Normalmente se procesa al solicitarla. Si hay un fallo, puede tardar más. Te enviaremos la confirmación por correo; si no llega en 48 horas, contacta a ITC Club.": {"en": "It is normally processed when requested. If a failure occurs, it may take longer. We will email confirmation; if it does not arrive within 48 hours, contact ITC Club.", "pt": "Normalmente é processada ao solicitar. Se houver uma falha, pode demorar mais. Enviaremos a confirmação por e-mail; se não chegar em 48 horas, entre em contato com o ITC Club."},
+
   "ITC Club puede recibir una comisión si reservas o compras a través de este enlace, sin costo adicional para ti.": {
     "en": "ITC Club may receive a commission if you book or purchase through this link, at no additional cost to you.",
     "pt": "O ITC Club pode receber uma comissão se você reservar ou comprar por este link, sem custo adicional para você."
@@ -781,7 +786,8 @@ export const UI_TRANSLATIONS = {
   "Hoy · 7:00 PM": {
     "en": "Today · 7:00 PM",
     "pt": "Hoje · 19:00"
-  },
+  }
+,
   "mes": {
     "en": "month",
     "pt": "mês"

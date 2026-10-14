@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { deleteAccountLocalData, resumeAccountLocalDeletion } from '../lib/accountLocalData';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import {
@@ -160,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setBiometricAvailable(available);
         setBiometricLabel(label);
 
+        await resumeAccountLocalDeletion();
         const [[, savedUser], [, biometricPreference], [, lastBackgroundAt]] = await AsyncStorage.multiGet([
           USER_KEY,
           BIOMETRIC_ENABLED_KEY,
@@ -407,8 +409,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const data = await response.json().catch(() => null);
     if (!response.ok || !data?.success) throw new Error(data?.message || 'No se pudo eliminar la cuenta.');
+    const deletedId = user?.id;
     await signOut();
-  }, [token, signOut]);
+    if (deletedId != null) await deleteAccountLocalData(deletedId);
+  }, [token, signOut, user?.id]);
 
   const saveProfileResponse = useCallback(async (response: Response) => {
     const data = await response.json();

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveAccountLocalItem } from '../lib/accountLocalData';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -70,7 +71,7 @@ export function HomeSearch({ experiences, guides, tags, query, onQueryChange, on
     const term = value.trim();
     if (!term) return;
     const next = [term, ...recent.filter(item => item.toLowerCase() !== term.toLowerCase())].slice(0, 5);
-    setRecent(next); void AsyncStorage.setItem(recentKey, JSON.stringify(next)).catch(() => undefined);
+    setRecent(next); void saveAccountLocalItem(recentKey, JSON.stringify(next)).catch(() => undefined);
   };
   const close = () => { input.current?.blur(); Keyboard.dismiss(); setFocused(false); onOpenChange(false); };
   const choose = (value: string) => { onOpenChange(true); setQuery(value); remember(value); if (!requested) setLoading(true); setRequested(true); };

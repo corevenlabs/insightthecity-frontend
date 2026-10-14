@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveAccountLocalItem } from '../lib/accountLocalData';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Alert } from 'react-native';
 import { useAuth } from './AuthContext';
@@ -36,7 +37,7 @@ export function SavedProvider({ children }: { children: ReactNode }) {
       const items = current.current.items.some(entry => entry.key === item.key)
         ? current.current.items.filter(entry => entry.key !== item.key) : [item, ...current.current.items];
       try {
-        await AsyncStorage.setItem(storageKey, JSON.stringify(items));
+        await saveAccountLocalItem(storageKey, JSON.stringify(items));
         if (current.current.key === storageKey) { current.current = { key: storageKey, items, ready: true }; setState(current.current); }
       } catch { Alert.alert('Guardados', 'No se pudo guardar el cambio. Inténtalo otra vez.'); }
     });

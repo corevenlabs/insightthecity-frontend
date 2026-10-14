@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -38,8 +39,7 @@ export default function DeleteAccountScreen() {
     setError('');
     try {
       await deleteAccount(password);
-      router.dismissAll();
-      router.replace('/welcome');
+      Alert.alert(ui('Solicitud de eliminación recibida'), ui('Tu cuenta está bloqueada y la eliminación está en proceso. Te enviaremos un correo cuando termine. Si no recibes la confirmación en 48 horas, contacta a ITC Club.'), [{ text: 'OK', onPress: () => { router.dismissAll(); router.replace('/welcome'); } }]);
     } catch (err) {
       setError(err instanceof Error ? err.message : ui('No se pudo eliminar la cuenta.'));
     } finally {
@@ -69,7 +69,7 @@ export default function DeleteAccountScreen() {
           <Text style={styles.body}>{ui('Al eliminar tu cuenta:')}</Text>
           {[
             ui('Borramos tu perfil, tu foto, tus mensajes del chat y tus códigos de beneficios.'),
-            ui('Si tienes una membresía ITC Club, la cancelamos de inmediato y no se te volverá a cobrar.'),
+            ui('Solicitamos la cancelación de tu membresía en Stripe antes de borrar la cuenta. Si ocurre un problema, reintentamos y te confirmamos cuando termine.'),
             ui('Pierdes el acceso a las guías que compraste.'),
             ui('Stripe puede conservar el registro de tus pagos por obligaciones legales y fiscales.'),
           ].map((item) => (
@@ -78,6 +78,8 @@ export default function DeleteAccountScreen() {
               <Text style={styles.listText}>{item}</Text>
             </View>
           ))}
+
+          <Text style={styles.body}>{ui('Normalmente se procesa al solicitarla. Si hay un fallo, puede tardar más. Te enviaremos la confirmación por correo; si no llega en 48 horas, contacta a ITC Club.')}</Text>
 
           {user?.email ? <Text style={styles.account}>{ui('Cuenta: {email}', { email: user.email })}</Text> : null}
 
