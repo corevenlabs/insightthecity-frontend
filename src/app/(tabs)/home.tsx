@@ -21,7 +21,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Experience } from '@/constants/experiences';
-import { GuideCard } from '../../components/GuideCard';
 import { NewsImage } from '../../components/NewsImage';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -166,23 +165,6 @@ function RecommendationsCarousel({ experiences }: { experiences: Experience[] })
         })}
       </ScrollView>
     </View>
-  );
-}
-
-function GuidesCarousel({ guides }: { guides: Guide[] }) {
-  const { ui } = useLanguage();
-  const { carouselWidth: cardWidth } = useResponsiveLayout();
-
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}
-      snapToInterval={cardWidth + 12} decelerationRate="fast"
-      contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
-      {guides.map((guide) => (
-        <GuideCard key={guide.id} guide={guide} width={cardWidth}
-          accessibilityLabel={ui('Abrir guía: {title}', { title: guide.title })}
-          onPress={() => router.push('/guides')} />
-      ))}
-    </ScrollView>
   );
 }
 
@@ -475,34 +457,6 @@ export default function HomeScreen() {
           title={ui("QUÉ HACER EN NEW YORK")}
           route="/que-hacer"
         />
-
-        {/* GUIAS */}
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {t('home.guides')}
-          </Text>
-
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Ver todas las guías')} style={styles.sectionHeaderAction} onPress={() => router.push('/guides')}>
-            <Text style={styles.seeMore}>{t('common.seeAll')}</Text>
-            <Ionicons name="chevron-forward" size={16} color={COLORS.gold} />
-          </TouchableOpacity>
-        </View>
-
-        {guides.length > 0 ? (
-          <GuidesCarousel guides={guides} />
-        ) : (
-          <TouchableOpacity
-            style={styles.newsState}
-            activeOpacity={0.72}
-            accessibilityRole="button"
-            accessibilityLabel={ui('Abrir guías')}
-            onPress={() => router.push('/guides')}
-          >
-            <Ionicons name="book-outline" size={30} color={COLORS.gold} />
-            <Text style={styles.emptyText}>{ui('Todavía no hay guías publicadas.')}</Text>
-          </TouchableOpacity>
-        )}
 
         {/* NY AL DIA */}
         <HomeNewsSection

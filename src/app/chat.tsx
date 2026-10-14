@@ -246,17 +246,17 @@ export default function ChatScreen() {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
         <View style={styles.header}>
-          <Pressable accessibilityRole="button" accessibilityLabel={ui("Volver")} hitSlop={8} onPress={() => router.back()} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
-            <Ionicons name="arrow-back" size={24} color="#FDDD56" />
-          </Pressable>
+          <View style={styles.headerSide}>
+            <Pressable accessibilityRole="button" accessibilityLabel={ui("Volver")} hitSlop={8} onPress={() => router.back()} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+              <Ionicons name="arrow-back" size={24} color="#FDDD56" />
+            </Pressable>
+            <ClubLogo width={44} />
+          </View>
           <View style={styles.identity}>
-            <View style={styles.identityRow}>
-              <ClubLogo width={60} />
-              <Text style={styles.assistantName} accessibilityRole="header">YORK<Text style={styles.brandI}>i</Text></Text>
-            </View>
+            <Text style={styles.assistantName} accessibilityRole="header">YORK<Text style={styles.brandI}>i</Text></Text>
             <Text style={styles.subtitle}>{t('chat.subtitle')}</Text>
           </View>
-          <View style={styles.iconButton} />
+          <View style={styles.headerSide} />
         </View>
 
         {!token || !user ? (
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 }, container: { flex: 1, backgroundColor: COLORS.background }, center: { flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' },
   header: { width: '100%', maxWidth: 780, alignSelf: 'center', minHeight: 88, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border },
   iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }, identity: { flex: 1, minWidth: 0, alignItems: 'center', justifyContent: 'center', paddingVertical: 10 },
-  identityRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', columnGap: 10, rowGap: 4, maxWidth: '100%' },
+  headerSide: { width: 92, flexDirection: 'row', alignItems: 'center', flexShrink: 0 },
   assistantName: { color: COLORS.text, fontSize: 29, lineHeight: 35, fontWeight: '800', letterSpacing: 1 },
   brandI: { color: COLORS.black, backgroundColor: COLORS.gold },
   subtitle: { color: COLORS.muted, fontSize: 11, lineHeight: 15, marginTop: 2, textAlign: 'center' },
