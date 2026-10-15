@@ -35,6 +35,9 @@
       },
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "app-bundle"
       }
     }
   },
@@ -51,6 +54,10 @@
         "appleId": "corevenlabs@gmail.com",
         "ascAppId": "6802768103",
         "appleTeamId": "XKA2G7T5XX"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
       }
     }
   }
