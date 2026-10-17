@@ -2,6 +2,7 @@ import { ClubLogo } from '../../components/ClubLogo';
 import { HomeSearch } from '../../components/HomeSearch';
 import { matchesPlanTags } from '../../lib/homeSearch';
 import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
+import { TopTodayBanner } from '../../components/TopTodayBanner';
 import { HomePromotion } from '../../components/HomePromotion';
 import { BenefitPreview } from '../../components/BenefitPreview';
 import { getExperienceTags, matchesExperienceTags } from '@/lib/experienceFilters';
@@ -395,6 +396,7 @@ export default function HomeScreen() {
 
         <View style={searchActive ? { display: 'none' } : undefined}>
         <HomePromotion />
+        <TopTodayBanner experiences={catalog.filter(item => matchesExperienceTags(item, selectedTags))} visible={!searchActive} />
 
         {/* BENEFICIOS ITC CLUB */}
 

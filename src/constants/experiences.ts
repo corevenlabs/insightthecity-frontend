@@ -43,6 +43,10 @@ export type Experience = {
   /** Contenido o beneficio con alcohol: la app muestra el aviso 21+. */
   isAgeRestricted?: boolean;
   section?: string | null;
+  isFeatured?: boolean;
+  isPublished?: boolean;
+  sortOrder?: number;
+  endsAt?: string | null;
 };
 
 export const experiences: Experience[] = [
