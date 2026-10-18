@@ -1,3 +1,4 @@
+import { isMembershipTrial, TRIAL_COPY } from '../../lib/membershipTrial';
 import { ClubLogo } from '../../components/ClubLogo';
 import { SubscriptionRenewal } from '../../components/SubscriptionRenewal';
 import { LanguagePicker } from '../../components/LanguagePicker';
@@ -117,6 +118,8 @@ export default function ProfileScreen() {
       <TouchableOpacity accessibilityRole="button" style={styles.secondaryButton} onPress={() => router.push('/register')}><Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text></TouchableOpacity>
     </SafeAreaView>
   );
+  const trial = isMembershipTrial(user);
+  const trialCopy = TRIAL_COPY[language];
   const hasBilling = user.has_billing_account === true || !!user.subscription_status;
   const manualMembership = user.is_premium && user.has_billing_account === false && !user.subscription_status;
   return (
@@ -146,9 +149,9 @@ export default function ProfileScreen() {
         </Pressable>
       </View>
       <View style={[styles.card, styles.membershipCard]}>
-        <View style={styles.membershipHeading}><Text style={styles.sectionTitle}>{c.membership}</Text><Text style={styles.status}>{user.is_premium && user.subscription_cancel_at_period_end ? ui('Renovación cancelada') : user.is_premium ? c.active : t('profile.free')}</Text></View>
+        <View style={styles.membershipHeading}><Text style={styles.sectionTitle}>{c.membership}</Text><Text style={styles.status}>{trial ? trialCopy.status : user.is_premium && user.subscription_cancel_at_period_end ? ui('Renovación cancelada') : user.is_premium ? c.active : t('profile.free')}</Text></View>
         {user.is_premium ? <ClubLogo width={108} header /> : <Text style={styles.planTitle}>{t('profile.freeAccount')}</Text>}
-        <Text style={styles.planDescription}>{user.is_premium ? c.plan : t('profile.joinClubSubtitle')}</Text>
+        <Text style={styles.planDescription}>{trial ? trialCopy.title : user.is_premium ? c.plan : t('profile.joinClubSubtitle')}</Text>
         <Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => user.is_premium || hasBilling ? void openMembership() : router.push('/club-form')}><Text style={styles.primaryText}>{user.is_premium || hasBilling ? c.manage : t('profile.joinClub')}</Text></Pressable>
       </View>
       <View style={styles.card}>
@@ -194,13 +197,17 @@ export default function ProfileScreen() {
             <View style={[styles.card, styles.membershipCard, styles.membershipDetailsCard]}>
               <View style={styles.membershipBrand}><ClubLogo width={132} header /></View>
               <Text style={styles.membershipDetailsStatus}>
-                {user.subscription_status === 'canceled' ? ui('Finalizada') : user.subscription_cancel_at_period_end ? ui('Renovación cancelada') : user.subscription_status === 'past_due' ? ui('Pago pendiente') : user.is_premium ? c.active : t('profile.free')}
+                {trial ? trialCopy.status : user.subscription_status === 'canceled' ? ui('Finalizada') : user.subscription_cancel_at_period_end ? ui('Renovación cancelada') : user.subscription_status === 'past_due' ? ui('Pago pendiente') : user.is_premium ? c.active : t('profile.free')}
               </Text>
-              <Text style={styles.planDescription}>{ui('Tu membresía y sus beneficios')}</Text>
+              {trial && <Text style={styles.planTitle}>{trialCopy.title}</Text>}
+              <Text style={styles.planDescription}>{trial ? trialCopy.benefits : ui('Tu membresía y sus beneficios')}</Text>
               {!membershipLoading && hasBilling ? [
-                [ui('Precio'), user.subscription_amount_cents == null ? ui('No disponible') : `${formatMoney(user.subscription_amount_cents, user.subscription_currency || 'usd', language)} / ${ui(({ day: 'día', week: 'semana', month: 'mes', year: 'año' } as Record<string, string>)[user.subscription_interval || 'month'] ?? 'mes')}`],
+                [trial ? trialCopy.after : ui('Precio'), user.subscription_amount_cents == null ? ui('No disponible') : `${formatMoney(user.subscription_amount_cents, user.subscription_currency || 'usd', language)} / ${ui(({ day: 'día', week: 'semana', month: 'mes', year: 'año' } as Record<string, string>)[user.subscription_interval || 'month'] ?? 'mes')}`],
                 [ui('Renovación'), user.subscription_status === 'canceled' || user.subscription_status === 'unpaid' || user.subscription_status === 'incomplete_expired' || user.subscription_cancel_at_period_end ? ui('Desactivada') : ui('Automática')],
-                [user.subscription_status === 'canceled' ? ui('Finalizada') : user.subscription_cancel_at_period_end ? ui('Acceso hasta') : ui('Próxima renovación'), user.subscription_current_period_end ? formatDate(user.subscription_current_period_end, language) : '—'],
+                ...(trial ? [
+                  [trialCopy.ends, user.subscription_current_period_end ? formatDate(user.subscription_current_period_end, language) : '—'],
+                  [trialCopy.first, user.subscription_cancel_at_period_end ? trialCopy.none : user.subscription_current_period_end ? formatDate(user.subscription_current_period_end, language) : '—'],
+                ] : [[user.subscription_status === 'canceled' ? ui('Finalizada') : user.subscription_cancel_at_period_end ? ui('Acceso hasta') : ui('Próxima renovación'), user.subscription_current_period_end ? formatDate(user.subscription_current_period_end, language) : '—']]),
               ].map(([label, value]) => <View key={label} style={styles.membershipDetailRow}><Text style={styles.rowLabel}>{label}</Text><Text style={styles.membershipDetailValue}>{value}</Text></View>) : (
                 membershipLoading ? <ActivityIndicator color={GOLD} accessibilityLabel={ui('Actualizando membresía')} /> : manualMembership ? <>
                   {[

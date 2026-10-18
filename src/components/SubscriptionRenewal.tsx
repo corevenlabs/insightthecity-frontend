@@ -1,3 +1,4 @@
+import { isMembershipTrial, TRIAL_COPY } from '../lib/membershipTrial';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -16,6 +17,8 @@ export function SubscriptionRenewal({ user, token, disabled, onBusy, onUpdate }:
 }) {
   const { language } = useLanguage();
   const c = COPY[language];
+  const trial = isMembershipTrial(user);
+  const trialCopy = TRIAL_COPY[language];
   const [action, setAction] = useState<'cancel' | 'resume' | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
@@ -38,13 +41,13 @@ export function SubscriptionRenewal({ user, token, disabled, onBusy, onUpdate }:
     finally { pending.current = false; setBusy(false); onBusy(false); }
   }
   return <View style={s.container}>
-    {eligible && <Text style={s.note}>{fill(user.subscription_cancel_at_period_end ? c.scheduled : c.active)}</Text>}
+    {eligible && <Text style={s.note}>{fill(trial ? (user.subscription_cancel_at_period_end ? trialCopy.scheduled : trialCopy.active) : (user.subscription_cancel_at_period_end ? c.scheduled : c.active))}</Text>}
     {result && <View style={s.success} accessibilityLiveRegion="polite"><Ionicons name="checkmark-circle-outline" color="#FDDD56" size={25} /><Text style={s.successText}>{result.cancel ? c.canceled : c.resumed}{result.changed ? `\n${result.email ? c.email : c.noEmail}` : ''}</Text></View>}
     {error && <Text style={s.error} accessibilityRole="alert">{c.error}</Text>}
     {eligible && (action ? <View style={s.confirmation}>
       <Ionicons name={action === 'cancel' ? 'calendar-outline' : 'refresh-outline'} size={28} color="#FDDD56" accessible={false} />
       <Text style={s.heading} accessibilityRole="header">{action === 'cancel' ? c.cancelTitle : c.resumeTitle}</Text>
-      <Text style={s.note}>{fill(action === 'cancel' ? c.access : c.renewal)}</Text>
+      <Text style={s.note}>{fill(trial ? (action === 'cancel' ? trialCopy.cancel : trialCopy.resume) : (action === 'cancel' ? c.access : c.renewal))}</Text>
       <Pressable disabled={busy || disabled} onPress={() => void confirm()} accessibilityRole="button" accessibilityState={{ busy, disabled: busy || disabled }} style={({ pressed }) => [s.primary, pressed && s.pressed, (busy || disabled) && s.disabled]}>
         {busy ? <ActivityIndicator color="#0A0A0A" /> : <Text style={s.primaryText}>{action === 'cancel' ? c.confirm : c.resume}</Text>}
       </Pressable>
