@@ -1,3 +1,4 @@
+import { Text, TextInput } from '../../components/typography';
 import { isMembershipTrial, TRIAL_COPY } from '../../lib/membershipTrial';
 import { ClubLogo } from '../../components/ClubLogo';
 import { SubscriptionRenewal } from '../../components/SubscriptionRenewal';
@@ -8,7 +9,7 @@ import { PrivateAvatar } from '../../components/PrivateAvatar';
 import { requireOptionalNativeModule } from 'expo';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, type AppLanguage } from '../../context/LanguageContext';

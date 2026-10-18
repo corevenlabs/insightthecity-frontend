@@ -1,3 +1,4 @@
+import { Text } from '../components/typography';
 import { SaveButton } from '../components/SaveButton';
 import { savedPlan } from '../context/SavedContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -5,16 +6,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
 import { translateUi, type AppLanguage } from '../i18n/ui';
 import { fetchArticle, formatDate, type NewsArticle } from '../lib/news';
 import { articleImagesScript } from '../lib/newsImages';
+import { API_URL } from '../constants/api';
 
 // Envuelve el HTML del artículo (de WordPress) en un documento con los estilos
-// de la app: fondo negro, dorado, tipografía del sistema, imágenes responsivas.
+// de la app: fondo negro, dorado, tipografía de la marca, imágenes responsivas.
 // Así se ve nativo aunque el motor por dentro sea un WebView.
 function buildHtml(article: NewsArticle, language: AppLanguage): string {
   const hero = article.image
@@ -27,12 +29,15 @@ function buildHtml(article: NewsArticle, language: AppLanguage): string {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
 <style>
+  @font-face { font-family:ITCBody; src:url('${API_URL}/brand-assets/fonts/Roboto_400Regular.ttf'); font-weight:400; }
+  @font-face { font-family:ITCBody; src:url('${API_URL}/brand-assets/fonts/Roboto_700Bold.ttf'); font-weight:700; }
+  @font-face { font-family:ITCBody; src:url('${API_URL}/brand-assets/fonts/Roboto_800ExtraBold.ttf'); font-weight:800; }
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #050505; overflow-x: hidden; }
   body {
     color: #E8E8E8;
-    font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    font-family: ITCBody, Roboto, Arial, Helvetica, sans-serif;
     font-size: 17px;
     max-width: 760px;
     margin: 0 auto;
@@ -75,6 +80,7 @@ function buildHtml(article: NewsArticle, language: AppLanguage): string {
   .content h1, .content h2, .content h3, .content h4 {
     color: #FFFFFF; line-height: 1.3; font-weight: 800; margin: 28px 0 10px;
   }
+  .content, .content * { font-family: ITCBody, Roboto, Arial, Helvetica, sans-serif !important; }
   .content h2 { font-size: 22px; }
   .content h3 { font-size: 19px; }
   .content p { margin: 0 0 16px; }

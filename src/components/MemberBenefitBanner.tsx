@@ -1,6 +1,7 @@
+import { Text } from './typography';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, AppState, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, AppState, ImageBackground, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import type { Experience } from '../constants/experiences';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -46,10 +47,10 @@ export function MemberBenefitBanner({ items, height = 210 }: { items: Experience
         onPress={() => router.push({ pathname: '/experience-detail', params: { id: item.id } })}>
         <ImageBackground source={{ uri: item.image }} style={[styles.banner, { height: height * Math.max(1, fontScale) }]} imageStyle={styles.image}>
           <View style={styles.overlay}>
-            <Text style={styles.badge}>{ui('BENEFICIO ITC CLUB')}</Text>
+            <Text variant="banner" style={styles.badge}>{ui('BENEFICIO ITC CLUB')}</Text>
             <View style={styles.copy}>
-              <Text style={styles.offer} numberOfLines={2}>{item.memberBenefit}</Text>
-              <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+              <Text variant="banner" style={styles.offer} numberOfLines={2}>{item.memberBenefit}</Text>
+              <Text variant="banner" style={styles.title} numberOfLines={1}>{item.title}</Text>
                             <Text style={styles.link}>{ui('Ver beneficio')} →</Text>
             </View>
           </View>

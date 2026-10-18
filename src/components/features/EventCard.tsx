@@ -1,6 +1,7 @@
+import { Text } from '../typography';
 import { useLanguage } from '@/context/LanguageContext';
 import { ExperienceTags } from '@/components/ExperienceTags';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 // Definimos el tipo aquí mismo
 type EventCardProps = {

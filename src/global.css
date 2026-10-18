@@ -1,9 +1,8 @@
 :root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-display: 'Roboto_700Bold', 'Roboto', Arial, Helvetica, sans-serif;
+  --font-body: 'Roboto_400Regular', 'Roboto', Arial, Helvetica, sans-serif;
+  --font-banner: 'RobotoCondensed_900Black', 'Roboto Condensed', sans-serif;
+  --font-mono: var(--font-body);
+  --font-rounded: var(--font-body);
+  --font-serif: var(--font-body);
 }

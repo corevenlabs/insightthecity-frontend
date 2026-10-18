@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Text } from './typography';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
 import { formatMoney, type Plan } from '../lib/payments';
 

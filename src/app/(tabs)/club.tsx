@@ -1,3 +1,4 @@
+import { Text } from '../../components/typography';
 import { ClubLogo } from '../../components/ClubLogo';
 import { MemberBenefitBanner } from '../../components/MemberBenefitBanner';
 import { MembershipPrice } from '../../components/MembershipPrice';
@@ -9,7 +10,7 @@ import { getExperienceTags, matchesExperienceTags } from '@/lib/experienceFilter
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Experience } from '../../constants/experiences';

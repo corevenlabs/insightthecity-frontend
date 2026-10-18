@@ -1,3 +1,4 @@
+import { Text } from '../../components/typography';
 import { ClubLogo } from '../../components/ClubLogo';
 import { HomeSearch } from '../../components/HomeSearch';
 import { matchesPlanTags } from '../../lib/homeSearch';
@@ -16,7 +17,6 @@ import {
   Keyboard,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';

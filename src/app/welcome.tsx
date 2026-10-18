@@ -1,3 +1,4 @@
+import { Text } from '../components/typography';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -9,7 +10,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';

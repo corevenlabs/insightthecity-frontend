@@ -1,9 +1,10 @@
+import { Text, TextInput } from './typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveAccountLocalItem } from '../lib/accountLocalData';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Keyboard, StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { Experience } from '../constants/experiences';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';

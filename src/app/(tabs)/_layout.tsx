@@ -102,7 +102,7 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabLabel: {
+  tabLabel: { fontFamily: 'Roboto_600SemiBold',
     fontSize: 11,
     fontWeight: '500',
   },

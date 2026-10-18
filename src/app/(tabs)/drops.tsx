@@ -1,3 +1,4 @@
+import { Text } from '../../components/typography';
 import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
 import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { ExperienceTags } from '@/components/ExperienceTags';
@@ -6,7 +7,7 @@ import { ExpandableText } from '@/components/ExpandableContent';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';

@@ -1,5 +1,6 @@
+import { Text } from './typography';
 import { useLanguage } from '@/context/LanguageContext';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export function ExperienceTags({ tags }: { tags: string[] }) {
   const { tagLabel } = useLanguage();

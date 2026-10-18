@@ -1,6 +1,7 @@
+import { Text } from './typography';
 import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
-import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import type { Experience } from '@/constants/experiences';
 import { availableExperienceTags } from '@/lib/experienceFilters';
 import { filterIcon } from '@/lib/filterIcons';

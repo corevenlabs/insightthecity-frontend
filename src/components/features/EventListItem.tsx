@@ -1,6 +1,7 @@
+import { Text } from '../typography';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { getExperienceTags } from '@/lib/experienceFilters';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 // Definimos la interfaz del evento para que TypeScript esté feliz
 interface EventListItemProps {

@@ -1,3 +1,4 @@
+import { Text, TextInput } from '../components/typography';
 import { ClubLogo } from '../components/ClubLogo';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -11,8 +12,6 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

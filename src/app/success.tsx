@@ -1,8 +1,9 @@
+import { Text } from '../components/typography';
 import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Animated, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
 import { confirmSubscription } from '../lib/payments';

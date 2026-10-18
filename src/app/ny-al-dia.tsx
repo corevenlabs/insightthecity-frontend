@@ -1,3 +1,4 @@
+import { Text } from '../components/typography';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +8,6 @@ import {
   FlatList,
   RefreshControl,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';

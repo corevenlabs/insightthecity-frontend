@@ -1,6 +1,7 @@
+import { Text } from './typography';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useLanguage, type AppLanguage } from '../context/LanguageContext';
 import { LANGUAGE_NAMES } from '../i18n/ui';

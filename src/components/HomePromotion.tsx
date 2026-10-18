@@ -1,9 +1,10 @@
+import { Text } from './typography';
 import { ClubLogo } from './ClubLogo';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
 
 export function HomePromotion() {
@@ -40,7 +41,7 @@ export function HomePromotion() {
     <View style={s.banner} onLayout={event => { if (!closing) setHeight(event.nativeEvent.layout.height); }}>
       <Animated.View style={[s.row, compact && { flexWrap: 'wrap', paddingVertical: 8 }, { opacity: contents }]}>
         <ClubLogo width={66} />
-        <Text style={[s.message, compact && { flexBasis: '45%' }]} numberOfLines={compact ? 2 : 1}>{ui('Beneficios cerca de ti')}</Text>
+        <Text variant="banner" style={[s.message, compact && { flexBasis: '45%' }]} numberOfLines={compact ? 2 : 1}>{ui('Beneficios cerca de ti')}</Text>
         <TouchableOpacity style={s.button} accessibilityRole="button" accessibilityLabel={ui('Ver beneficios')} onPress={() => router.push('/club')}>
           <Text style={s.buttonText} numberOfLines={1}>{ui('Ver más')}</Text>
         </TouchableOpacity>

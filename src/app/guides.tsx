@@ -1,3 +1,4 @@
+import { Text, TextInput } from '../components/typography';
 import { AdaptiveGrid } from '../components/AdaptiveGrid';
 import { GuideCard } from '../components/GuideCard';
 import { useLanguage } from '@/context/LanguageContext';
@@ -5,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { confirmGuidePurchase, createGuidePurchase, fetchGuides, getGuideDownload, type Guide } from '../lib/guides';

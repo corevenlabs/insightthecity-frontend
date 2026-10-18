@@ -1,17 +1,14 @@
+import { Text } from '../components/typography';
 import { SavedProvider } from '../context/SavedContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, usePathname, useRouter } from 'expo-router';
 import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 
-import {
-  SplineSans_400Regular,
-  SplineSans_500Medium,
-  SplineSans_600SemiBold,
-  SplineSans_700Bold,
-  useFonts
-} from '@expo-google-fonts/spline-sans';
+import { useFonts } from 'expo-font';
+import { Roboto_400Regular, Roboto_500Medium, Roboto_600SemiBold, Roboto_700Bold, Roboto_800ExtraBold, Roboto_900Black, Roboto_400Regular_Italic, Roboto_700Bold_Italic } from '@expo-google-fonts/roboto';
+import { RobotoCondensed_900Black } from '@expo-google-fonts/roboto-condensed';
 
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { LanguageProvider, useLanguage } from '../context/LanguageContext';
@@ -111,11 +108,10 @@ function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean
 export default function RootLayout() {
   const pathname = usePathname();
 
-  const [fontsLoaded] = useFonts({
-    SplineSans_400Regular,
-    SplineSans_500Medium,
-    SplineSans_600SemiBold,
-    SplineSans_700Bold,
+  const [fontsLoaded, fontError] = useFonts({
+    Roboto_400Regular, Roboto_500Medium, Roboto_600SemiBold, Roboto_700Bold,
+    Roboto_800ExtraBold, Roboto_900Black, Roboto_400Regular_Italic, Roboto_700Bold_Italic,
+    RobotoCondensed_900Black,
   });
 
   useEffect(() => {
@@ -131,7 +127,7 @@ export default function RootLayout() {
       });
   }, []);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded && !fontError) return null;
 
   const hideChatButton = [
     '/welcome',

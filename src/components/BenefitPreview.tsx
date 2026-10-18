@@ -1,3 +1,4 @@
+import { Text } from './typography';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { savedExperience } from '../context/SavedContext';
 import { SaveButton } from './SaveButton';
@@ -5,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { AccessibilityInfo, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { Experience } from '../constants/experiences';
 import { useLanguage } from '../context/LanguageContext';
 import { getExperienceTags } from '../lib/experienceFilters';

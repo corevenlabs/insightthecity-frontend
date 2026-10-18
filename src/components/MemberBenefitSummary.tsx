@@ -1,5 +1,6 @@
+import { Text } from './typography';
 import { getCardBenefit } from '@/lib/memberBenefits';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Experience } from '@/constants/experiences';
 
 export function MemberBenefitSummary({ experience, color = '#FDDD56' }: {

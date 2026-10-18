@@ -1,3 +1,4 @@
+import { Text, TextInput } from '../../components/typography';
 import { AdaptiveGrid } from '../../components/AdaptiveGrid';
 import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { ExperienceTags } from '@/components/ExperienceTags';
@@ -5,7 +6,7 @@ import { TagFilter } from '@/components/TagFilter';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';

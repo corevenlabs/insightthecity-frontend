@@ -1,3 +1,4 @@
+import { Text } from '../components/typography';
 import { partnerDisclosure } from '../lib/partnerDisclosure';
 import { ClubLogo } from '../components/ClubLogo';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
@@ -10,7 +11,7 @@ import { ExpandableSection, ExpandableText } from '@/components/ExpandableConten
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { ActivityIndicator, FlatList, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getExperienceById } from '@/constants/experiences';

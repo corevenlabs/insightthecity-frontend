@@ -1,7 +1,8 @@
+import { Text } from './typography';
 import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, type PropsWithChildren } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, type StyleProp, type TextStyle } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, type StyleProp, type TextStyle } from 'react-native';
 
 export function ExpandableSection({ title, children }: PropsWithChildren<{ title: string }>) {
   const [expanded, setExpanded] = useState(false);

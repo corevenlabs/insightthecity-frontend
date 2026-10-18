@@ -1,4 +1,5 @@
-import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
+import { Text } from './typography';
+import { Platform, StyleSheet, type TextProps } from 'react-native';
 
 import { ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -66,7 +67,7 @@ const styles = StyleSheet.create({
     color: '#3c87f7',
   },
   code: {
-    fontFamily: 'SplineSans_700Bold',
+
     fontWeight: Platform.select({ android: 700 }) ?? 500,
     fontSize: 12,
   },

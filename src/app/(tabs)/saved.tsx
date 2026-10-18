@@ -1,9 +1,10 @@
+import { Text } from '../../components/typography';
 import { AdaptiveGrid } from '../../components/AdaptiveGrid';
 import { useSaved } from '../../context/SavedContext';
 import { NewsImage } from '../../components/NewsImage';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useLanguage } from '../../context/LanguageContext';
