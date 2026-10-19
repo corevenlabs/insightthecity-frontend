@@ -1,12 +1,13 @@
 import { Text } from '../components/typography';
 import { SavedProvider } from '../context/SavedContext';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, usePathname, useRouter } from 'expo-router';
+import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { useFonts } from 'expo-font';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Roboto_400Regular, Roboto_500Medium, Roboto_600SemiBold, Roboto_700Bold, Roboto_800ExtraBold, Roboto_900Black, Roboto_400Regular_Italic, Roboto_700Bold_Italic } from '@expo-google-fonts/roboto';
 import { RobotoCondensed_900Black } from '@expo-google-fonts/roboto-condensed';
 
@@ -16,6 +17,14 @@ import { BiometricLockScreen } from '../components/BiometricLockScreen';
 
 function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean }) {
   const router = useRouter();
+  const segments = useSegments();
+  const insets = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
+  // Match the tab bar height in (tabs)/_layout, then leave room for the bubble tail.
+  // iOS and screens outside the tab navigator retain their existing placement.
+  const androidTabOffset = Platform.OS === 'android' && segments[0] === '(tabs)'
+    ? { bottom: 60 + Math.max(insets.bottom, 10) + Math.max(0, fontScale - 1) * 16 + 16 }
+    : undefined;
   const { language } = useLanguage();
   const { user } = useAuth();
   const pathname = usePathname();
@@ -84,7 +93,7 @@ function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean
   const introPrefix = `${introduction} `;
   const introPrefixCount = Math.min(typedCount, introPrefix.length);
   const yorkCount = Math.min(Math.max(typedCount - introPrefix.length, 0), 4);
-  return <View style={styles.chatLauncher} pointerEvents="box-none">
+  return <View style={[styles.chatLauncher, androidTabOffset]} pointerEvents="box-none">
     <Animated.View style={[styles.morphingChatButton, {
       width: bubbleProgress.interpolate({ inputRange: [0, 0.3, 0.7, 1, 1.08], outputRange: [58, 76, 174, 220, 226], extrapolate: 'clamp' }),
       height: bubbleProgress.interpolate({ inputRange: [0, 0.3, 0.7, 1, 1.08], outputRange: [58, 52, 60, 68, 64], extrapolate: 'clamp' }),
