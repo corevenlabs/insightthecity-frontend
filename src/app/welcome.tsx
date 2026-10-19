@@ -2,9 +2,13 @@ import { Text } from '../components/typography';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Redirect, router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
+import { WelcomeVideo } from '../components/WelcomeVideo';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   Animated,
   Easing,
   Pressable,
@@ -13,56 +17,113 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
 const GOLD = '#FDDD56';
 const BLACK = '#050505';
 
+// Returning from login must not replay the ten-second intro in the same session.
+let introShown = false;
+
 export default function WelcomeScreen() {
-  const { t, ui } = useLanguage();
-  const { height } = useResponsiveLayout();
   const { loading, token } = useAuth();
-  const [content] = useState(() => new Animated.Value(0));
-
-  useEffect(() => {
-    Animated.timing(content, {
-      toValue: 1,
-      duration: 700,
-      delay: 220,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [content]);
-
-  const contentTranslate = content.interpolate({
-    inputRange: [0, 1],
-    outputRange: [28, 0],
-  });
-
+  const { preview, replay, take } = useLocalSearchParams<{ preview?: string; replay?: string; take?: string }>();
+  // Development-only route for reviewing the intro without changing a saved session.
+  if (__DEV__ && preview === '1') return <WelcomeExperience key={take} replay={replay === '1'} />;
   if (loading) return null;
   if (token) return <Redirect href="/home" />;
+  return <WelcomeExperience />;
+}
+
+function WelcomeExperience({ replay = false }: { replay?: boolean }) {
+  const { t, ui } = useLanguage();
+  const { height, width, insets, fontScale } = useResponsiveLayout();
+  const playIntro = useRef(replay || !introShown).current;
+  const [phase, setPhase] = useState<'checking' | 'playing' | 'settling' | 'ready'>(playIntro ? 'checking' : 'ready');
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const settled = phase === 'ready';
+  // Keep controls readable on short screens/large text; the page can scroll after the intro.
+  const heroHeight = Math.min(440, Math.max(230, height * (fontScale > 1.25 ? 0.36 : 0.48)));
+  const [progress] = useState(() => new Animated.Value(playIntro ? 0 : 1));
+  const finishStarted = useRef(!playIntro);
+  const reveal = useCallback((immediate = false) => {
+    if (finishStarted.current) {
+      if (immediate) { progress.stopAnimation(); progress.setValue(1); setPhase('ready'); }
+      return;
+    }
+    finishStarted.current = true;
+    introShown = true;
+    setPhase('settling');
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: immediate ? 0 : 600,
+      easing: Easing.inOut(Easing.cubic),
+      useNativeDriver: false,
+    }).start(({ finished }) => { if (finished) setPhase('ready'); });
+  }, [progress]);
+  const complete = useCallback(() => reveal(reducedMotion), [reveal, reducedMotion]);
+
+  useEffect(() => {
+    let active = true;
+    if (playIntro) {
+      AccessibilityInfo.isReduceMotionEnabled().then(enabled => {
+        if (!active) return;
+        setReducedMotion(enabled);
+        if (enabled) reveal(true);
+        else setPhase('playing');
+      }).catch(() => { if (active) setPhase('playing'); });
+    }
+    const listener = AccessibilityInfo.addEventListener('reduceMotionChanged', enabled => {
+      setReducedMotion(enabled);
+      if (enabled) reveal(true);
+    });
+    return () => { active = false; listener.remove(); progress.stopAnimation(); };
+  }, [progress, reveal, playIntro]);
+
+  useEffect(() => {
+    if (phase !== 'playing') return;
+    // A decoder failure or blocked autoplay must never prevent signing in.
+    const timeout = setTimeout(complete, 8000);
+    return () => clearTimeout(timeout);
+  }, [phase, complete]);
+
+  const mediaHeight = progress.interpolate({ inputRange: [0, 1], outputRange: [height, heroHeight] });
+  const mediaWidth = progress.interpolate({ inputRange: [0, 1], outputRange: [width, Math.min(width, heroHeight * 1.35)] });
+  const contentOpacity = progress.interpolate({ inputRange: [0, 0.45, 1], outputRange: [0, 0, 1] });
+  const contentTranslate = progress.interpolate({ inputRange: [0, 1], outputRange: [36, 0] });
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-      <View style={styles.logoSection}>
-        <Image
-          source={require('@/assets/images/itc-login-logo.gif')}
-          style={[styles.animatedLogo, { height: Math.min(420, Math.max(180, height * 0.45)) }]}
-          contentFit="contain"
+    <View style={styles.container}>
+      <StatusBar style="light" hidden={!settled} />
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: Math.max(insets.bottom, 20) }}
+        scrollEnabled={settled}
+        showsVerticalScrollIndicator={false}
+      >
+      <Animated.View style={[styles.logoSection, { height: mediaHeight }]} testID="welcome-hero">
+        <Animated.View style={{ height: '100%', width: mediaWidth, alignSelf: 'center' }}>
+        {phase === 'playing' ? <WelcomeVideo onComplete={complete} /> : <Image
+          source={phase === 'checking' ? require('../../assets/videos/itc-welcome-first.jpg') : require('../../assets/videos/itc-welcome-final.jpg')}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
           transition={0}
           accessibilityRole="image"
-          accessibilityLabel="Insight The City"
-        />
-      </View>
+          accessibilityLabel="ITC CLUB · New York"
+        />}
+        </Animated.View>
+        <LinearGradient pointerEvents="none" colors={['transparent', BLACK]} style={styles.heroFade} />
+      </Animated.View>
 
       <Animated.View
+        pointerEvents={settled ? 'auto' : 'none'}
+        accessibilityElementsHidden={!settled}
+        importantForAccessibility={settled ? 'auto' : 'no-hide-descendants'}
         style={[
           styles.actionPanel,
+          { paddingHorizontal: width < 360 ? 20 : 24 },
           {
-            opacity: content,
+            opacity: contentOpacity,
             transform: [{ translateY: contentTranslate }],
           },
         ]}
@@ -120,7 +181,7 @@ export default function WelcomeScreen() {
         </Text>
       </Animated.View>
     </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -130,19 +191,15 @@ const styles = StyleSheet.create({
     backgroundColor: BLACK,
   },
   logoSection: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: '100%',
     overflow: 'hidden',
+    backgroundColor: BLACK,
   },
-  animatedLogo: {
-    width: '88%',
-    maxWidth: 520,
-    maxHeight: 420,
-  },
+  heroFade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 80 },
   actionPanel: { width: '100%', maxWidth: 560, alignSelf: 'center',
     paddingHorizontal: 24,
-    paddingBottom: 30,
+    paddingBottom: 12,
+    paddingTop: 8,
   },
   kickerRow: {
     flexDirection: 'row',

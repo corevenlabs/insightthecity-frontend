@@ -2,6 +2,7 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Saltar": {"en":"Skip","pt":"Pular"},
   "TOP DE HOY": {"en":"TODAY’S TOP PICKS","pt":"DESTAQUES DE HOJE"},
   "Top de hoy: {title}": {"en":"Today’s pick: {title}","pt":"Destaque de hoje: {title}"},
   "Abre la ficha de esta atracción.": {"en":"Opens this attraction’s details.","pt":"Abre os detalhes desta atração."},
