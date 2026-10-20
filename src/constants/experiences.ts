@@ -11,6 +11,8 @@ export type Experience = {
   images?: string[];
   date: string;
   location: string;
+  shortAddress?: string | null;
+  mapsUrl?: string | null;
   region?: ExperienceRegion;
   access: ExperienceAccess;
   /** Derived from the activated partner associated with this publication. */

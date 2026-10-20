@@ -1,3 +1,4 @@
+import { ExperienceLocation } from '../components/ExperienceLocation';
 import { Text } from '../components/typography';
 import { partnerDisclosure } from '../lib/partnerDisclosure';
 import { ClubLogo } from '../components/ClubLogo';
@@ -185,12 +186,9 @@ export default function ExperienceDetailScreen() {
         ))}
         </ExpandableSection>
 
-        {!!experience.location && <View style={styles.addressCard}>
-          <Text style={styles.addressTitle}>{ui("Dirección")}</Text>
-          <View style={styles.addressRow}>
-            <Ionicons name="location-outline" size={20} color={COLORS.gold} />
-            <Text style={styles.addressText}>{experience.location}</Text>
-          </View>
+        {(experience.location || experience.shortAddress) && <View style={styles.addressCard}>
+          <Text style={styles.addressTitle}>{ui("Ubicación")}</Text>
+          <ExperienceLocation experience={experience} full />
         </View>}
 
         <View style={styles.recommendationCard}>
