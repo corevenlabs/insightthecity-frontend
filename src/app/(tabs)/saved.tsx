@@ -1,3 +1,4 @@
+import { ScreenBackButton } from '../../components/ScreenBackButton';
 import { Text } from '../../components/typography';
 import { AdaptiveGrid } from '../../components/AdaptiveGrid';
 import { useSaved } from '../../context/SavedContext';
@@ -16,7 +17,7 @@ export default function SavedScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
-        <Text style={styles.title}>{ui('Guardados')}</Text>
+        <View style={styles.titleRow}><ScreenBackButton /><Text style={styles.title}>{ui('Guardados')}</Text></View>
         <Text style={styles.subtitle}>
           {ui('Tus lugares, beneficios y planes favoritos.')}
         </Text>
@@ -64,7 +65,9 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 18,
   },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: {
+    flex: 1,
     color: '#FFFFFF',
     fontSize: 28,
     fontWeight: '700',

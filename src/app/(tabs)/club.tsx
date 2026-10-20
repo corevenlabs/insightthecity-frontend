@@ -1,3 +1,4 @@
+import { ScreenBackButton } from '../../components/ScreenBackButton';
 import { Text } from '../../components/typography';
 import { ClubLogo } from '../../components/ClubLogo';
 import { MemberBenefitBanner } from '../../components/MemberBenefitBanner';
@@ -58,7 +59,7 @@ function PremiumCard({ experience }: { experience: Experience }) {
 
 export default function ClubScreen() {
   const router = useRouter();
-  const { user, loading, isAuthenticated, hasSignedOut, refreshUser } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const { t, ui } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
@@ -97,6 +98,7 @@ export default function ClubScreen() {
   if (!loading && user?.is_premium) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <View style={styles.backHeader}><ScreenBackButton /></View>
         <ScrollView contentContainerStyle={styles.memberContent} showsVerticalScrollIndicator={false}>
           <View style={styles.memberHeader}>
             <ClubLogo width={108} header />
@@ -122,18 +124,10 @@ export default function ClubScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <View style={styles.backHeader}><ScreenBackButton /></View>
     <View style={styles.offerLayout}>
       <ScrollView style={styles.offerPreview} contentContainerStyle={styles.offerPreviewContent} showsVerticalScrollIndicator={false}>
         <View style={styles.offerHero}>
-          {!loading && !isAuthenticated && !hasSignedOut && <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={ui('Volver a explorar como invitado')}
-            style={styles.guestBack}
-            onPress={() => {
-              if (router.canGoBack()) router.back();
-              else router.replace('/home');
-            }}
-          ><Ionicons name="arrow-back" size={24} color={GOLD} /></TouchableOpacity>}
           <ClubLogo width={90} header />
           <Text style={styles.offerSubtitle}>{ui('Descubre New York con beneficios exclusivos')}</Text>
         </View>
@@ -180,7 +174,7 @@ const styles = StyleSheet.create({
   inclusionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 8 },
   inclusionText: { flex: 1, color: '#FFF', fontSize: 15, lineHeight: 23 },
   inclusionsNote: { color: '#AAA', fontSize: 13, lineHeight: 20, marginTop: 12 },
-  guestBack: { position: 'absolute', top: 16, left: 0, width: 48, height: 48, zIndex: 1, alignItems: 'center', justifyContent: 'center' },
+  backHeader: { width: '100%', maxWidth: 680, alignSelf: 'center', paddingHorizontal: 16, paddingTop: 4 },
   offerLayout: { flex: 1, width: '100%', maxWidth: 680, alignSelf: 'center', paddingHorizontal: 16 },
   offerPreview: { flex: 1 },
   offerPreviewContent: { paddingTop: 8, paddingBottom: 16 },

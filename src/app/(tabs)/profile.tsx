@@ -1,3 +1,4 @@
+import { ScreenBackButton } from '../../components/ScreenBackButton';
 import { Text, TextInput } from '../../components/typography';
 import { isMembershipTrial, TRIAL_COPY } from '../../lib/membershipTrial';
 import { ClubLogo } from '../../components/ClubLogo';
@@ -130,7 +131,7 @@ export default function ProfileScreen() {
   const manualMembership = user.is_premium && user.has_billing_account === false && !user.subscription_status;
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <View style={styles.pageHeader}><Text style={styles.pageTitle}>{c.title}</Text><Pressable accessibilityRole="button" accessibilityLabel={c.edit} onPress={openEditor} style={styles.settings}><Ionicons name="settings-outline" size={25} color={GOLD} /></Pressable></View>
+      <View style={styles.pageHeader}><ScreenBackButton /><Text style={styles.pageTitle}>{c.title}</Text><Pressable accessibilityRole="button" accessibilityLabel={c.edit} onPress={openEditor} style={styles.settings}><Ionicons name="settings-outline" size={25} color={GOLD} /></Pressable></View>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32, width: '100%', maxWidth: 680, alignSelf: 'center' }}>
       <View style={styles.header}>
         <Pressable onPress={openEditor} accessibilityRole="button" accessibilityLabel={c.edit} style={styles.avatar}>
