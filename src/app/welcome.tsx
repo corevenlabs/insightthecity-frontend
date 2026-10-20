@@ -5,12 +5,13 @@ import { Image } from 'expo-image';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { WelcomeVideo } from '../components/WelcomeVideo';
+import { requireOptionalNativeModule } from 'expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Animated,
   Easing,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -26,6 +27,12 @@ const BLACK = '#050505';
 // Returning from login must not replay the intro in the same session.
 let introShown = false;
 
+// expo-video es nativo: una OTA puede llegar a un build que no lo incluye. Importarlo
+// sin comprobar lanzaría al cargar las rutas y cerraría la app, así que sin el módulo
+// la bienvenida se muestra sin video.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const WelcomeVideo: typeof import('../components/WelcomeVideo').WelcomeVideo | null = Platform.OS === 'web' || requireOptionalNativeModule('ExpoVideo') ? require('../components/WelcomeVideo').WelcomeVideo : null;
+
 export default function WelcomeScreen() {
   const { loading, token } = useAuth();
   const { preview, replay, take, source } = useLocalSearchParams<{ preview?: string; replay?: string; take?: string; source?: string }>();
@@ -40,7 +47,7 @@ export default function WelcomeScreen() {
 function WelcomeExperience({ replay = false, fromProfile = false }: { replay?: boolean; fromProfile?: boolean }) {
   const { t, ui } = useLanguage();
   const { height, width, insets, fontScale } = useResponsiveLayout();
-  const playIntro = useRef(!fromProfile && (replay || !introShown)).current;
+  const playIntro = useRef(!!WelcomeVideo && !fromProfile && (replay || !introShown)).current;
   const [phase, setPhase] = useState<'checking' | 'playing' | 'settling' | 'ready'>(playIntro ? 'checking' : 'ready');
   const [reducedMotion, setReducedMotion] = useState(false);
   const settled = phase === 'ready';
@@ -104,7 +111,7 @@ function WelcomeExperience({ replay = false, fromProfile = false }: { replay?: b
       >
       <Animated.View style={[styles.logoSection, { height: mediaHeight }]} testID="welcome-hero">
         <Animated.View style={{ height: '100%', width: mediaWidth, alignSelf: 'center' }}>
-        {phase === 'playing' ? <WelcomeVideo onComplete={complete} /> : <Image
+        {phase === 'playing' && WelcomeVideo ? <WelcomeVideo onComplete={complete} /> : <Image
           source={phase === 'checking' ? require('../../assets/videos/itc-welcome-first.jpg') : require('../../assets/videos/itc-welcome-final.jpg')}
           style={StyleSheet.absoluteFill}
           contentFit="cover"

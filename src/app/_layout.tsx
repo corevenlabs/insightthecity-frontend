@@ -1,10 +1,10 @@
 import { Text } from '../components/typography';
 import { SavedProvider } from '../context/SavedContext';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
+import { Stack, usePathname, useRouter, useSegments, type ErrorBoundaryProps } from 'expo-router';
 import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, Platform, Pressable, StyleSheet, Text as NativeText, useWindowDimensions, View } from 'react-native';
 
 import { useFonts } from 'expo-font';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -113,6 +113,28 @@ function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean
     </Animated.View>
   </View>;
 }
+
+// Un error al renderizar no debe cerrar la app: se muestra esta pantalla y se puede
+// reintentar. Va fuera de los providers, así que no usa contexto ni fuentes propias.
+export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+  return (
+    <View style={errorStyles.container} accessibilityRole="alert">
+      <NativeText style={errorStyles.title}>Algo salió mal</NativeText>
+      <NativeText style={errorStyles.body}>Something went wrong · Algo deu errado</NativeText>
+      <Pressable accessibilityRole="button" accessibilityLabel="Reintentar" onPress={() => void retry()} style={({ pressed }) => [errorStyles.button, pressed && { opacity: 0.72 }]}>
+        <NativeText style={errorStyles.buttonText}>REINTENTAR · RETRY</NativeText>
+      </Pressable>
+    </View>
+  );
+}
+
+const errorStyles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#050505', alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
+  title: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', textAlign: 'center' },
+  body: { color: '#B8B8B8', fontSize: 15, textAlign: 'center' },
+  button: { marginTop: 16, minHeight: 48, minWidth: 200, borderRadius: 24, backgroundColor: '#FDDD56', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
+  buttonText: { color: '#080808', fontSize: 13, fontWeight: '900', letterSpacing: 1 },
+});
 
 export default function RootLayout() {
   const pathname = usePathname();

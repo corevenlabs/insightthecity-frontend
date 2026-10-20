@@ -41,6 +41,7 @@ export default function LoginScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const passwordRef = useRef<TextInput>(null);
+  const biometricAttempted = useRef(false);
 
   const enterAuthenticatedApp = () => {
     router.dismissAll();
@@ -58,6 +59,9 @@ export default function LoginScreen() {
     }
 
     setSubmitting(true);
+    // Al activar Face ID tras este ingreso, biometricEnabled cambia en esta misma
+    // pantalla: no debe disparar además el desbloqueo automático.
+    biometricAttempted.current = true;
     try {
       await signIn(email.trim(), password);
       if (biometricAvailable) {
@@ -89,7 +93,6 @@ export default function LoginScreen() {
     }
   };
 
-  const biometricAttempted = useRef(false);
   useFocusEffect(useCallback(() => {
     if (loading || !biometricEnabled || !biometricAvailable || biometricAttempted.current) return;
     let active = true;
