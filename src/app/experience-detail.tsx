@@ -186,7 +186,7 @@ export default function ExperienceDetailScreen() {
         ))}
         </ExpandableSection>
 
-        {(experience.location || experience.shortAddress) && <View style={styles.addressCard}>
+        {(experience.location || experience.shortAddress || !!experience.locations?.length) && <View style={styles.addressCard}>
           <Text style={styles.addressTitle}>{ui("Ubicación")}</Text>
           <ExperienceLocation experience={experience} full />
         </View>}

@@ -24,3 +24,19 @@ test('map tap consumes the event and opens full destination rather than the even
  assert.equal(node.type,'pressable');node.props.onPress({stopPropagation:()=>stopped=true});await Promise.resolve();assert.equal(stopped,true);assert.match(decodeURIComponent(opened),/45 E 42nd St, Manhattan/);
  assert.equal(exportsModule.exports.ExperienceLocation({experience:{region:'NJ'}}).type,'view');
 });
+test('six locations produce a single Google Maps link, without a route or selector',()=>{
+ const locations=Array.from({length:6},(_,i)=>({name:`Sucursal ${i+1}`,address:`${i+1} Test St`,placeId:`ChIJ_test_${i}`,benefitApplies:true}));
+ const url=new URL(moduleData.exports.branchMapsUrl(locations));
+ assert.equal(url.pathname,'/maps/@');assert.equal(url.searchParams.get('map_action'),'shortlist');assert.equal(url.searchParams.get('place_ids').split(',').length,6);assert.equal(url.searchParams.has('waypoints'),false);
+ locations[0].benefitApplies=false;
+ assert.equal(new URL(moduleData.exports.branchMapsUrl(locations)).searchParams.get('place_ids').split(',').length,5);
+ const single=new URL(eventMapsUrl({locations:[locations[1]]}));assert.equal(single.searchParams.get('query_place_id'),'ChIJ_test_1');assert.equal(single.searchParams.get('query'),'2 Test St');
+ assert.equal(eventMapsUrl({locations:[locations[0]],location:'old address'}),null);
+ assert.equal(eventMapsUrl({locations:[{...locations[1],placeId:'invalid/link'}]}),null);
+});
+
+test('several pins require the shared map; the app never substitutes a list of places',()=>{
+ const locations=[{name:'A',address:'A',placeId:'ChIJ_A',benefitApplies:true},{name:'B',address:'B',placeId:'ChIJ_B',benefitApplies:true}];
+ assert.equal(eventMapsUrl({locations}),null);
+ assert.equal(eventMapsUrl({locations,mapsUrl:'https://www.google.com/maps/d/u/0/edit?mid=demo-map&usp=sharing'}),'https://www.google.com/maps/d/viewer?mid=demo-map');
+});

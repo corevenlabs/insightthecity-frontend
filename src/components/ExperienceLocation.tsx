@@ -7,9 +7,10 @@ import { eventMapsUrl, type EventLocation } from '../lib/experienceLocation';
 /** The address handles its own tap instead of opening the surrounding event card. */
 export function ExperienceLocation({ experience, full = false, color = '#CCC' }: { experience: EventLocation; full?: boolean; color?: string }) {
   const { ui } = useLanguage();
-  const address = full ? experience.location?.trim() || experience.shortAddress?.trim() : experience.shortAddress?.trim();
-  const label = `${experience.region ?? 'NY'}${address ? ` · ${address}` : ''}`;
-  const url = address ? eventMapsUrl(experience) : null;
+  const branches = experience.locations?.filter(item => item.benefitApplies !== false) ?? [];
+  const address = full ? experience.location?.trim() || experience.shortAddress?.trim() || branches[0]?.address : experience.shortAddress?.trim();
+  const label = `${experience.region ?? 'NY'}${address ? ` · ${address}` : ''}${branches.length > 1 ? ` · ${ui('{count} ubicaciones', { count: branches.length })}` : ''}`;
+  const url = eventMapsUrl(experience);
   const content = <><Ionicons name="location-outline" size={16} color={color} /><Text style={[styles.label, { color }]} numberOfLines={full ? undefined : 1}>{label}</Text>{url && <Ionicons name="open-outline" size={14} color={color} />}</>;
   if (!url) return <View style={styles.row}>{content}</View>;
   return <Pressable style={styles.row} accessibilityRole="link" accessibilityLabel={`${label}. ${ui('Abrir en Google Maps')}`} hitSlop={4}

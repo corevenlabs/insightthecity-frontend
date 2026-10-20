@@ -11,6 +11,7 @@ export type Experience = {
   images?: string[];
   date: string;
   location: string;
+  locations?: { name: string; address: string; placeId: string; benefitApplies: boolean }[];
   shortAddress?: string | null;
   mapsUrl?: string | null;
   region?: ExperienceRegion;
