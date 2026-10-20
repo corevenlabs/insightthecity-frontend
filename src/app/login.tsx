@@ -1,7 +1,7 @@
 import { Text, TextInput } from '../components/typography';
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useRef, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -26,6 +26,7 @@ export default function LoginScreen() {
   const { t, ui } = useLanguage();
   const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
   const {
+    loading,
     biometricAvailable,
     biometricEnabled,
     biometricLabel,
@@ -88,19 +89,25 @@ export default function LoginScreen() {
     }
   };
 
-  const enterWithBiometrics = async () => {
-    if (submitting) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      await unlockWithBiometrics();
-      enterAuthenticatedApp();
-    } catch (err: any) {
-      setError(err?.message ?? `No se pudo ingresar con ${biometricLabel}.`);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const biometricAttempted = useRef(false);
+  useFocusEffect(useCallback(() => {
+    if (loading || !biometricEnabled || !biometricAvailable || biometricAttempted.current) return;
+    let active = true;
+    // Wait for the login transition, then request biometrics once per screen visit.
+    const timer = setTimeout(() => {
+      biometricAttempted.current = true;
+      setSubmitting(true);
+      setError(null);
+      void unlockWithBiometrics().then(() => {
+        if (!active) return;
+        router.dismissAll();
+        router.replace(returnTo === 'membership' ? '/profile?membership=1' : returnTo === 'benefits' ? '/club' : '/home');
+      }).catch(() => {
+        if (active) setError(ui('Puedes iniciar sesión con tu correo y contraseña.'));
+      }).finally(() => setSubmitting(false));
+    }, 300);
+    return () => { active = false; clearTimeout(timer); };
+  }, [loading, biometricEnabled, biometricAvailable, unlockWithBiometrics, returnTo, ui]));
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -187,33 +194,13 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-            {biometricEnabled && biometricAvailable && (
-              <>
-                <View style={styles.separatorRow}>
-                  <View style={styles.separatorLine} />
-                  <Text style={styles.separatorText}>{t('login.or')}</Text>
-                  <View style={styles.separatorLine} />
-                </View>
-                <TouchableOpacity
-                  accessibilityRole="button"
-                  accessibilityLabel={ui('Ingresar con {biometric}', { biometric: biometricLabel })}
-                  activeOpacity={0.72}
-                  style={styles.biometricButton}
-                  onPress={enterWithBiometrics}
-                  disabled={submitting}
-                >
-                  <Ionicons name="scan-outline" size={22} color={GOLD} />
-                  <Text style={styles.biometricText}>
-                    {t('login.biometric', { biometric: biometricLabel.toUpperCase() })}
-                  </Text>
-                </TouchableOpacity>
+            {biometricEnabled && (
                 <Pressable accessibilityRole="button" disabled={submitting} onPress={() => {
                   Alert.alert(ui('Olvidar esta cuenta en el dispositivo'), ui('Se eliminará el acceso biométrico. Podrás entrar con tu correo y contraseña.'), [
                     { text: ui('Cancelar'), style: 'cancel' },
                     { text: ui('Olvidar cuenta'), style: 'destructive', onPress: () => { void forgetBiometric().catch(() => setError(ui('No se pudo olvidar la cuenta. Inténtalo nuevamente.'))); } },
                   ]);
                 }}><Text style={styles.forgotText}>{ui('Olvidar esta cuenta en el dispositivo')}</Text></Pressable>
-              </>
             )}
 
             <Pressable accessibilityRole="link" onPress={() => router.push('/register' as any)}>
