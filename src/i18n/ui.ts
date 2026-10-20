@@ -842,6 +842,54 @@ export const UI_TRANSLATIONS = {
     "en": "Could not open membership management.",
     "pt": "Não foi possível abrir o gerenciamento da assinatura."
   },
+  "Aceptar y continuar": {
+    "en": "Accept and continue",
+    "pt": "Aceitar e continuar"
+  },
+  "Ahora no": {
+    "en": "Not now",
+    "pt": "Agora não"
+  },
+  "Ver Política de Privacidad": {
+    "en": "View Privacy Policy",
+    "pt": "Ver Política de Privacidade"
+  },
+  "Sin tu permiso, Yorki no envía nada. Puedes seguir usando el resto de la app.": {
+    "en": "Without your permission, Yorki sends nothing. You can keep using the rest of the app.",
+    "pt": "Sem sua permissão, o Yorki não envia nada. Você pode continuar usando o resto do app."
+  },
+  "Revisar aviso": {
+    "en": "Review notice",
+    "pt": "Revisar aviso"
+  },
+  "No se pudo guardar tu respuesta. Inténtalo de nuevo.": {
+    "en": "Could not save your answer. Please try again.",
+    "pt": "Não foi possível salvar sua resposta. Tente novamente."
+  },
+  "Chat con IA (Yorki)": {
+    "en": "AI chat (Yorki)",
+    "pt": "Chat com IA (Yorki)"
+  },
+  "Permitido": {
+    "en": "Allowed",
+    "pt": "Permitido"
+  },
+  "No permitido": {
+    "en": "Not allowed",
+    "pt": "Não permitido"
+  },
+  "Retirar permiso": {
+    "en": "Withdraw permission",
+    "pt": "Retirar permissão"
+  },
+  "Si retiras el permiso, Yorki deja de enviar datos a OpenAI y el chat no funcionará hasta que vuelvas a aceptarlo.": {
+    "en": "If you withdraw permission, Yorki stops sending data to OpenAI and the chat will not work until you accept again.",
+    "pt": "Se você retirar a permissão, o Yorki deixa de enviar dados à OpenAI e o chat não funcionará até você aceitar novamente."
+  },
+  "No se pudo retirar el permiso. Inténtalo de nuevo.": {
+    "en": "Could not withdraw permission. Please try again.",
+    "pt": "Não foi possível retirar a permissão. Tente novamente."
+  },
   "Legal y privacidad": {
     "en": "Legal and privacy",
     "pt": "Jurídico e privacidade"

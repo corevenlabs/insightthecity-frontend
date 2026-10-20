@@ -11,6 +11,7 @@ import {
   Linking,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
@@ -19,6 +20,7 @@ import { getLocation } from '../../services/location';
 import { API_URL } from '../constants/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { grantAiConsent, type AiConsent } from '../lib/aiConsent';
 
 const COLORS = {
   background: '#050505', surface: '#121212', raised: '#181818', border: '#292929',
@@ -60,7 +62,7 @@ function TypingDots({ label }: { label: string }) {
 
 export default function ChatScreen() {
   const router = useRouter();
-  const { user, token, loading: authLoading } = useAuth();
+  const { user, token, loading: authLoading, refreshUser } = useAuth();
   const { t, ui } = useLanguage();
   const listRef = useRef<FlatList<Message>>(null);
   const sessionRef = useRef(0);
@@ -71,6 +73,12 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [writing, setWriting] = useState<{ id: string; text: string } | null>(null);
+  // null: el backend no pide permiso (versión anterior). Si accepted es false, nada se envía.
+  const [consent, setConsent] = useState<AiConsent | null>(null);
+  const [consentBusy, setConsentBusy] = useState(false);
+  const [consentError, setConsentError] = useState('');
+  const [declined, setDeclined] = useState(false);
+  const needsConsent = !!consent && !consent.accepted;
 
   const loadHistory = useCallback(async (session: number) => {
     if (!token) { setLoading(false); return; }
@@ -79,7 +87,7 @@ export default function ChatScreen() {
       const data = await response.json();
       if (!response.ok || !data?.success) throw new Error(data?.message);
       // El historial del servidor es memoria, no conversación visible de esta apertura.
-      if (sessionRef.current === session) setMessages([]);
+      if (sessionRef.current === session) { setMessages([]); setConsent(data.aiConsent ?? null); }
     } catch {
       if (sessionRef.current === session) setMessages([{ id: 'history-error', from: 'bot', text: t('chat.error') }]);
     } finally { if (sessionRef.current === session) setLoading(false); }
@@ -154,8 +162,16 @@ export default function ChatScreen() {
         body: JSON.stringify({ message: userText, lat: location?.lat, lng: location?.lng }),
       });
       const data = await response.json();
-      if (!response.ok || !data?.success) throw new Error(data?.message);
       if (sessionRef.current !== session) return;
+      if (response.status === 403 && data?.code === 'AI_CONSENT_REQUIRED') {
+        // El mensaje no salió del servidor: se devuelve al campo y se pide el permiso.
+        setMessages((current) => current.filter((message) => message.id !== localId));
+        setInput(userText);
+        setDeclined(false);
+        setConsent(data.aiConsent ?? null);
+        return;
+      }
+      if (!response.ok || !data?.success) throw new Error(data?.message);
       const replyId = String(data.messageId || `bot-${Date.now()}`);
       setWriting({ id: replyId, text: String(data.reply || '') });
       setMessages((current) => [...current, {
@@ -166,6 +182,56 @@ export default function ChatScreen() {
       setMessages((current) => [...current, { id: `error-${Date.now()}`, from: 'bot', text: t('chat.error') }]);
     } finally { if (sessionRef.current === session) setSending(false); }
   };
+
+  const acceptConsent = async () => {
+    if (!token || !consent || consentBusy) return;
+    setConsentBusy(true); setConsentError('');
+    try {
+      setConsent(await grantAiConsent(token, consent.version));
+      void refreshUser();
+    } catch { setConsentError(ui('No se pudo guardar tu respuesta. Inténtalo de nuevo.')); }
+    finally { setConsentBusy(false); }
+  };
+
+  const openPrivacy = () => {
+    openingRecommendationRef.current = true;
+    router.push({ pathname: '/legal', params: { slug: 'privacy' } });
+  };
+
+  const renderConsent = (notice: AiConsent['notice']) => declined ? (
+    <View style={styles.guestState}>
+      <View style={styles.guestIcon}><Ionicons name="shield-checkmark-outline" size={34} color={COLORS.gold} /></View>
+      <Text style={styles.guestSubtitle}>{ui('Sin tu permiso, Yorki no envía nada. Puedes seguir usando el resto de la app.')}</Text>
+      <Pressable accessibilityRole="button" onPress={() => setDeclined(false)} style={({ pressed }) => [styles.loginButton, pressed && styles.pressed]}>
+        <Text style={styles.loginText}>{ui('Revisar aviso')}</Text>
+      </Pressable>
+    </View>
+  ) : (
+    <ScrollView contentContainerStyle={styles.consent}>
+      <View style={styles.guestIcon}><Ionicons name="sparkles-outline" size={32} color={COLORS.gold} /></View>
+      <Text style={styles.consentTitle} accessibilityRole="header">{notice.title}</Text>
+      <Text style={styles.consentText}>{notice.intro}</Text>
+      {notice.points.map((point) => (
+        <View key={point} style={styles.consentPoint}>
+          <Ionicons name="ellipse" size={7} color={COLORS.gold} style={styles.consentBullet} accessible={false} />
+          <Text style={[styles.consentText, styles.flex]}>{point}</Text>
+        </View>
+      ))}
+      <Text style={styles.consentText}>{notice.retention}</Text>
+      <Text style={styles.consentText}>{notice.advice}</Text>
+      <Text style={styles.consentMuted}>{notice.control}</Text>
+      <Pressable accessibilityRole="link" onPress={openPrivacy} hitSlop={8}>
+        <Text style={styles.consentLink}>{ui('Ver Política de Privacidad')}</Text>
+      </Pressable>
+      {!!consentError && <Text style={styles.consentError} accessibilityRole="alert">{consentError}</Text>}
+      <Pressable accessibilityRole="button" accessibilityState={{ busy: consentBusy }} disabled={consentBusy} onPress={() => void acceptConsent()} style={({ pressed }) => [styles.loginButton, styles.consentButton, pressed && styles.pressed]}>
+        {consentBusy ? <ActivityIndicator color={COLORS.black} /> : <Text style={styles.loginText}>{ui('Aceptar y continuar')}</Text>}
+      </Pressable>
+      <Pressable accessibilityRole="button" disabled={consentBusy} onPress={() => setDeclined(true)} style={({ pressed }) => [styles.declineButton, pressed && styles.pressed]}>
+        <Text style={styles.declineText}>{ui('Ahora no')}</Text>
+      </Pressable>
+    </ScrollView>
+  );
 
   const openMaps = (place: Place) => {
     const lat = place.location?.latitude;
@@ -267,7 +333,7 @@ export default function ChatScreen() {
               <Text style={styles.loginText}>{t('chat.signIn')}</Text>
             </Pressable>
           </View>
-        ) : (
+        ) : needsConsent ? renderConsent(consent.notice) : (
           <>
             <FlatList ref={listRef} data={messages} renderItem={renderMessage} keyExtractor={(item) => item.id} contentContainerStyle={styles.chat} keyboardShouldPersistTaps="handled" ListFooterComponent={sending ? (
               <View style={styles.typingRow}><View style={styles.typingBubble}><TypingDots label={t('chat.typing')} /></View></View>
@@ -301,5 +367,12 @@ const styles = StyleSheet.create({
   actionButton: { minHeight: 44, flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 12, backgroundColor: COLORS.gold, paddingHorizontal: 14 }, actionText: { color: COLORS.black, fontSize: 13, fontWeight: '700' },
   typingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }, typingBubble: { minHeight: 32, flexDirection: 'row', alignItems: 'center' }, typingDots: { flexDirection: 'row', alignItems: 'center', gap: 5 }, typingDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.muted },
   inputBar: { width: '100%', maxWidth: 780, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingTop: 10, paddingBottom: Platform.OS === 'ios' ? 8 : 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLORS.border, backgroundColor: COLORS.background }, input: { flex: 1, minHeight: 48, maxHeight: 112, borderRadius: 24, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, paddingHorizontal: 17, color: COLORS.text, fontSize: 16 }, sendButton: { width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' }, sendDisabled: { opacity: 0.42 }, pressed: { opacity: 0.72 },
+  consent: { width: '100%', maxWidth: 620, alignSelf: 'center', alignItems: 'stretch', paddingHorizontal: 24, paddingTop: 28, paddingBottom: 40, gap: 12 },
+  consentTitle: { color: COLORS.text, fontSize: 22, lineHeight: 29, fontWeight: '800', marginTop: 8 },
+  consentText: { color: COLORS.text, fontSize: 15, lineHeight: 22 }, consentMuted: { color: COLORS.muted, fontSize: 14, lineHeight: 21 },
+  consentPoint: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingLeft: 4 }, consentBullet: { marginTop: 8 },
+  consentLink: { color: COLORS.gold, fontSize: 15, fontWeight: '700', textDecorationLine: 'underline', paddingVertical: 6 },
+  consentError: { color: '#FF8080', fontSize: 14, lineHeight: 20 }, consentButton: { alignSelf: 'stretch', marginTop: 8 },
+  declineButton: { minHeight: 48, alignItems: 'center', justifyContent: 'center' }, declineText: { color: COLORS.muted, fontSize: 14, fontWeight: '700' },
   guestState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }, guestIcon: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.gold }, guestTitle: { color: COLORS.text, fontSize: 23, lineHeight: 30, fontWeight: '800', textAlign: 'center', marginTop: 24 }, guestSubtitle: { color: COLORS.muted, fontSize: 15, lineHeight: 23, textAlign: 'center', marginTop: 10 }, loginButton: { minHeight: 48, minWidth: 210, borderRadius: 24, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, marginTop: 28 }, loginText: { color: COLORS.black, fontSize: 13, fontWeight: '900', letterSpacing: 1 },
 });

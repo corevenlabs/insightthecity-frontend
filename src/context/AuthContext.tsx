@@ -37,6 +37,8 @@ export type User = {
   subscription_currency?: string | null;
   subscription_interval?: string | null;
   has_billing_account?: boolean;
+  // Permiso vigente para que el chat envíe datos a OpenAI.
+  ai_chat_consent?: boolean;
 };
 
 type AuthContextValue = {

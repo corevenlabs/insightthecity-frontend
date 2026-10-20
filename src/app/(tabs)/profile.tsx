@@ -14,6 +14,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, type AppLanguage } from '../../context/LanguageContext';
 import type { LegalSlug } from '../../lib/legal';
+import { revokeAiConsent } from '../../lib/aiConsent';
 import { createBillingPortal, formatDate, formatMoney, openStripePage } from '../../lib/payments';
 
 const GOLD = '#FDDD56';
@@ -35,6 +36,9 @@ export default function ProfileScreen() {
   const { membership } = useLocalSearchParams<{ membership?: string }>();
   const [editing, setEditing] = useState(false);
   const [help, setHelp] = useState(false);
+  const [aiConsentOpen, setAiConsentOpen] = useState(false);
+  const [aiConsentBusy, setAiConsentBusy] = useState(false);
+  const [aiConsentError, setAiConsentError] = useState('');
   const [membershipDetails, setMembershipDetails] = useState(false);
   const [membershipLoading, setMembershipLoading] = useState(false);
   const [membershipLoadError, setMembershipLoadError] = useState(false);
@@ -61,6 +65,13 @@ export default function ProfileScreen() {
     } else { void refreshUser(); }
   }, [membership, isAuthenticated, openMembership, refreshUser]));
   const openLegal = (slug: LegalSlug) => router.push({ pathname: '/legal', params: { slug } });
+  const withdrawAiConsent = async () => {
+    if (!token || aiConsentBusy) return;
+    setAiConsentBusy(true); setAiConsentError('');
+    try { await revokeAiConsent(token); await refreshUser(); setAiConsentOpen(false); }
+    catch { setAiConsentError(ui('No se pudo retirar el permiso. Inténtalo de nuevo.')); }
+    finally { setAiConsentBusy(false); }
+  };
   // Stripe Customer Portal: cambiar tarjeta, ver facturas o cancelar (cancelación en línea, NY GBL §527-a).
   const manageSubscription = async () => {
     if (!token || portalBusy || renewalBusy) return;
@@ -154,6 +165,9 @@ export default function ProfileScreen() {
         {row('shield-checkmark-outline', ui('Política de Privacidad'), '', () => openLegal('privacy'))}
         {row('card-outline', ui('Términos de la membresía'), '', () => openLegal('subscription'))}
         {row('accessibility-outline', ui('Accesibilidad'), '', () => openLegal('accessibility'))}
+        {row('sparkles-outline', ui('Chat con IA (Yorki)'), user.ai_chat_consent ? ui('Permitido') : ui('No permitido'), () => {
+          if (user.ai_chat_consent) { setAiConsentError(''); setAiConsentOpen(true); } else router.push('/chat');
+        })}
       </View>
       <View style={styles.card}>
         {row('help-buoy-outline', c.help, '', () => setHelp(true))}
@@ -176,6 +190,17 @@ export default function ProfileScreen() {
             <Pressable disabled={saving || photoBusy || !name.trim()} accessibilityRole="button" onPress={save} style={[styles.primaryButton, { marginTop: 24, opacity: saving || photoBusy || !name.trim() ? 0.5 : 1 }]}><Text style={styles.primaryText}>{saving ? c.saving : c.save}</Text></Pressable>
           </ScrollView>
         </KeyboardAvoidingView></SafeAreaView></SafeAreaProvider>
+      </Modal>
+      <Modal visible={aiConsentOpen} transparent animationType="fade" onRequestClose={() => { if (!aiConsentBusy) setAiConsentOpen(false); }}>
+        <View style={styles.modalBackdrop}><View style={styles.helpCard}>
+          <Text style={styles.sectionTitle}>{ui('Chat con IA (Yorki)')}</Text>
+          <Text style={styles.helpText}>{ui('Si retiras el permiso, Yorki deja de enviar datos a OpenAI y el chat no funcionará hasta que vuelvas a aceptarlo.')}</Text>
+          {!!aiConsentError && <Text style={styles.helpText} accessibilityRole="alert">{aiConsentError}</Text>}
+          <Pressable accessibilityRole="button" accessibilityState={{ busy: aiConsentBusy }} disabled={aiConsentBusy} style={styles.primaryButton} onPress={() => void withdrawAiConsent()}>
+            {aiConsentBusy ? <ActivityIndicator color={BLACK} /> : <Text style={styles.primaryText}>{ui('Retirar permiso')}</Text>}
+          </Pressable>
+          <Pressable accessibilityRole="button" disabled={aiConsentBusy} style={styles.photoButton} onPress={() => setAiConsentOpen(false)}><Text style={styles.secondaryText}>{c.cancel}</Text></Pressable>
+        </View></View>
       </Modal>
       <Modal visible={help} transparent animationType="fade" onRequestClose={() => setHelp(false)}>
         <View style={styles.modalBackdrop}><View style={styles.helpCard}><Text style={styles.sectionTitle}>{c.help}</Text><Text style={styles.helpText}>{c.helpBody}</Text><Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => { setHelp(false); router.push('/chat'); }}><Text style={styles.primaryText}>{c.chat}</Text></Pressable><Pressable accessibilityRole="button" style={styles.photoButton} onPress={() => setHelp(false)}><Text style={styles.secondaryText}>{c.cancel}</Text></Pressable></View></View>
