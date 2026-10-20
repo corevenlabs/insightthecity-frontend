@@ -16,8 +16,8 @@ function setup(){
  return {render,plain,secure,protectedReads,cancel:v=>rejectPrompt=v,status:v=>status=v,mount:async()=>{render();for(const f of effects)f();await new Promise(r=>setImmediate(r));return render();}};
 }
 test('logout removes active session, retains protected login, restores only after biometric and server validation',async()=>{
- const h=setup();let a=await h.mount();await a.signIn('a','b');a=h.render();await a.enableBiometric();a=h.render();await a.signOut();a=h.render();assert.equal(a.token,null);assert.equal(a.user,null);assert.equal(a.biometricEnabled,true);assert.equal(h.secure.has('itc_token'),false);assert.equal(h.secure.has('itc_biometric_token'),true);
- await a.unlockWithBiometrics();a=h.render();assert.equal(a.token,'valid-token');assert.equal(a.user.id,42);assert.equal(h.protectedReads.at(-1).requireAuthentication,true);
+ const h=setup();let a=await h.mount();await a.signIn('a','b');a=h.render();await a.enableBiometric();a=h.render();await a.signOut();a=h.render();assert.equal(a.token,null);assert.equal(a.user,null);assert.equal(a.hasSignedOut,true);assert.equal(a.biometricEnabled,true);assert.equal(h.secure.has('itc_token'),false);assert.equal(h.secure.has('itc_biometric_token'),true);
+ await a.unlockWithBiometrics();a=h.render();assert.equal(a.token,'valid-token');assert.equal(a.user.id,42);assert.equal(a.hasSignedOut,false);assert.equal(h.protectedReads.at(-1).requireAuthentication,true);
 });
 test('cancelling authentication leaves user signed out and enrollment available',async()=>{
  const h=setup();let a=await h.mount();await a.signIn('a','b');a=h.render();await a.enableBiometric();a=h.render();await a.signOut();a=h.render();h.cancel(true);await assert.rejects(a.unlockWithBiometrics());a=h.render();assert.equal(a.token,null);assert.equal(a.biometricEnabled,true);

@@ -58,7 +58,7 @@ function PremiumCard({ experience }: { experience: Experience }) {
 
 export default function ClubScreen() {
   const router = useRouter();
-  const { user, loading, refreshUser } = useAuth();
+  const { user, loading, isAuthenticated, hasSignedOut, refreshUser } = useAuth();
   const { t, ui } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
@@ -68,11 +68,8 @@ export default function ClubScreen() {
   const [contentError, setContentError] = useState(false);
   const [contentLoading, setContentLoading] = useState(true);
   const [attempt, setAttempt] = useState(0);
-  const [layoutHeight, setLayoutHeight] = useState(0);
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const [footerHeight, setFooterHeight] = useState(0);
-  // Fit the banner between measured copy and pricing; allow scrolling for large text.
-  const bannerHeight = Math.min(280, Math.max(150, layoutHeight - headerHeight - footerHeight - 40));
+  // Compact preview leaves space for the membership inclusions; larger text can scroll.
+  const bannerHeight = 210;
 
   useFocusEffect(useCallback(() => {
     let active = true;
@@ -125,16 +122,38 @@ export default function ClubScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-    <View style={styles.offerLayout} onLayout={event => setLayoutHeight(event.nativeEvent.layout.height)}>
+    <View style={styles.offerLayout}>
       <ScrollView style={styles.offerPreview} contentContainerStyle={styles.offerPreviewContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.offerHero} onLayout={event => setHeaderHeight(event.nativeEvent.layout.height)}>
+        <View style={styles.offerHero}>
+          {!loading && !isAuthenticated && !hasSignedOut && <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={ui('Volver a explorar como invitado')}
+            style={styles.guestBack}
+            onPress={() => {
+              if (router.canGoBack()) router.back();
+              else router.replace('/home');
+            }}
+          ><Ionicons name="arrow-back" size={24} color={GOLD} /></TouchableOpacity>}
           <ClubLogo width={90} header />
           <Text style={styles.offerSubtitle}>{ui('Descubre New York con beneficios exclusivos')}</Text>
         </View>
         {contentLoading ? <Text style={styles.previewCopy}>{ui('Cargando…')}</Text> : contentError ?
           <TouchableOpacity accessibilityRole="button" style={styles.retryButton} onPress={() => setAttempt(value => value + 1)}><Text style={styles.gold}>{ui('No se pudieron cargar los beneficios. Toca para reintentar.')}</Text></TouchableOpacity> :
           <MemberBenefitBanner height={bannerHeight} items={premiumExperiences.filter(item => Boolean(item.memberBenefit?.trim()) && !['sold_out', 'paused'].includes(item.couponStatus || ''))} />}
-      <View style={styles.offerFooter} onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}>
+        <View style={styles.inclusions}>
+          <Text accessibilityRole="header" style={styles.inclusionsTitle}>
+            {ui('¿Qué incluye')} ITC <Text style={styles.gold}>CLUB</Text>?
+          </Text>
+          {[
+            'Descuentos y promociones en negocios participantes',
+            'Beneficios exclusivos para miembros',
+          ].map((benefit) => <View key={benefit} style={styles.inclusionRow}>
+            <Ionicons name="checkmark" size={24} color={GOLD} accessible={false} />
+            <Text style={styles.inclusionText}>{ui(benefit)}</Text>
+          </View>)}
+          <Text style={styles.inclusionsNote}>{ui('Entradas y consumos se pagan aparte, salvo que la oferta indique que están incluidos.')}</Text>
+        </View>
+      <View style={styles.offerFooter}>
         <MembershipPrice compact dense plan={plan} error={planError} retry={() => setAttempt(value => value + 1)} />
         <Text style={styles.offerConditions}>{ui('Beneficios sujetos a disponibilidad y condiciones.')}</Text>
         <TouchableOpacity style={styles.joinButton} onPress={() => router.push('/club-form')} accessibilityRole="button">
@@ -156,6 +175,12 @@ export default function ClubScreen() {
 }
 
 const styles = StyleSheet.create({
+  inclusions: { marginTop: 22, paddingHorizontal: 4 },
+  inclusionsTitle: { color: '#FFF', fontSize: 22, lineHeight: 30, fontWeight: '700', marginBottom: 12 },
+  inclusionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 8 },
+  inclusionText: { flex: 1, color: '#FFF', fontSize: 15, lineHeight: 23 },
+  inclusionsNote: { color: '#AAA', fontSize: 13, lineHeight: 20, marginTop: 12 },
+  guestBack: { position: 'absolute', top: 16, left: 0, width: 48, height: 48, zIndex: 1, alignItems: 'center', justifyContent: 'center' },
   offerLayout: { flex: 1, width: '100%', maxWidth: 680, alignSelf: 'center', paddingHorizontal: 16 },
   offerPreview: { flex: 1 },
   offerPreviewContent: { paddingTop: 8, paddingBottom: 16 },

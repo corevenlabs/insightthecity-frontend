@@ -30,7 +30,7 @@ function initials(value: string) {
   return parts.length > 1 ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() : value.slice(0, 2).toUpperCase() || '?';
 }
 export default function ProfileScreen() {
-  const { user, token, isAuthenticated, signOut, refreshUser, updateProfile, uploadAvatar, applyServerUser } = useAuth();
+  const { user, token, loading, hasSignedOut, isAuthenticated, signOut, refreshUser, updateProfile, uploadAvatar, applyServerUser } = useAuth();
   const { t, ui, language, tagLabel } = useLanguage();
   const c = COPY[language];
   const { membership } = useLocalSearchParams<{ membership?: string }>();
@@ -120,8 +120,9 @@ export default function ProfileScreen() {
       {onPress && <Ionicons name="chevron-forward" size={17} color="#A6A6A6" />}
     </Pressable>
   );
+  if (loading) return null;
   if (!isAuthenticated || !user) {
-    return <Redirect href={{ pathname: '/welcome', params: { source: 'profile' } }} />;
+    return <Redirect href={{ pathname: '/welcome', params: { source: hasSignedOut ? 'profile' : 'guest-profile' } }} />;
   }
   const trial = isMembershipTrial(user);
   const trialCopy = TRIAL_COPY[language];

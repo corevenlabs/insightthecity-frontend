@@ -47,6 +47,7 @@ type AuthContextValue = {
   /** true mientras se restaura la sesión guardada al abrir la app */
   loading: boolean;
   isAuthenticated: boolean;
+  hasSignedOut: boolean;
   biometricAvailable: boolean;
   biometricEnabled: boolean;
   biometricLocked: boolean;
@@ -134,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasSignedOut, setHasSignedOut] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [biometricLocked, setBiometricLocked] = useState(false);
@@ -268,6 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     await forgetBiometric();
     await persist(t, u);
+    setHasSignedOut(false);
     setToken(t);
     setUser(u);
     setBiometricLocked(false);
@@ -284,6 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       await forgetBiometric();
       await persist(t, u);
+      setHasSignedOut(false);
       setToken(t);
       setUser(u);
       setBiometricLocked(false);
@@ -292,6 +296,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    setHasSignedOut(true);
     profileRevision.current += 1;
     await Promise.all([
       deleteToken(),
@@ -362,6 +367,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // A concurrent logout/forget must not be undone by a late server response.
       if (revision !== profileRevision.current) throw new Error('Autenticación cancelada.');
       await persist(savedToken, data.user);
+      setHasSignedOut(false);
       setToken(savedToken);
       setUser(data.user);
       setBiometricLocked(false);
@@ -464,6 +470,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       token,
       loading,
       isAuthenticated: !!token,
+      hasSignedOut,
       biometricAvailable,
       biometricEnabled,
       biometricLocked,
@@ -484,6 +491,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       token,
       loading,
+      hasSignedOut,
       biometricAvailable,
       biometricEnabled,
       biometricLocked,

@@ -34,17 +34,18 @@ let introShown = false;
 const WelcomeVideo: typeof import('../components/WelcomeVideo').WelcomeVideo | null = Platform.OS === 'web' || requireOptionalNativeModule('ExpoVideo') ? require('../components/WelcomeVideo').WelcomeVideo : null;
 
 export default function WelcomeScreen() {
-  const { loading, token } = useAuth();
+  const { loading, token, hasSignedOut } = useAuth();
   const { preview, replay, take, source } = useLocalSearchParams<{ preview?: string; replay?: string; take?: string; source?: string }>();
-  const fromProfile = source === 'profile';
+  const fromProfile = source === 'profile' || source === 'guest-profile';
+  const allowGuestBack = source === 'guest-profile' && !hasSignedOut;
   // Development-only route for reviewing the intro without changing a saved session.
-  if (__DEV__ && preview === '1') return <WelcomeExperience key={take} replay={replay === '1'} fromProfile={fromProfile} />;
+  if (__DEV__ && preview === '1') return <WelcomeExperience key={take} replay={replay === '1'} fromProfile={fromProfile} allowGuestBack={allowGuestBack} />;
   if (loading) return null;
   if (token) return <Redirect href="/home" />;
-  return <WelcomeExperience fromProfile={fromProfile} />;
+  return <WelcomeExperience fromProfile={fromProfile} allowGuestBack={allowGuestBack} />;
 }
 
-function WelcomeExperience({ replay = false, fromProfile = false }: { replay?: boolean; fromProfile?: boolean }) {
+function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack = false }: { replay?: boolean; fromProfile?: boolean; allowGuestBack?: boolean }) {
   const { t, ui } = useLanguage();
   const { height, width, insets, fontScale } = useResponsiveLayout();
   const playIntro = useRef(!!WelcomeVideo && !fromProfile && (replay || !introShown)).current;
@@ -104,6 +105,12 @@ function WelcomeExperience({ replay = false, fromProfile = false }: { replay?: b
   return (
     <View style={styles.container}>
       <StatusBar style="light" hidden={!settled} />
+      {allowGuestBack && <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={ui('Volver a explorar como invitado')}
+        onPress={() => router.replace('/home')}
+        style={[styles.guestBack, { top: insets.top + 8, left: insets.left + 16 }]}
+      ><Ionicons name="arrow-back" size={24} color={GOLD} /></Pressable>}
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, paddingBottom: Math.max(insets.bottom, 20) }}
         scrollEnabled={settled}
@@ -198,6 +205,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BLACK,
   },
+  guestBack: { position: 'absolute', zIndex: 10, width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.65)' },
   logoSection: {
     width: '100%',
     overflow: 'hidden',

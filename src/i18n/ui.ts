@@ -3,6 +3,10 @@ export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
   "{count} ubicaciones": { "en": "{count} locations", "pt": "{count} locais" },
+  "¿Qué incluye": { "en": "What's included in", "pt": "O que inclui" },
+  "Descuentos y promociones en negocios participantes": { "en": "Discounts and promotions at participating businesses", "pt": "Descontos e promoções em estabelecimentos participantes" },
+  "Beneficios exclusivos para miembros": { "en": "Exclusive member benefits", "pt": "Benefícios exclusivos para membros" },
+  "Entradas y consumos se pagan aparte, salvo que la oferta indique que están incluidos.": { "en": "Tickets and purchases are paid separately unless the offer states they are included.", "pt": "Ingressos e consumos são pagos separadamente, salvo quando a oferta indicar que estão incluídos." },
   "Saltar": {"en":"Skip","pt":"Pular"},
   "TOP DE HOY": {"en":"TODAY’S TOP PICKS","pt":"DESTAQUES DE HOJE"},
   "Top de hoy: {title}": {"en":"Today’s pick: {title}","pt":"Destaque de hoje: {title}"},
