@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { PrivateAvatar } from '../../components/PrivateAvatar';
 import { requireOptionalNativeModule } from 'expo';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -110,26 +110,7 @@ export default function ProfileScreen() {
     </Pressable>
   );
   if (!isAuthenticated || !user) {
-    const guestContent = <>
-      <View style={{ width: '100%', marginBottom: 24 }}><LanguagePicker /></View>
-      <View style={styles.guestAvatar}><Ionicons name="person-outline" size={44} color={GOLD} /></View>
-      <Text style={styles.guestTitle}>{t('profile.signedOut')}</Text>
-      <Text style={styles.guestSubtitle}>{t('profile.signedOutSubtitle')}</Text>
-      <TouchableOpacity accessibilityRole="button" style={styles.primaryButton} onPress={() => router.push('/login')}><Text style={styles.primaryText}>{t('welcome.signIn')}</Text></TouchableOpacity>
-      <TouchableOpacity accessibilityRole="button" style={styles.secondaryButton} onPress={() => router.push('/register')}><Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text></TouchableOpacity>
-    </>;
-    if (Platform.OS === 'android') return (
-      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-        <ScrollView style={styles.container} contentContainerStyle={styles.androidGuestContent}>
-          {guestContent}
-        </ScrollView>
-      </SafeAreaView>
-    );
-    return (
-      <SafeAreaView style={styles.guestContainer} edges={['top', 'left', 'right']}>
-        {guestContent}
-      </SafeAreaView>
-    );
+    return <Redirect href={{ pathname: '/welcome', params: { source: 'profile' } }} />;
   }
   const trial = isMembershipTrial(user);
   const trialCopy = TRIAL_COPY[language];

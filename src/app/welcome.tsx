@@ -23,23 +23,24 @@ import { useAuth } from '../context/AuthContext';
 const GOLD = '#FDDD56';
 const BLACK = '#050505';
 
-// Returning from login must not replay the ten-second intro in the same session.
+// Returning from login must not replay the intro in the same session.
 let introShown = false;
 
 export default function WelcomeScreen() {
   const { loading, token } = useAuth();
-  const { preview, replay, take } = useLocalSearchParams<{ preview?: string; replay?: string; take?: string }>();
+  const { preview, replay, take, source } = useLocalSearchParams<{ preview?: string; replay?: string; take?: string; source?: string }>();
+  const fromProfile = source === 'profile';
   // Development-only route for reviewing the intro without changing a saved session.
-  if (__DEV__ && preview === '1') return <WelcomeExperience key={take} replay={replay === '1'} />;
+  if (__DEV__ && preview === '1') return <WelcomeExperience key={take} replay={replay === '1'} fromProfile={fromProfile} />;
   if (loading) return null;
   if (token) return <Redirect href="/home" />;
-  return <WelcomeExperience />;
+  return <WelcomeExperience fromProfile={fromProfile} />;
 }
 
-function WelcomeExperience({ replay = false }: { replay?: boolean }) {
+function WelcomeExperience({ replay = false, fromProfile = false }: { replay?: boolean; fromProfile?: boolean }) {
   const { t, ui } = useLanguage();
   const { height, width, insets, fontScale } = useResponsiveLayout();
-  const playIntro = useRef(replay || !introShown).current;
+  const playIntro = useRef(!fromProfile && (replay || !introShown)).current;
   const [phase, setPhase] = useState<'checking' | 'playing' | 'settling' | 'ready'>(playIntro ? 'checking' : 'ready');
   const [reducedMotion, setReducedMotion] = useState(false);
   const settled = phase === 'ready';
@@ -151,9 +152,9 @@ function WelcomeExperience({ replay = false }: { replay?: boolean }) {
           <Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text>
         </TouchableOpacity>
 
-        <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.replace('/home' as any)}>
+        {!fromProfile && <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.replace('/home' as any)}>
           <Text style={styles.guestText}>{t('welcome.guest')}</Text>
-        </Pressable>
+        </Pressable>}
 
         {/* Aviso visible antes de usar la app; la aceptación expresa se pide al crear la cuenta. */}
         <Text style={styles.termsText}>
