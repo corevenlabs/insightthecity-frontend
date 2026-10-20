@@ -31,7 +31,7 @@ export default function LoginScreen() {
     biometricLabel,
     enableBiometric,
     signIn,
-    token,
+    forgetBiometric,
     unlockWithBiometrics,
   } = useAuth();
   const [email, setEmail] = useState('');
@@ -59,7 +59,7 @@ export default function LoginScreen() {
     setSubmitting(true);
     try {
       await signIn(email.trim(), password);
-      if (biometricAvailable && !biometricEnabled) {
+      if (biometricAvailable) {
         Alert.alert(
           t('login.enableTitle', { biometric: biometricLabel }),
           t('login.enableMessage', { biometric: biometricLabel }),
@@ -68,7 +68,11 @@ export default function LoginScreen() {
             {
               text: t('login.enable'),
               onPress: async () => {
-                await enableBiometric();
+                try {
+                  await enableBiometric();
+                } catch {
+                  Alert.alert(ui('No se pudo activar el acceso biométrico'), ui('Puedes seguir entrando con tu correo y contraseña.'));
+                }
                 enterAuthenticatedApp();
               },
             },
@@ -183,7 +187,7 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-            {biometricEnabled && token && (
+            {biometricEnabled && biometricAvailable && (
               <>
                 <View style={styles.separatorRow}>
                   <View style={styles.separatorLine} />
@@ -203,6 +207,12 @@ export default function LoginScreen() {
                     {t('login.biometric', { biometric: biometricLabel.toUpperCase() })}
                   </Text>
                 </TouchableOpacity>
+                <Pressable accessibilityRole="button" disabled={submitting} onPress={() => {
+                  Alert.alert(ui('Olvidar esta cuenta en el dispositivo'), ui('Se eliminará el acceso biométrico. Podrás entrar con tu correo y contraseña.'), [
+                    { text: ui('Cancelar'), style: 'cancel' },
+                    { text: ui('Olvidar cuenta'), style: 'destructive', onPress: () => { void forgetBiometric().catch(() => setError(ui('No se pudo olvidar la cuenta. Inténtalo nuevamente.'))); } },
+                  ]);
+                }}><Text style={styles.forgotText}>{ui('Olvidar esta cuenta en el dispositivo')}</Text></Pressable>
               </>
             )}
 

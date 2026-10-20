@@ -54,6 +54,7 @@ type AuthContextValue = {
   signUp: (name: string, email: string, password: string, language: AppLanguage, acceptLegal: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   enableBiometric: () => Promise<boolean>;
+  forgetBiometric: () => Promise<void>;
   unlockWithBiometrics: () => Promise<void>;
   refreshUser: () => Promise<User | null>;
   updateProfile: (data: ProfileUpdate) => Promise<void>;
@@ -66,6 +67,7 @@ type AuthContextValue = {
 
 const TOKEN_KEY = 'itc_token';
 const USER_KEY = 'itc_user';
+const BIOMETRIC_TOKEN_KEY = 'itc_biometric_token';
 const BIOMETRIC_ENABLED_KEY = 'itc_biometric_enabled';
 const LAST_BACKGROUND_AT_KEY = 'itc_last_background_at';
 const BACKGROUND_LOCK_DELAY_MS = 30 * 60 * 1000;
@@ -175,6 +177,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (savedToken) await writeToken(savedToken);
         }
 
+        // An enrollment is discoverable without reading its protected credential.
+        setBiometricEnabled(biometricPreference === 'true');
         if (!savedToken) return;
 
         const biometricsWereEnabled = biometricPreference === 'true';
@@ -248,16 +252,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.remove();
   }, [token, biometricEnabled]);
 
+  const forgetBiometric = useCallback(async () => {
+    profileRevision.current += 1;
+    if (Platform.OS !== 'web') await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY);
+    await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
+    setBiometricEnabled(false);
+  }, []);
+
   const signIn = useCallback(async (email: string, password: string) => {
     const { token: t, user: u } = await postAuth('/api/users/login', {
       email,
       password,
     });
+    await forgetBiometric();
     await persist(t, u);
     setToken(t);
     setUser(u);
     setBiometricLocked(false);
-  }, []);
+  }, [forgetBiometric]);
 
   const signUp = useCallback(
     async (name: string, email: string, password: string, language: AppLanguage, acceptLegal: boolean) => {
@@ -268,31 +280,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         language,
         acceptLegal,
       });
+      await forgetBiometric();
       await persist(t, u);
       setToken(t);
       setUser(u);
       setBiometricLocked(false);
     },
-    []
+    [forgetBiometric]
   );
 
   const signOut = useCallback(async () => {
+    profileRevision.current += 1;
     await Promise.all([
       deleteToken(),
       AsyncStorage.multiRemove([
         USER_KEY,
-        BIOMETRIC_ENABLED_KEY,
         LAST_BACKGROUND_AT_KEY,
       ]),
     ]);
     setToken(null);
     setUser(null);
-    setBiometricEnabled(false);
     setBiometricLocked(false);
   }, []);
 
   const enableBiometric = useCallback(async () => {
     if (!biometricAvailable || Platform.OS === 'web') return false;
+    const activeToken = await readToken();
+    if (!activeToken) return false;
     const result = await LocalAuthentication.authenticateAsync({
       promptMessage: `Activar ${biometricLabel}`,
       cancelLabel: 'Ahora no',
@@ -300,6 +314,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       biometricsSecurityLevel: 'strong',
     });
     if (!result.success) return false;
+    await SecureStore.setItemAsync(BIOMETRIC_TOKEN_KEY, activeToken, {
+      requireAuthentication: true,
+      authenticationPrompt: `Activar ${biometricLabel}`,
+      keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    });
     await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, 'true');
     await AsyncStorage.setItem(LAST_BACKGROUND_AT_KEY, String(Date.now()));
     setBiometricEnabled(true);
@@ -308,57 +327,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [biometricAvailable, biometricLabel]);
 
   const unlockWithBiometrics = useCallback(async () => {
-    if (!token || !biometricAvailable) {
+    if (!biometricEnabled || !biometricAvailable || Platform.OS === 'web') {
       throw new Error(`${biometricLabel} no está disponible en este dispositivo.`);
     }
+    if (biometricPromptActive.current) throw new Error('La verificación ya está en curso.');
     biometricPromptActive.current = true;
+    const revision = profileRevision.current;
     try {
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: `Ingresar con ${biometricLabel}`,
-        cancelLabel: 'Cancelar',
-        fallbackLabel: 'Usar código del dispositivo',
-        biometricsSecurityLevel: 'strong',
+      const savedToken = await SecureStore.getItemAsync(BIOMETRIC_TOKEN_KEY, {
+        requireAuthentication: true,
+        authenticationPrompt: `Ingresar con ${biometricLabel}`,
       });
-      if (!result.success) {
-        if (result.error === 'user_cancel' || result.error === 'system_cancel') {
-          throw new Error('Autenticación cancelada.');
-        }
-        throw new Error(`No pudimos verificar tu ${biometricLabel}.`);
+      if (!savedToken) {
+        await forgetBiometric();
+        throw new Error('Activa nuevamente el acceso biométrico iniciando sesión con tu contraseña.');
       }
-
-      // Face ID desbloquea localmente y el servidor conserva la última palabra.
-      try {
-        const res = await fetch(`${API_URL}/api/users/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.status === 401) {
-          await Promise.all([
-            deleteToken(),
-            AsyncStorage.removeItem(USER_KEY),
-          ]);
-          setToken(null);
-          setUser(null);
-          setBiometricLocked(false);
-          throw new Error('Tu sesión expiró. Ingresa nuevamente con tu contraseña.');
-        }
-        if (res.ok) {
-          const data = await res.json();
-          if (data?.user) {
-            const restoredUser = data.user as User;
-            setUser(restoredUser);
-            await AsyncStorage.setItem(USER_KEY, JSON.stringify(restoredUser));
-          }
-        }
-      } catch (error) {
-        if (error instanceof Error && error.message.startsWith('Tu sesión expiró')) throw error;
-        // Sin conexión conservamos el comportamiento offline que ya tenía la app.
+      const res = await fetch(`${API_URL}/api/users/me`, {
+        headers: { Authorization: `Bearer ${savedToken}` },
+      });
+      if (res.status === 401 || res.status === 403) {
+        await forgetBiometric();
+        await deleteToken();
+        await AsyncStorage.removeItem(USER_KEY);
+        setToken(null);
+        setUser(null);
+        setBiometricLocked(false);
+        throw new Error('Tu sesión expiró. Ingresa nuevamente con tu contraseña.');
       }
+      if (!res.ok) throw new Error('No se pudo verificar tu cuenta. Inténtalo nuevamente.');
+      const data = await res.json();
+      if (!data?.user) throw new Error('No se pudo verificar tu cuenta.');
+      // A concurrent logout/forget must not be undone by a late server response.
+      if (revision !== profileRevision.current) throw new Error('Autenticación cancelada.');
+      await persist(savedToken, data.user);
+      setToken(savedToken);
+      setUser(data.user);
       setBiometricLocked(false);
       await AsyncStorage.setItem(LAST_BACKGROUND_AT_KEY, String(Date.now()));
     } finally {
       biometricPromptActive.current = false;
     }
-  }, [token, biometricAvailable, biometricLabel]);
+  }, [biometricAvailable, biometricEnabled, biometricLabel, forgetBiometric]);
 
   const refreshUser = useCallback(async () => {
     if (!token) return null;
@@ -410,9 +419,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await response.json().catch(() => null);
     if (!response.ok || !data?.success) throw new Error(data?.message || 'No se pudo eliminar la cuenta.');
     const deletedId = user?.id;
+    await forgetBiometric();
     await signOut();
     if (deletedId != null) await deleteAccountLocalData(deletedId);
-  }, [token, signOut, user?.id]);
+  }, [token, signOut, forgetBiometric, user?.id]);
 
   const saveProfileResponse = useCallback(async (response: Response) => {
     const data = await response.json();
@@ -460,6 +470,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signOut,
       enableBiometric,
+      forgetBiometric,
       unlockWithBiometrics,
       refreshUser,
       updateProfile,
@@ -479,6 +490,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signOut,
       enableBiometric,
+      forgetBiometric,
       unlockWithBiometrics,
       refreshUser,
       updateProfile,
