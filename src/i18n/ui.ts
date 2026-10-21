@@ -2,6 +2,18 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Continuar con Apple": {"en":"Continue with Apple","pt":"Continuar com Apple"},
+  "Vincular Apple a mi cuenta": {"en":"Link Apple to my account","pt":"Vincular Apple à minha conta"},
+  "Continuar con correo": {"en": "Continue with email", "pt": "Continuar com e-mail"},
+  "Apple estará disponible en una nueva compilación de iOS.": {"en": "Apple sign-in will be available in a new iOS build.", "pt": "O acesso com Apple estará disponível em uma nova compilação do iOS."},
+  "Para crear tu cuenta, acepta los términos y la privacidad.": {"en": "To create your account, accept the terms and privacy policy.", "pt": "Para criar sua conta, aceite os termos e a política de privacidade."},
+  "Acepto los términos y la política de privacidad": {"en": "I accept the terms and privacy policy", "pt": "Aceito os termos e a política de privacidade"},
+  "Crear cuenta con Apple": {"en": "Create account with Apple", "pt": "Criar conta com Apple"},
+  "Apple vinculado": {"en": "Apple linked", "pt": "Apple vinculado"},
+  "Ya puedes iniciar sesión con Apple sin perder tus datos.": {"en": "You can now sign in with Apple and keep your existing data.", "pt": "Agora você pode entrar com Apple mantendo seus dados."},
+  "¿Quieres activar el acceso biométrico en este dispositivo?": {"en": "Would you like to enable biometric sign-in on this device?", "pt": "Deseja ativar o acesso biométrico neste dispositivo?"},
+  "Eliminar mi cuenta mediante verificación por correo": {"en": "Delete my account using email verification", "pt": "Excluir minha conta por verificação de e-mail"},
+
   "{count} ubicaciones": { "en": "{count} locations", "pt": "{count} locais" },
   "¿Qué incluye": { "en": "What's included in", "pt": "O que inclui" },
   "Descuentos y promociones en negocios participantes": { "en": "Discounts and promotions at participating businesses", "pt": "Descontos e promoções em estabelecimentos participantes" },

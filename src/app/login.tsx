@@ -24,7 +24,7 @@ const BLACK = '#0A0A0A';
 
 export default function LoginScreen() {
   const { t, ui } = useLanguage();
-  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
+  const { returnTo, biometric } = useLocalSearchParams<{ returnTo?: string; biometric?: string }>();
   const {
     loading,
     biometricAvailable,
@@ -41,7 +41,7 @@ export default function LoginScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const passwordRef = useRef<TextInput>(null);
-  const biometricAttempted = useRef(false);
+  const biometricAttempted = useRef(biometric === 'skip');
 
   const enterAuthenticatedApp = () => {
     router.dismissAll();

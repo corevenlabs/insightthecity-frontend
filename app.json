@@ -14,9 +14,14 @@
         "LSApplicationQueriesSchemes": [
           "itcclub"
         ],
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleAllowMixedLocalizations": true
       },
-      "supportsTablet": true
+      "supportsTablet": true,
+      "usesAppleSignIn": true,
+      "runtimeVersion": {
+        "policy": "fingerprint"
+      }
     },
     "android": {
       "package": "com.insightthecity.app",
@@ -73,7 +78,8 @@
           "isAndroidBackgroundLocationEnabled": false
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true,

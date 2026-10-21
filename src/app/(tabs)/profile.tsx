@@ -1,3 +1,4 @@
+import AppleAccess from '../../components/AppleAccess';
 import { ScreenBackButton } from '../../components/ScreenBackButton';
 import { Text, TextInput } from '../../components/typography';
 import { isMembershipTrial, TRIAL_COPY } from '../../lib/membershipTrial';
@@ -174,6 +175,7 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         {row('help-buoy-outline', c.help, '', () => setHelp(true))}
         <Pressable accessibilityRole="button" onPress={signOut} style={styles.infoRow}><Ionicons name="log-out-outline" size={21} color="#FF8080" /><Text style={styles.logoutText}>{t('profile.signOut')}</Text></Pressable>
+        {Platform.OS === 'ios' && <AppleAccess link />}
         <Pressable accessibilityRole="button" onPress={() => router.push('/delete-account')} style={styles.infoRow}><Ionicons name="trash-outline" size={21} color="#FF8080" /><Text style={styles.logoutText}>{ui('Eliminar cuenta')}</Text></Pressable>
       </View>
     </ScrollView>

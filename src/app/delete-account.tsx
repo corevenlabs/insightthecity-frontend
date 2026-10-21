@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Linking,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -14,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { API_URL } from '../constants/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -82,6 +84,7 @@ export default function DeleteAccountScreen() {
 
           {user?.email ? <Text style={styles.account}>{ui('Cuenta: {email}', { email: user.email })}</Text> : null}
 
+          {user?.has_password === false && Platform.OS === 'ios' ? <Pressable style={styles.cancelButton} accessibilityRole="link" onPress={() => { void Linking.openURL(`${API_URL}/delete-account`); }}><Text style={styles.cancelText}>{ui('Eliminar mi cuenta mediante verificación por correo')}</Text></Pressable> : <>
           <Text style={styles.label}>{ui('Confirma tu contraseña')}</Text>
           <TextInput
             value={password}
@@ -94,6 +97,7 @@ export default function DeleteAccountScreen() {
             onSubmitEditing={submit}
           />
 
+          </>}
           <Pressable
             style={styles.consentRow}
             onPress={() => setConfirmed((value) => !value)}

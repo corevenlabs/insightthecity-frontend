@@ -20,6 +20,7 @@ import type { AppLanguage } from './LanguageContext';
 export type ProfileUpdate = Partial<Pick<User, 'name' | 'language' | 'home_area' | 'interests'>>;
 
 export type User = {
+  has_password?: boolean;
   id: number;
   name: string | null;
   email: string;
@@ -52,6 +53,7 @@ type AuthContextValue = {
   biometricEnabled: boolean;
   biometricLocked: boolean;
   biometricLabel: string;
+  signInWithApple: (body: Record<string, unknown>) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   /** acceptLegal: el usuario marcó la casilla de Términos y Privacidad */
   signUp: (name: string, email: string, password: string, language: AppLanguage, acceptLegal: boolean) => Promise<void>;
@@ -125,7 +127,7 @@ async function postAuth(
   }
 
   if (!res.ok || !data?.success) {
-    throw new Error(data?.message || 'Ocurrió un error. Inténtalo de nuevo.');
+    throw Object.assign(new Error(data?.message || 'Ocurrió un error. Inténtalo de nuevo.'), { code: data?.code });
   }
 
   return { token: data.token, user: data.user };
@@ -268,6 +270,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
+    await forgetBiometric();
+    await persist(t, u);
+    setHasSignedOut(false);
+    setToken(t);
+    setUser(u);
+    setBiometricLocked(false);
+  }, [forgetBiometric]);
+
+  const signInWithApple = useCallback(async (body: Record<string, unknown>) => {
+    const { token: t, user: u } = await postAuth('/api/users/apple/login', body);
     await forgetBiometric();
     await persist(t, u);
     setHasSignedOut(false);
@@ -476,6 +488,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       biometricLocked,
       biometricLabel,
       signIn,
+      signInWithApple,
       signUp,
       signOut,
       enableBiometric,
@@ -497,6 +510,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       biometricLocked,
       biometricLabel,
       signIn,
+      signInWithApple,
       signUp,
       signOut,
       enableBiometric,

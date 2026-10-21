@@ -1,3 +1,5 @@
+import AppleAccess from '../components/AppleAccess';
+import { WelcomeAttribution } from '../components/WelcomeAttribution';
 import { Text } from '../components/typography';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { requireOptionalNativeModule } from 'expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   AccessibilityInfo,
   Animated,
   Easing,
@@ -47,8 +50,25 @@ export default function WelcomeScreen() {
 
 function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack = false }: { replay?: boolean; fromProfile?: boolean; allowGuestBack?: boolean }) {
   const { t, ui } = useLanguage();
+  const { biometricEnabled, biometricAvailable, unlockWithBiometrics } = useAuth();
+  const [showSignInOptions, setShowSignInOptions] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
+  const unlockInFlight = useRef(false);
+  const finishSignIn = () => router.replace('/home');
+  const openSignIn = async () => {
+    if (Platform.OS !== 'ios') { router.push('/login'); return; }
+    if (unlockInFlight.current) return;
+    setShowSignInOptions(true);
+    if (!biometricEnabled || !biometricAvailable) return;
+    unlockInFlight.current = true;
+    setUnlocking(true);
+    try { await unlockWithBiometrics(); finishSignIn(); }
+    catch { /* Keep Apple and email available when biometrics is cancelled. */ }
+    finally { unlockInFlight.current = false; setUnlocking(false); }
+  };
+
   const { height, width, insets, fontScale } = useResponsiveLayout();
-  const playIntro = useRef(!!WelcomeVideo && !fromProfile && (replay || !introShown)).current;
+  const [playIntro] = useState(() => !!WelcomeVideo && !fromProfile && (replay || !introShown));
   const [phase, setPhase] = useState<'checking' | 'playing' | 'settling' | 'ready'>(playIntro ? 'checking' : 'ready');
   const [reducedMotion, setReducedMotion] = useState(false);
   const settled = phase === 'ready';
@@ -126,6 +146,7 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
           accessibilityRole="image"
           accessibilityLabel="ITC CLUB · New York"
         />}
+        {(phase === 'settling' || phase === 'ready') && <WelcomeAttribution />}
         </Animated.View>
         <LinearGradient pointerEvents="none" colors={['transparent', BLACK]} style={styles.heroFade} />
       </Animated.View>
@@ -148,23 +169,38 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
           <Text style={styles.kicker}>{ui("NYC & NJ GUIDE")}</Text>
         </View>
 
-        <TouchableOpacity
+        {showSignInOptions && Platform.OS === 'ios' ? (
+          <View style={{ width: '100%', gap: 16 }}>
+            {unlocking ? <ActivityIndicator color={GOLD} accessibilityLabel={ui('Iniciar sesión')} /> : <>
+              <AppleAccess onSuccess={finishSignIn} />
+              <TouchableOpacity
+                style={styles.primaryButton}
+                activeOpacity={0.86}
+                accessibilityRole="button"
+                onPress={() => router.push({ pathname: '/login', params: { biometric: 'skip' } })}
+              ><Text style={styles.primaryText}>{ui('Continuar con correo')}</Text></TouchableOpacity>
+              <Pressable accessibilityRole="button" onPress={() => setShowSignInOptions(false)} style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={styles.guestText}>{ui('Volver')}</Text>
+              </Pressable>
+            </>}
+          </View>
+        ) : <TouchableOpacity
           style={styles.primaryButton}
           activeOpacity={0.86}
-          onPress={() => router.push('/login' as any)}
+          onPress={() => { void openSignIn(); }}
           accessibilityRole="button"
         >
           <Text style={styles.primaryText}>{t('welcome.signIn')}</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
 
-        <TouchableOpacity
+        {Platform.OS !== 'ios' && <TouchableOpacity
           style={styles.secondaryButton}
           activeOpacity={0.86}
           onPress={() => router.push('/register' as any)}
           accessibilityRole="button"
         >
           <Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
 
         {!fromProfile && <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.replace('/home' as any)}>
           <Text style={styles.guestText}>{t('welcome.guest')}</Text>
