@@ -17,6 +17,8 @@ import { AppState, Platform } from 'react-native';
 import { API_URL } from '../constants/api';
 import type { AppLanguage } from './LanguageContext';
 
+export type DeletionVerification = {challenge:string;code:string} | {apple:true;identityToken?:string;nonce?:string};
+
 export type ProfileUpdate = Partial<Pick<User, 'name' | 'language' | 'home_area' | 'interests'>>;
 
 export type User = {
@@ -67,8 +69,8 @@ type AuthContextValue = {
   uploadAvatar: (file: { uri: string; mimeType?: string | null; fileName?: string | null; file?: File; base64?: string | null }) => Promise<void>;
   /** Guarda un usuario devuelto por el servidor (p. ej. tras confirmar un pago). */
   applyServerUser: (user: User) => Promise<void>;
-  /** Elimina la cuenta en el servidor (exige la contraseña) y cierra la sesión. */
-  deleteAccount: (password: string, emailVerification?: { challenge: string; code: string }) => Promise<void>;
+  /** Solicita la eliminación con la verificación correspondiente y limpia la sesión local. */
+  deleteAccount: (password: string, emailVerification?: DeletionVerification) => Promise<void>;
 };
 
 const TOKEN_KEY = 'itc_token';
@@ -435,9 +437,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(serverUser)).catch(() => undefined);
   }, []);
 
-  const deleteAccount = useCallback(async (password: string, emailVerification?: { challenge: string; code: string }) => {
+  const deleteAccount = useCallback(async (password: string, emailVerification?: DeletionVerification) => {
     if (!token) throw new Error('Inicia sesión para eliminar tu cuenta');
-    if (emailVerification) {
+    if (emailVerification && 'apple' in emailVerification) {
+      const response=await fetch(`${API_URL}/api/users/apple/delete`,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({...emailVerification,confirm:true})});
+      const data=await response.json().catch(()=>null);
+      if(!response.ok || !data?.success)throw Object.assign(new Error(data?.message || 'No se pudo eliminar la cuenta.'),{code:data?.code});
+    } else if (emailVerification) {
       const verifyResponse = await fetch(`${API_URL}/api/account-deletions/verify-code`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(emailVerification),
       });

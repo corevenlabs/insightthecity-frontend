@@ -2,6 +2,10 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Verifica tu identidad con Apple para continuar.": {"en": "Verify your identity with Apple to continue.", "pt": "Verifique sua identidade com Apple para continuar."},
+  "La cuenta de Apple no corresponde a este perfil": {"en": "This Apple account does not match this profile", "pt": "Esta conta Apple não corresponde a este perfil"},
+  "La verificación con Apple no está disponible en este dispositivo.": {"en": "Apple verification is not available on this device.", "pt": "A verificação com Apple não está disponível neste dispositivo."},
+  "No se pudo verificar el acceso. Reintentar": {"en": "Could not verify access. Try again", "pt": "Não foi possível verificar o acesso. Tentar novamente"},
   "No se pudo enviar el código. Inténtalo de nuevo.": {"en": "Could not send the code. Please try again.", "pt": "Não foi possível enviar o código. Tente novamente."},
   "Revisa tu correo e introduce el código de 8 dígitos. Si no aparece, revisa spam.": {"en": "Check your email and enter the 8-digit code. If it is missing, check spam.", "pt": "Confira seu e-mail e digite o código de 8 dígitos. Se não chegar, confira o spam."},
   "Código inválido o vencido": {"en": "Invalid or expired code", "pt": "Código inválido ou expirado"},

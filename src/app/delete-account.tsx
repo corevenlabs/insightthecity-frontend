@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { appleDeletionCredential, isAppleCancellation } from '../lib/appleDeletion';
 import { API_URL } from '../constants/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -25,7 +26,7 @@ const RED = '#FF8080';
 // Borra la cuenta y los datos personales y cancela la membresía de Stripe.
 export default function DeleteAccountScreen() {
   const { ui, language } = useLanguage();
-  const { user, deleteAccount } = useAuth();
+  const { user, token, deleteAccount } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -34,7 +35,19 @@ export default function DeleteAccountScreen() {
   const [code, setCode] = useState('');
   const [sending, setSending] = useState(false);
   const [resendSeconds, setResendSeconds] = useState(0);
-  const useEmail = user?.has_password === false;
+  const [method,setMethod] = useState<'loading'|'password'|'apple'|'email'|'unavailable'>(user?.has_password ? 'password' : 'loading');
+  const [methodAttempt,setMethodAttempt] = useState(0);
+  const useApple = method === 'apple' && Platform.OS === 'ios';
+  const useEmail = method === 'email' || (method === 'apple' && Platform.OS !== 'ios');
+  useEffect(() => {
+    let alive=true;
+    void fetch(`${API_URL}/api/users/me/deletion-method`,{headers:{Authorization:`Bearer ${token}`}}).then(async response=>{
+      const data=await response.json();
+      if(!response.ok || !['password','apple','email'].includes(data.method))throw new Error('method');
+      if(alive)setMethod(data.method);
+    }).catch(()=>{if(alive)setMethod(user?.has_password ? 'password' : 'unavailable');});
+    return ()=>{alive=false;};
+  },[token,user?.has_password,methodAttempt]);
   useEffect(() => {
     if (resendSeconds <= 0) return;
     const timer = setTimeout(() => setResendSeconds(value => value - 1), 1000);
@@ -55,17 +68,23 @@ export default function DeleteAccountScreen() {
     } finally { setSending(false); }
   };
 
-  const canDelete = confirmed && (useEmail ? !!challenge && /^\d{8}$/.test(code) : password.length > 0) && !busy && !sending;
+  const canDelete = confirmed && (useApple || (useEmail ? !!challenge && /^\d{8}$/.test(code) : method === 'password' && password.length > 0)) && !busy && !sending;
 
   const submit = async () => {
     if (!canDelete) return;
     setBusy(true);
     setError('');
     try {
-      await deleteAccount(password, useEmail ? {challenge,code} : undefined);
+      if(useApple){
+        try { await deleteAccount('',{apple:true}); }
+        catch(caught){
+          if((caught as Error & {code?:string}).code!=='APPLE_REAUTH_REQUIRED')throw caught;
+          await deleteAccount('',await appleDeletionCredential());
+        }
+      } else await deleteAccount(password, useEmail ? {challenge,code} : undefined);
       Alert.alert(ui('Solicitud de eliminación recibida'), ui('Tu cuenta está bloqueada y la eliminación está en proceso. Te enviaremos un correo cuando termine. Si no recibes la confirmación en 48 horas, contacta a ITC Club.'), [{ text: 'OK', onPress: () => { router.dismissAll(); router.replace('/welcome'); } }]);
     } catch (err) {
-      setError(err instanceof Error ? ui(err.message) : ui('No se pudo eliminar la cuenta.'));
+      if(!isAppleCancellation(err))setError(err instanceof Error ? ui(err.message) : ui('No se pudo eliminar la cuenta.'));
     } finally {
       setBusy(false);
     }
@@ -107,7 +126,9 @@ export default function DeleteAccountScreen() {
 
           {user?.email ? <Text style={styles.account}>{ui('Cuenta: {email}', { email: user.email })}</Text> : null}
 
-          {useEmail ? <>
+          {method === 'loading' && <ActivityIndicator color={GOLD} />}
+          {method === 'unavailable' && <Pressable style={styles.cancelButton} accessibilityRole="button" onPress={()=>{setMethod('loading');setMethodAttempt(value=>value+1);}}><Text style={styles.cancelText}>{ui('No se pudo verificar el acceso. Reintentar')}</Text></Pressable>}
+          {useApple ? null : useEmail ? <>
             <Text style={styles.body}>{ui('Para eliminar tu cuenta, confirma tu identidad con el código que enviaremos a tu correo registrado.')}</Text>
             <Pressable style={styles.cancelButton} accessibilityRole="button" disabled={sending || busy || resendSeconds > 0} onPress={() => { void sendCode(); }} accessibilityState={{disabled:sending || busy || resendSeconds > 0,busy:sending}}>
               {sending ? <ActivityIndicator color={GOLD} /> : <Text style={styles.cancelText}>{ui(challenge ? 'Reenviar código' : 'Enviar código de confirmación')}{resendSeconds > 0 ? ` (${resendSeconds}s)` : ''}</Text>}
@@ -117,7 +138,7 @@ export default function DeleteAccountScreen() {
               <Text style={styles.label}>{ui('Código de confirmación')}</Text>
               <TextInput value={code} onChangeText={value => setCode(value.replace(/\D/g, '').slice(0,8))} keyboardType="number-pad" autoComplete="one-time-code" textContentType="oneTimeCode" maxLength={8} editable={!busy && !sending} accessibilityLabel={ui('Código de confirmación')} style={styles.input} onSubmitEditing={submit} />
             </>}
-          </> : <>
+          </> : method === 'password' ? <>
           <Text style={styles.label}>{ui('Confirma tu contraseña')}</Text>
           <TextInput
             value={password}
@@ -130,7 +151,7 @@ export default function DeleteAccountScreen() {
             onSubmitEditing={submit}
           />
 
-          </>}
+          </> : null}
           <Pressable
             style={styles.consentRow}
             onPress={() => setConfirmed((value) => !value)}
