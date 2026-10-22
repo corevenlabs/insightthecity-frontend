@@ -50,6 +50,7 @@ export default function WelcomeScreen() {
 function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack = false }: { replay?: boolean; fromProfile?: boolean; allowGuestBack?: boolean }) {
   const { t, ui } = useLanguage();
   const [showSignInOptions, setShowSignInOptions] = useState(false);
+  const [signInButtonHeight, setSignInButtonHeight] = useState(56);
   const finishSignIn = () => router.replace('/home');
   const openSignIn = () => {
     if (Platform.OS !== 'ios') { router.push('/login'); return; }
@@ -160,9 +161,10 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
 
         {showSignInOptions && Platform.OS === 'ios' ? (
           <View style={{ width: '100%', gap: 16 }}>
-              <AppleAccess onSuccess={finishSignIn} />
+              <AppleAccess onSuccess={finishSignIn} buttonHeight={signInButtonHeight} />
               <TouchableOpacity
                 style={styles.primaryButton}
+                onLayout={({ nativeEvent }) => setSignInButtonHeight(nativeEvent.layout.height)}
                 activeOpacity={0.86}
                 accessibilityRole="button"
                 onPress={() => router.push('/login')}
@@ -173,6 +175,7 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
           </View>
         ) : <TouchableOpacity
           style={styles.primaryButton}
+          onLayout={({ nativeEvent }) => setSignInButtonHeight(nativeEvent.layout.height)}
           activeOpacity={0.86}
           onPress={() => { void openSignIn(); }}
           accessibilityRole="button"
