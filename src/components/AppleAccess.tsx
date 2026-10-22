@@ -49,7 +49,7 @@ export default function AppleAccess({ link = false, onSuccess }: { link?: boolea
     } catch(caught) {
       const e=caught as Error & {code?:string};
       if(e.code==='REGISTRATION_REQUIRED' && body) setPending(body);
-      else if(e.code!=='ERR_REQUEST_CANCELED') setError(e.message || ui('No se pudo iniciar sesión.'));
+      else if (!['ERR_REQUEST_CANCELED', 'ERR_REQUEST_CANCELLED', 'ERR_CANCELED', 'ERR_CANCELLED', '1001'].includes(String(e.code)) && e.message !== 'The user canceled the authorization attempt') setError(e.message || ui('No se pudo iniciar sesión.'));
     } finally { setBusy(false); }
   };
   return <View style={{gap:16}}>

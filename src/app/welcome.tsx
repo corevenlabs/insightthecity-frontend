@@ -10,7 +10,6 @@ import { StatusBar } from 'expo-status-bar';
 import { requireOptionalNativeModule } from 'expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   AccessibilityInfo,
   Animated,
   Easing,
@@ -50,21 +49,11 @@ export default function WelcomeScreen() {
 
 function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack = false }: { replay?: boolean; fromProfile?: boolean; allowGuestBack?: boolean }) {
   const { t, ui } = useLanguage();
-  const { biometricEnabled, biometricAvailable, unlockWithBiometrics } = useAuth();
   const [showSignInOptions, setShowSignInOptions] = useState(false);
-  const [unlocking, setUnlocking] = useState(false);
-  const unlockInFlight = useRef(false);
   const finishSignIn = () => router.replace('/home');
-  const openSignIn = async () => {
+  const openSignIn = () => {
     if (Platform.OS !== 'ios') { router.push('/login'); return; }
-    if (unlockInFlight.current) return;
     setShowSignInOptions(true);
-    if (!biometricEnabled || !biometricAvailable) return;
-    unlockInFlight.current = true;
-    setUnlocking(true);
-    try { await unlockWithBiometrics(); finishSignIn(); }
-    catch { /* Keep Apple and email available when biometrics is cancelled. */ }
-    finally { unlockInFlight.current = false; setUnlocking(false); }
   };
 
   const { height, width, insets, fontScale } = useResponsiveLayout();
@@ -171,18 +160,16 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
 
         {showSignInOptions && Platform.OS === 'ios' ? (
           <View style={{ width: '100%', gap: 16 }}>
-            {unlocking ? <ActivityIndicator color={GOLD} accessibilityLabel={ui('Iniciar sesión')} /> : <>
               <AppleAccess onSuccess={finishSignIn} />
               <TouchableOpacity
                 style={styles.primaryButton}
                 activeOpacity={0.86}
                 accessibilityRole="button"
-                onPress={() => router.push({ pathname: '/login', params: { biometric: 'skip' } })}
+                onPress={() => router.push('/login')}
               ><Text style={styles.primaryText}>{ui('Continuar con correo')}</Text></TouchableOpacity>
               <Pressable accessibilityRole="button" onPress={() => setShowSignInOptions(false)} style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={styles.guestText}>{ui('Volver')}</Text>
               </Pressable>
-            </>}
           </View>
         ) : <TouchableOpacity
           style={styles.primaryButton}
