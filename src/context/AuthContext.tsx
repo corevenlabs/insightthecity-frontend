@@ -68,7 +68,7 @@ type AuthContextValue = {
   /** Guarda un usuario devuelto por el servidor (p. ej. tras confirmar un pago). */
   applyServerUser: (user: User) => Promise<void>;
   /** Elimina la cuenta en el servidor (exige la contraseña) y cierra la sesión. */
-  deleteAccount: (password: string) => Promise<void>;
+  deleteAccount: (password: string, emailVerification?: { challenge: string; code: string }) => Promise<void>;
 };
 
 const TOKEN_KEY = 'itc_token';
@@ -435,20 +435,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(serverUser)).catch(() => undefined);
   }, []);
 
-  const deleteAccount = useCallback(async (password: string) => {
+  const deleteAccount = useCallback(async (password: string, emailVerification?: { challenge: string; code: string }) => {
     if (!token) throw new Error('Inicia sesión para eliminar tu cuenta');
-    let response: Response;
-    try {
-      response = await fetch(`${API_URL}/api/users/me`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+    if (emailVerification) {
+      const verifyResponse = await fetch(`${API_URL}/api/account-deletions/verify-code`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(emailVerification),
       });
-    } catch {
-      throw new Error('No se pudo conectar con el servidor. Revisa tu conexión.');
+      const verified = await verifyResponse.json().catch(() => null);
+      if (!verifyResponse.ok || !verified?.proof) throw new Error('Código inválido o vencido');
+      const confirmResponse = await fetch(`${API_URL}/api/account-deletions/confirm`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ proof: verified.proof, accept: true }),
+      });
+      const confirmation = await confirmResponse.json().catch(() => null);
+      if (!confirmResponse.ok || confirmation?.requested !== true) throw new Error('No se pudo eliminar la cuenta.');
+    } else {
+      let response: Response;
+      try {
+        response = await fetch(`${API_URL}/api/users/me`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        });
+      } catch {
+        throw new Error('No se pudo conectar con el servidor. Revisa tu conexión.');
+      }
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success) throw new Error(data?.message || 'No se pudo eliminar la cuenta.');
     }
-    const data = await response.json().catch(() => null);
-    if (!response.ok || !data?.success) throw new Error(data?.message || 'No se pudo eliminar la cuenta.');
     const deletedId = user?.id;
     await forgetBiometric();
     await signOut();

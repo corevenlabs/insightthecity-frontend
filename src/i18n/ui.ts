@@ -2,6 +2,13 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "No se pudo enviar el código. Inténtalo de nuevo.": {"en": "Could not send the code. Please try again.", "pt": "Não foi possível enviar o código. Tente novamente."},
+  "Revisa tu correo e introduce el código de 8 dígitos. Si no aparece, revisa spam.": {"en": "Check your email and enter the 8-digit code. If it is missing, check spam.", "pt": "Confira seu e-mail e digite o código de 8 dígitos. Se não chegar, confira o spam."},
+  "Código inválido o vencido": {"en": "Invalid or expired code", "pt": "Código inválido ou expirado"},
+  "Código de confirmación": {"en": "Confirmation code", "pt": "Código de confirmação"},
+  "Reenviar código": {"en": "Resend code", "pt": "Reenviar código"},
+  "Enviar código de confirmación": {"en": "Send confirmation code", "pt": "Enviar código de confirmação"},
+  "Para eliminar tu cuenta, confirma tu identidad con el código que enviaremos a tu correo registrado.": {"en": "To delete your account, confirm your identity with the code sent to your registered email.", "pt": "Para excluir sua conta, confirme sua identidade com o código enviado ao seu e-mail cadastrado."},
   "Continuar con Google": {"en": "Continue with Google", "pt": "Continuar com Google"},
   "Google no proporcionó una credencial.": {"en": "Google did not provide a credential.", "pt": "O Google não forneceu uma credencial."},
   "Confirma tu contraseña para vincular Google a tu cuenta existente.": {"en": "Confirm your password to link Google to your existing account.", "pt": "Confirme sua senha para vincular o Google à sua conta existente."},

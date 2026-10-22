@@ -1,10 +1,9 @@
 import { Text, TextInput } from '../components/typography';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Linking,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -25,24 +24,48 @@ const RED = '#FF8080';
 // Eliminación de cuenta desde la app (App Store 5.1.1(v) / Google Play).
 // Borra la cuenta y los datos personales y cancela la membresía de Stripe.
 export default function DeleteAccountScreen() {
-  const { ui } = useLanguage();
+  const { ui, language } = useLanguage();
   const { user, deleteAccount } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [challenge, setChallenge] = useState('');
+  const [code, setCode] = useState('');
+  const [sending, setSending] = useState(false);
+  const [resendSeconds, setResendSeconds] = useState(0);
+  const useEmail = user?.has_password === false;
+  useEffect(() => {
+    if (resendSeconds <= 0) return;
+    const timer = setTimeout(() => setResendSeconds(value => value - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendSeconds]);
+  const sendCode = async () => {
+    if (sending || busy || resendSeconds > 0 || !user?.email) return;
+    setSending(true); setError('');
+    try {
+      const response = await fetch(`${API_URL}/api/account-deletions/request-code`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({email:user.email,language}),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.challenge) throw new Error(ui('No se pudo enviar el código. Inténtalo de nuevo.'));
+      setChallenge(data.challenge); setCode(''); setResendSeconds(60);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : ui('No se pudo enviar el código. Inténtalo de nuevo.'));
+    } finally { setSending(false); }
+  };
 
-  const canDelete = confirmed && password.length > 0 && !busy;
+  const canDelete = confirmed && (useEmail ? !!challenge && /^\d{8}$/.test(code) : password.length > 0) && !busy && !sending;
 
   const submit = async () => {
     if (!canDelete) return;
     setBusy(true);
     setError('');
     try {
-      await deleteAccount(password);
+      await deleteAccount(password, useEmail ? {challenge,code} : undefined);
       Alert.alert(ui('Solicitud de eliminación recibida'), ui('Tu cuenta está bloqueada y la eliminación está en proceso. Te enviaremos un correo cuando termine. Si no recibes la confirmación en 48 horas, contacta a ITC Club.'), [{ text: 'OK', onPress: () => { router.dismissAll(); router.replace('/welcome'); } }]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : ui('No se pudo eliminar la cuenta.'));
+      setError(err instanceof Error ? ui(err.message) : ui('No se pudo eliminar la cuenta.'));
     } finally {
       setBusy(false);
     }
@@ -84,7 +107,17 @@ export default function DeleteAccountScreen() {
 
           {user?.email ? <Text style={styles.account}>{ui('Cuenta: {email}', { email: user.email })}</Text> : null}
 
-          {user?.has_password === false && Platform.OS === 'ios' ? <Pressable style={styles.cancelButton} accessibilityRole="link" onPress={() => { void Linking.openURL(`${API_URL}/delete-account`); }}><Text style={styles.cancelText}>{ui('Eliminar mi cuenta mediante verificación por correo')}</Text></Pressable> : <>
+          {useEmail ? <>
+            <Text style={styles.body}>{ui('Para eliminar tu cuenta, confirma tu identidad con el código que enviaremos a tu correo registrado.')}</Text>
+            <Pressable style={styles.cancelButton} accessibilityRole="button" disabled={sending || busy || resendSeconds > 0} onPress={() => { void sendCode(); }} accessibilityState={{disabled:sending || busy || resendSeconds > 0,busy:sending}}>
+              {sending ? <ActivityIndicator color={GOLD} /> : <Text style={styles.cancelText}>{ui(challenge ? 'Reenviar código' : 'Enviar código de confirmación')}{resendSeconds > 0 ? ` (${resendSeconds}s)` : ''}</Text>}
+            </Pressable>
+            {!!challenge && <>
+              <Text style={styles.body} accessibilityLiveRegion="polite">{ui('Revisa tu correo e introduce el código de 8 dígitos. Si no aparece, revisa spam.')}</Text>
+              <Text style={styles.label}>{ui('Código de confirmación')}</Text>
+              <TextInput value={code} onChangeText={value => setCode(value.replace(/\D/g, '').slice(0,8))} keyboardType="number-pad" autoComplete="one-time-code" textContentType="oneTimeCode" maxLength={8} editable={!busy && !sending} accessibilityLabel={ui('Código de confirmación')} style={styles.input} onSubmitEditing={submit} />
+            </>}
+          </> : <>
           <Text style={styles.label}>{ui('Confirma tu contraseña')}</Text>
           <TextInput
             value={password}
