@@ -1,3 +1,4 @@
+import GoogleAccess from '../components/GoogleAccess';
 import AppleAccess from '../components/AppleAccess';
 import { WelcomeAttribution } from '../components/WelcomeAttribution';
 import { Text } from '../components/typography';
@@ -53,7 +54,7 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
   const [signInButtonHeight, setSignInButtonHeight] = useState(56);
   const finishSignIn = () => router.replace('/home');
   const openSignIn = () => {
-    if (Platform.OS !== 'ios') { router.push('/login'); return; }
+    if (Platform.OS === 'web') { router.push('/login'); return; }
     setShowSignInOptions(true);
   };
 
@@ -159,9 +160,10 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
           <Text style={styles.kicker}>{ui("NYC & NJ GUIDE")}</Text>
         </View>
 
-        {showSignInOptions && Platform.OS === 'ios' ? (
+        {showSignInOptions ? (
           <View style={{ width: '100%', gap: 16 }}>
               <AppleAccess onSuccess={finishSignIn} buttonHeight={signInButtonHeight} />
+              <GoogleAccess onSuccess={finishSignIn} buttonHeight={signInButtonHeight} />
               <TouchableOpacity
                 style={styles.primaryButton}
                 onLayout={({ nativeEvent }) => setSignInButtonHeight(nativeEvent.layout.height)}

@@ -35,7 +35,10 @@
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
-      ]
+      ],
+      "runtimeVersion": {
+        "policy": "fingerprint"
+      }
     },
     "web": {
       "output": "static",
@@ -79,7 +82,13 @@
         }
       ],
       "expo-video",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.1031252664334-s5vljumt8ccc7h5epep3oekrs8arr3fi"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

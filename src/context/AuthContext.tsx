@@ -53,6 +53,7 @@ type AuthContextValue = {
   biometricEnabled: boolean;
   biometricLocked: boolean;
   biometricLabel: string;
+  signInWithGoogle: (body: Record<string, unknown>) => Promise<void>;
   signInWithApple: (body: Record<string, unknown>) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   /** acceptLegal: el usuario marcó la casilla de Términos y Privacidad */
@@ -288,6 +289,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setBiometricLocked(false);
   }, [forgetBiometric]);
 
+  const signInWithGoogle = useCallback(async (body: Record<string, unknown>) => {
+    const { token: t, user: u } = await postAuth('/api/users/google/login', body);
+    await forgetBiometric();
+    await persist(t, u);
+    setHasSignedOut(false);
+    setToken(t);
+    setUser(u);
+    setBiometricLocked(false);
+  }, [forgetBiometric]);
+
   const signUp = useCallback(
     async (name: string, email: string, password: string, language: AppLanguage, acceptLegal: boolean) => {
       const { token: t, user: u } = await postAuth('/api/users/register', {
@@ -489,6 +500,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       biometricLabel,
       signIn,
       signInWithApple,
+      signInWithGoogle,
       signUp,
       signOut,
       enableBiometric,
@@ -511,6 +523,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       biometricLabel,
       signIn,
       signInWithApple,
+      signInWithGoogle,
       signUp,
       signOut,
       enableBiometric,

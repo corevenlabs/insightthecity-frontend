@@ -2,6 +2,11 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Continuar con Google": {"en": "Continue with Google", "pt": "Continuar com Google"},
+  "Google no proporcionó una credencial.": {"en": "Google did not provide a credential.", "pt": "O Google não forneceu uma credencial."},
+  "Confirma tu contraseña para vincular Google a tu cuenta existente.": {"en": "Confirm your password to link Google to your existing account.", "pt": "Confirme sua senha para vincular o Google à sua conta existente."},
+  "No se pudo iniciar sesión con Google. Inténtalo de nuevo.": {"en": "Could not sign in with Google. Please try again.", "pt": "Não foi possível entrar com Google. Tente novamente."},
+
   "Continuar con Apple": {"en":"Continue with Apple","pt":"Continuar com Apple"},
   "Vincular Apple a mi cuenta": {"en":"Link Apple to my account","pt":"Vincular Apple à minha conta"},
   "Continuar con correo": {"en": "Continue with email", "pt": "Continuar com e-mail"},
