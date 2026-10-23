@@ -2,6 +2,8 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "O continúa con": {"en": "Or continue with", "pt": "Ou continue com"},
+  "Para crear una cuenta o iniciar sesión.": {"en": "To create an account or sign in.", "pt": "Para criar uma conta ou entrar."},
   "Verifica tu identidad con Apple para continuar.": {"en": "Verify your identity with Apple to continue.", "pt": "Verifique sua identidade com Apple para continuar."},
   "La cuenta de Apple no corresponde a este perfil": {"en": "This Apple account does not match this profile", "pt": "Esta conta Apple não corresponde a este perfil"},
   "La verificación con Apple no está disponible en este dispositivo.": {"en": "Apple verification is not available on this device.", "pt": "A verificação com Apple não está disponível neste dispositivo."},

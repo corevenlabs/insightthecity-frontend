@@ -19,6 +19,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  TurboModuleRegistry,
   View,
 } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
@@ -50,13 +51,10 @@ export default function WelcomeScreen() {
 
 function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack = false }: { replay?: boolean; fromProfile?: boolean; allowGuestBack?: boolean }) {
   const { t, ui } = useLanguage();
-  const [showSignInOptions, setShowSignInOptions] = useState(false);
   const [signInButtonHeight, setSignInButtonHeight] = useState(56);
   const finishSignIn = () => router.replace('/home');
-  const openSignIn = () => {
-    if (Platform.OS === 'web') { router.push('/login'); return; }
-    setShowSignInOptions(true);
-  };
+  const hasSocialAccess = (Platform.OS === 'ios' && !!requireOptionalNativeModule('ExpoAppleAuthentication'))
+    || (Platform.OS !== 'web' && !!TurboModuleRegistry.get('RNGoogleSignin'));
 
   const { height, width, insets, fontScale } = useResponsiveLayout();
   const [playIntro] = useState(() => !!WelcomeVideo && !fromProfile && (replay || !introShown));
@@ -160,39 +158,35 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
           <Text style={styles.kicker}>{ui("NYC & NJ GUIDE")}</Text>
         </View>
 
-        {showSignInOptions ? (
-          <View style={{ width: '100%', gap: 16 }}>
-              <AppleAccess onSuccess={finishSignIn} buttonHeight={signInButtonHeight} />
-              <GoogleAccess onSuccess={finishSignIn} buttonHeight={signInButtonHeight} />
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onLayout={({ nativeEvent }) => setSignInButtonHeight(nativeEvent.layout.height)}
-                activeOpacity={0.86}
-                accessibilityRole="button"
-                onPress={() => router.push('/login')}
-              ><Text style={styles.primaryText}>{ui('Continuar con correo')}</Text></TouchableOpacity>
-              <Pressable accessibilityRole="button" onPress={() => setShowSignInOptions(false)} style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={styles.guestText}>{ui('Volver')}</Text>
-              </Pressable>
-          </View>
-        ) : <TouchableOpacity
+        <TouchableOpacity
           style={styles.primaryButton}
           onLayout={({ nativeEvent }) => setSignInButtonHeight(nativeEvent.layout.height)}
-          activeOpacity={0.86}
-          onPress={() => { void openSignIn(); }}
-          accessibilityRole="button"
-        >
-          <Text style={styles.primaryText}>{t('welcome.signIn')}</Text>
-        </TouchableOpacity>}
-
-        {!showSignInOptions && <TouchableOpacity
-          style={[styles.secondaryButton, { minHeight: signInButtonHeight }]}
           activeOpacity={0.86}
           onPress={() => router.push('/register')}
           accessibilityRole="button"
         >
-          <Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text>
-        </TouchableOpacity>}
+          <Text style={styles.primaryText}>{t('welcome.createAccount')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.secondaryButton, { minHeight: signInButtonHeight }]}
+          activeOpacity={0.86}
+          onPress={() => router.push('/login')}
+          accessibilityRole="button"
+        >
+          <Text style={styles.secondaryText}>{t('welcome.signIn')}</Text>
+        </TouchableOpacity>
+
+        {hasSocialAccess && <View style={styles.socialAccess}>
+          <View style={styles.accessDivider}>
+            <View style={styles.accessDividerLine} />
+            <Text style={styles.accessDividerText}>{ui('O continúa con')}</Text>
+            <View style={styles.accessDividerLine} />
+          </View>
+          <AppleAccess onSuccess={finishSignIn} buttonHeight={signInButtonHeight} />
+          <GoogleAccess onSuccess={finishSignIn} buttonHeight={signInButtonHeight} />
+          <Text style={styles.socialHint}>{ui('Para crear una cuenta o iniciar sesión.')}</Text>
+        </View>}
 
         {!fromProfile && <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.replace('/home' as any)}>
           <Text style={styles.guestText}>{t('welcome.guest')}</Text>
@@ -283,6 +277,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '900',
   },
+  socialAccess: { width: '100%', gap: 12, marginTop: 20 },
+  accessDivider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  accessDividerLine: { flex: 1, height: 1, backgroundColor: '#333333' },
+  accessDividerText: { color: '#B8B8B8', fontSize: 13, flexShrink: 1, textAlign: 'center' },
+  socialHint: { color: '#B8B8B8', fontSize: 13, lineHeight: 19, textAlign: 'center' },
   termsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
