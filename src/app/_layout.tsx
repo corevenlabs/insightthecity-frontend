@@ -151,7 +151,8 @@ export default function RootLayout() {
       .then(async (update) => {
         if (!update.isAvailable) return;
         await Updates.fetchUpdateAsync();
-        await Updates.reloadAsync();
+        // Apply the downloaded update on the next cold start. Reloading here can
+        // tear down Hermes while startup requests still retain native promises.
       })
       .catch(() => {
         // Una falla de actualización nunca debe impedir el acceso a la app instalada.
