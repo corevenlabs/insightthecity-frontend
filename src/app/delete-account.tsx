@@ -35,7 +35,7 @@ export default function DeleteAccountScreen() {
   const [code, setCode] = useState('');
   const [sending, setSending] = useState(false);
   const [resendSeconds, setResendSeconds] = useState(0);
-  const [method,setMethod] = useState<'loading'|'password'|'apple'|'email'|'unavailable'>(user?.has_password ? 'password' : 'loading');
+  const [method,setMethod] = useState<'loading'|'password'|'apple'|'google'|'email'|'unavailable'>(user?.has_password ? 'password' : 'loading');
   const [methodAttempt,setMethodAttempt] = useState(0);
   const useApple = method === 'apple' && Platform.OS === 'ios';
   const useEmail = method === 'email' || (method === 'apple' && Platform.OS !== 'ios');
@@ -43,7 +43,7 @@ export default function DeleteAccountScreen() {
     let alive=true;
     void fetch(`${API_URL}/api/users/me/deletion-method`,{headers:{Authorization:`Bearer ${token}`}}).then(async response=>{
       const data=await response.json();
-      if(!response.ok || !['password','apple','email'].includes(data.method))throw new Error('method');
+      if(!response.ok || !['password','apple','google','email'].includes(data.method))throw new Error('method');
       if(alive)setMethod(data.method);
     }).catch(()=>{if(alive)setMethod(user?.has_password ? 'password' : 'unavailable');});
     return ()=>{alive=false;};
@@ -68,14 +68,16 @@ export default function DeleteAccountScreen() {
     } finally { setSending(false); }
   };
 
-  const canDelete = confirmed && (useApple || (useEmail ? !!challenge && /^\d{8}$/.test(code) : method === 'password' && password.length > 0)) && !busy && !sending;
+  const canDelete = confirmed && (method === 'google' || useApple || (useEmail ? !!challenge && /^\d{8}$/.test(code) : method === 'password' && password.length > 0)) && !busy && !sending;
 
   const submit = async () => {
     if (!canDelete) return;
     setBusy(true);
     setError('');
     try {
-      if(useApple){
+      if(method === 'google') {
+        await deleteAccount('', {google:true});
+      } else if(useApple){
         try { await deleteAccount('',{apple:true}); }
         catch(caught){
           if((caught as Error & {code?:string}).code!=='APPLE_REAUTH_REQUIRED')throw caught;
@@ -128,7 +130,7 @@ export default function DeleteAccountScreen() {
 
           {method === 'loading' && <ActivityIndicator color={GOLD} />}
           {method === 'unavailable' && <Pressable style={styles.cancelButton} accessibilityRole="button" onPress={()=>{setMethod('loading');setMethodAttempt(value=>value+1);}}><Text style={styles.cancelText}>{ui('No se pudo verificar el acceso. Reintentar')}</Text></Pressable>}
-          {useApple ? null : useEmail ? <>
+          {useApple || method === 'google' ? null : useEmail ? <>
             <Text style={styles.body}>{ui('Para eliminar tu cuenta, confirma tu identidad con el código que enviaremos a tu correo registrado.')}</Text>
             <Pressable style={styles.cancelButton} accessibilityRole="button" disabled={sending || busy || resendSeconds > 0} onPress={() => { void sendCode(); }} accessibilityState={{disabled:sending || busy || resendSeconds > 0,busy:sending}}>
               {sending ? <ActivityIndicator color={GOLD} /> : <Text style={styles.cancelText}>{ui(challenge ? 'Reenviar código' : 'Enviar código de confirmación')}{resendSeconds > 0 ? ` (${resendSeconds}s)` : ''}</Text>}
