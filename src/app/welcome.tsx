@@ -185,10 +185,10 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
           <Text style={styles.primaryText}>{t('welcome.signIn')}</Text>
         </TouchableOpacity>}
 
-        {Platform.OS !== 'ios' && <TouchableOpacity
-          style={styles.secondaryButton}
+        {!showSignInOptions && <TouchableOpacity
+          style={[styles.secondaryButton, { minHeight: signInButtonHeight }]}
           activeOpacity={0.86}
-          onPress={() => router.push('/register' as any)}
+          onPress={() => router.push('/register')}
           accessibilityRole="button"
         >
           <Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text>
@@ -273,7 +273,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: GOLD,
     borderRadius: 14,
-    paddingVertical: 18,
+    paddingVertical: 17,
+    justifyContent: 'center',
     alignItems: 'center',
     marginTop: 12,
   },
