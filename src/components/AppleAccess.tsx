@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
+import { SocialAccessButton } from './SocialAccessButton';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Pressable, View } from 'react-native';
+import { Alert, Platform, Pressable, View } from 'react-native';
 import { requireOptionalNativeModule } from 'expo-modules-core';
 import { router } from 'expo-router';
 import { Text } from './typography';
@@ -22,7 +22,7 @@ export default function AppleAccess({ link = false, onSuccess, buttonHeight = 56
   const [error,setError] = useState('');
   useEffect(() => { let active=true; void Apple?.isAvailableAsync().then(value => { if(active) setAvailable(value); }).catch(() => {}); return () => { active=false; }; }, []);
   if (Platform.OS !== 'ios') return null;
-  if (!Apple || !available) return <Pressable disabled accessibilityRole="button" accessibilityState={{ disabled: true }} style={{ backgroundColor: '#fff', borderRadius: 14, height: buttonHeight, width: '100%', flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}><Ionicons name="logo-apple" size={24} color="#000" accessible={false} /><Text style={{ color: '#000', fontSize: 18 }}>{ui('Continuar con Apple')}</Text></Pressable>;
+  if (!Apple || !available) return <SocialAccessButton provider="apple" label={ui('Continuar con Apple')} height={buttonHeight} disabled />;
   const submit = async (body:Record<string,unknown>) => {
     if(link) {
       const response=await fetch(`${API_URL}/api/users/apple/link`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(body)});
@@ -60,7 +60,7 @@ export default function AppleAccess({ link = false, onSuccess, buttonHeight = 56
       <View style={{flexDirection:'row',gap:20}}><Pressable accessibilityRole="link" onPress={()=>router.push({pathname:'/legal',params:{slug:'terms'}} as never)}><Text style={{color:'#FDDD56'}}>{ui('Términos')}</Text></Pressable><Pressable accessibilityRole="link" onPress={()=>router.push({pathname:'/legal',params:{slug:'privacy'}} as never)}><Text style={{color:'#FDDD56'}}>{ui('Privacidad')}</Text></Pressable></View>
       <Pressable accessibilityRole="button" disabled={!accepted||busy} onPress={()=>void run()} style={{backgroundColor:'#FDDD56',padding:18,borderRadius:14,opacity:accepted?1:0.5}}><Text style={{textAlign:'center',color:'black'}}>{ui('Crear cuenta con Apple')}</Text></Pressable>
       <Pressable onPress={()=>{setPending(null);setAccepted(false);}}><Text style={{color:'white'}}>{ui('Cancelar')}</Text></Pressable>
-    </> : busy ? <ActivityIndicator color="#FDDD56" /> : <Apple.AppleAuthenticationButton buttonType={Apple.AppleAuthenticationButtonType.CONTINUE} buttonStyle={Apple.AppleAuthenticationButtonStyle.WHITE} cornerRadius={14} style={{height:buttonHeight,width:'100%'}} onPress={()=>void run()} />}
+    </> : <SocialAccessButton provider="apple" label={ui('Continuar con Apple')} height={buttonHeight} busy={busy} onPress={()=>void run()} />}
     {!!error && <Text accessibilityRole="alert" style={{color:'#FF8080'}}>{error}</Text>}
   </View>;
 }

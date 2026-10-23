@@ -1,5 +1,6 @@
+import { SocialAccessButton } from './SocialAccessButton';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Image, Platform, Pressable, TextInput, TurboModuleRegistry, View } from 'react-native';
+import { Alert, Platform, Pressable, TextInput, TurboModuleRegistry, View } from 'react-native';
 import { router } from 'expo-router';
 import { Text } from './typography';
 import { useAuth } from '../context/AuthContext';
@@ -50,10 +51,8 @@ export default function GoogleAccess({onSuccess,buttonHeight=56}:{onSuccess:()=>
       <View style={{flexDirection:'row',gap:20}}>{(['terms','privacy'] as const).map(slug=><Pressable key={slug} accessibilityRole="link" onPress={()=>router.push({pathname:'/legal',params:{slug}} as never)}><Text style={{color:'#FDDD56'}}>{ui(slug==='terms'?'Términos':'Privacidad')}</Text></Pressable>)}</View>
     </>}
     {mode==='link'&&<View style={{gap:8}}><Text style={{color:'#fff'}}>{ui('Contraseña')}</Text><TextInput secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} textContentType="password" accessibilityLabel={ui('Contraseña')} placeholder={ui('Contraseña')} placeholderTextColor="#999" value={password} onChangeText={setPassword} style={{backgroundColor:'#171717',color:'#fff',borderWidth:1,borderColor:'#555',borderRadius:14,padding:16}} /><Pressable accessibilityRole="button" onPress={()=>setShowPassword(!showPassword)} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:'#FDDD56'}}>{ui(showPassword?'Ocultar contraseña':'Mostrar contraseña')}</Text></Pressable></View>}
-    <Pressable accessibilityRole="button" accessibilityLabel={ui('Continuar con Google')} disabled={busy||(mode==='register'&&!accepted)||(mode==='link'&&!password)} onPress={()=>void run()} style={{height:buttonHeight,width:'100%',paddingHorizontal:16,backgroundColor:'#fff',borderRadius:14,flexDirection:'row',gap:12,alignItems:'center',justifyContent:'center',opacity:busy||(mode==='register'&&!accepted)||(mode==='link'&&!password)?0.5:1}}>
-      {busy?<ActivityIndicator color="#333"/>:<Image source={require('../../assets/images/google-g.png')} style={{width:20,height:20}} resizeMode="contain" accessible={false} />}
-      <Text style={{color:'#1F1F1F',fontSize:18,fontWeight:'500',textAlign:'center',flexShrink:1}}>{ui('Continuar con Google')}</Text>
-    </Pressable>
+    <SocialAccessButton provider="google" label={ui('Continuar con Google')} height={buttonHeight} busy={busy}
+      disabled={(mode==='register'&&!accepted)||(mode==='link'&&!password)} onPress={()=>void run()} />
     {mode&&<Pressable accessibilityRole="button" onPress={()=>{setMode(null);setPending(null);setPassword('');setAccepted(false);setError('');}} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:'#fff',textAlign:'center'}}>{ui('Cancelar')}</Text></Pressable>}
     {!!error&&<Text accessibilityRole="alert" style={{color:'#FF8080'}}>{error}</Text>}
   </View>;
