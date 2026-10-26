@@ -1,6 +1,6 @@
 import { Text, TextInput } from '../components/typography';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -24,8 +24,9 @@ const BLACK = '#0A0A0A';
 export default function RegisterScreen() {
   const { signUp } = useAuth();
   const { language, setLanguage, t, ui } = useLanguage();
+  const { email: initialEmail } = useLocalSearchParams<{ email?: string }>();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(typeof initialEmail === 'string' ? initialEmail.trim().slice(0, 254) : '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

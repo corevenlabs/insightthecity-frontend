@@ -2,6 +2,12 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Este correo aún no tiene cuenta": {"en": "This email does not have an account yet", "pt": "Este e-mail ainda não tem uma conta"},
+  "No encontramos una cuenta con {email}. Puedes crear una con este mismo correo.": {"en": "We could not find an account for {email}. You can create one with this email.", "pt": "Não encontramos uma conta com {email}. Você pode criar uma com este mesmo e-mail."},
+  "Usar otro correo": {"en": "Use another email", "pt": "Usar outro e-mail"},
+  "La contraseña no es correcta.": {"en": "The password is incorrect.", "pt": "A senha está incorreta."},
+  "Esta cuenta usa Apple o Google. Usa tu acceso habitual o recupera la contraseña.": {"en": "This account uses Apple or Google. Use your usual sign-in method or reset your password.", "pt": "Esta conta usa Apple ou Google. Use seu acesso habitual ou redefina a senha."},
+
   "Redes sociales": {"en": "Social media", "pt": "Redes sociais"},
   "Abrir perfil en {network}": {"en": "Open profile on {network}", "pt": "Abrir perfil no {network}"},
   "No se pudo abrir el enlace. Inténtalo de nuevo.": {"en": "Could not open the link. Please try again.", "pt": "Não foi possível abrir o link. Tente novamente."},

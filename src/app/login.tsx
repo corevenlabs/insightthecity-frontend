@@ -38,8 +38,10 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [unregisteredEmail, setUnregisteredEmail] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const biometricAttempted = useRef(biometric === 'skip');
 
@@ -52,6 +54,7 @@ export default function LoginScreen() {
     if (submitting) return;
     Keyboard.dismiss();
     setError(null);
+    setUnregisteredEmail(null);
 
     if (!email.trim() || !password) {
       setError(t('login.required'));
@@ -87,7 +90,8 @@ export default function LoginScreen() {
         enterAuthenticatedApp();
       }
     } catch (err: any) {
-      setError(err?.message ?? t('login.genericError'));
+      if (err?.code === 'ACCOUNT_NOT_FOUND') setUnregisteredEmail(email.trim());
+      else setError(err?.code === 'INVALID_PASSWORD' ? ui('La contraseña no es correcta.') : err?.code === 'LOGIN_PROVIDER_REQUIRED' ? ui('Esta cuenta usa Apple o Google. Usa tu acceso habitual o recupera la contraseña.') : err?.message ?? t('login.genericError'));
     } finally {
       setSubmitting(false);
     }
@@ -146,8 +150,9 @@ export default function LoginScreen() {
             <View style={styles.form}>
               <Text style={styles.label}>{t('login.email')}</Text>
               <TextInput
+                ref={emailRef}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={value => { setEmail(value); setUnregisteredEmail(null); setError(null); }}
                 placeholder="name@example.com"
                 placeholderTextColor="#8A8A8A"
                 keyboardType="email-address"
@@ -197,6 +202,17 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
+            {unregisteredEmail && <View style={styles.accountNotice} accessibilityLiveRegion="polite">
+              <View style={styles.noticeHeading}><Ionicons name="information-circle-outline" size={22} color={GOLD} /><Text style={styles.noticeTitle}>{ui('Este correo aún no tiene cuenta')}</Text></View>
+              <Text style={styles.noticeText}>{ui('No encontramos una cuenta con {email}. Puedes crear una con este mismo correo.', { email: unregisteredEmail })}</Text>
+              <TouchableOpacity accessibilityRole="button" style={styles.primaryButton} onPress={() => { setPassword(''); router.push({ pathname: '/register', params: { email: unregisteredEmail } }); }}>
+                <Text style={styles.primaryText}>{t('register.submit')}</Text>
+              </TouchableOpacity>
+              <Pressable accessibilityRole="button" style={styles.otherEmail} onPress={() => { setUnregisteredEmail(null); setError(null); setEmail(''); setPassword(''); emailRef.current?.focus(); }}>
+                <Text style={styles.switchAccent}>{ui('Usar otro correo')}</Text>
+              </Pressable>
+            </View>}
+
             {biometricEnabled && (
                 <Pressable accessibilityRole="button" disabled={submitting} onPress={() => {
                   Alert.alert(ui('Olvidar esta cuenta en el dispositivo'), ui('Se eliminará el acceso biométrico. Podrás entrar con tu correo y contraseña.'), [
@@ -206,11 +222,11 @@ export default function LoginScreen() {
                 }}><Text style={styles.forgotText}>{ui('Olvidar esta cuenta en el dispositivo')}</Text></Pressable>
             )}
 
-            <Pressable accessibilityRole="link" onPress={() => router.push('/register' as any)}>
+            {!unregisteredEmail && <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/register', params: { email: email.trim() } })}>
               <Text style={styles.switchText}>
                 {t('login.noAccount')} <Text style={styles.switchAccent}>{t('login.createAccount')}</Text>
               </Text>
-            </Pressable>
+            </Pressable>}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -219,6 +235,11 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  accountNotice: { borderWidth: 1, borderColor: GOLD, borderRadius: 14, backgroundColor: '#121212', padding: 16, gap: 14, marginTop: 18 },
+  noticeHeading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  noticeTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', flex: 1 },
+  noticeText: { color: '#B8B8B8', fontSize: 14, lineHeight: 21 },
+  otherEmail: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   container: {
     flex: 1,
     backgroundColor: BLACK,
