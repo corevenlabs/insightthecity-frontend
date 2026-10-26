@@ -1,8 +1,8 @@
 import { SocialAccessButton } from './SocialAccessButton';
 import { useState } from 'react';
-import { Alert, Platform, Pressable, TextInput, TurboModuleRegistry, View } from 'react-native';
+import { Alert, Platform, Pressable, TurboModuleRegistry, View } from 'react-native';
 import { router } from 'expo-router';
-import { Text } from './typography';
+import { Text, TextInput } from './typography';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from '../constants/google';
