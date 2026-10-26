@@ -13,8 +13,7 @@
       },
       "ios": {
         "simulator": false
-      },
-      "node": "22.23.4"
+      }
     },
     "preview": {
       "channel": "preview",
@@ -25,8 +24,7 @@
       },
       "ios": {
         "resourceClass": "m-medium"
-      },
-      "node": "22.23.4"
+      }
     },
     "production": {
       "distribution": "store",
@@ -40,8 +38,7 @@
       },
       "android": {
         "buildType": "app-bundle"
-      },
-      "node": "22.23.4"
+      }
     }
   },
   "submit": {
