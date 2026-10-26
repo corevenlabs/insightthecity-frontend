@@ -1,3 +1,4 @@
+import { ExperienceSocialLinks } from '../components/ExperienceSocialLinks';
 import { ExperienceLocation } from '../components/ExperienceLocation';
 import { Text } from '../components/typography';
 import { partnerDisclosure } from '../lib/partnerDisclosure';
@@ -190,6 +191,8 @@ export default function ExperienceDetailScreen() {
           <Text style={styles.addressTitle}>{ui("Ubicación")}</Text>
           <ExperienceLocation experience={experience} full />
         </View>}
+
+        <ExperienceSocialLinks experience={experience} />
 
         <View style={styles.recommendationCard}>
           <Text style={styles.recommendationLabel}>{ui("Recomendación ITC")}</Text>

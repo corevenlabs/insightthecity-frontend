@@ -2,6 +2,9 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Redes sociales": {"en": "Social media", "pt": "Redes sociais"},
+  "Abrir perfil en {network}": {"en": "Open profile on {network}", "pt": "Abrir perfil no {network}"},
+  "No se pudo abrir el enlace. Inténtalo de nuevo.": {"en": "Could not open the link. Please try again.", "pt": "Não foi possível abrir o link. Tente novamente."},
   "O continúa con": {"en": "Or continue with", "pt": "Ou continue com"},
   "Para crear una cuenta o iniciar sesión.": {"en": "To create an account or sign in.", "pt": "Para criar uma conta ou entrar."},
   "Verifica tu identidad con Apple para continuar.": {"en": "Verify your identity with Apple to continue.", "pt": "Verifique sua identidade com Apple para continuar."},

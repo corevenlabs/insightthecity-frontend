@@ -3,6 +3,9 @@ export type ExperienceRegion = 'NY' | 'NJ';
 export type BenefitAction = 'none' | 'external' | 'qr';
 
 export type Experience = {
+  instagramUrl?: string | null;
+  tiktokUrl?: string | null;
+  facebookUrl?: string | null;
   id: string;
   title: string;
   category: string;
