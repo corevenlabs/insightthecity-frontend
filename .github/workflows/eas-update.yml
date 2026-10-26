@@ -3,20 +3,29 @@ name: Publicar update OTA (canal preview)
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '.github/**'
+      - '.nvmrc'
+      - 'scripts/check-node-version.cjs'
+      - 'eas.json'
+      - 'docs/**'
   workflow_dispatch:
 
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: npm
 
+      - run: node scripts/check-node-version.cjs
       - run: npm ci
+      - name: Comprobar TypeScript
+        run: npx tsc --noEmit
 
       # EXPO_TOKEN: token de acceso de expo.dev (Account settings -> Access tokens),
       # guardado como secret del repo.
