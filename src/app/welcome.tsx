@@ -188,9 +188,9 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
           <Text style={styles.socialHint}>{ui('Para crear una cuenta o iniciar sesión.')}</Text>
         </View>}
 
-        {!fromProfile && <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.replace('/home' as any)}>
+        <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.replace('/home')}>
           <Text style={styles.guestText}>{t('welcome.guest')}</Text>
-        </Pressable>}
+        </Pressable>
 
         {/* Aviso visible antes de usar la app; la aceptación expresa se pide al crear la cuenta. */}
         <Text style={styles.termsText}>
