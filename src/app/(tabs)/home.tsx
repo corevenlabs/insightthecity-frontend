@@ -6,7 +6,7 @@ import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
 import { TopTodayBanner } from '../../components/TopTodayBanner';
 import { HomePromotion } from '../../components/HomePromotion';
 import { BenefitPreview } from '../../components/BenefitPreview';
-import { getExperienceTags, matchesExperienceTags } from '@/lib/experienceFilters';
+import { matchesExperienceTags } from '@/lib/experienceFilters';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -120,7 +120,7 @@ function openExperience(id: string) {
 }
 
 function RecommendationsCarousel({ experiences }: { experiences: Experience[] }) {
-  const { ui, tagLabel } = useLanguage();
+  const { ui } = useLanguage();
   const { carouselWidth: bannerWidth } = useResponsiveLayout();
   const intervalWidth = bannerWidth + 10;
 
@@ -136,7 +136,6 @@ function RecommendationsCarousel({ experiences }: { experiences: Experience[] })
 
       >
         {experiences.map((experience) => {
-          const primaryTag = getExperienceTags(experience)[0];
           return (
             <TouchableOpacity
               key={experience.id}
@@ -149,17 +148,10 @@ function RecommendationsCarousel({ experiences }: { experiences: Experience[] })
               <Image source={{ uri: experience.image }} style={styles.recommendationBannerImage} />
               <View style={styles.recommendationBannerOverlay}>
                 <Text style={styles.recommendationBannerCategory} numberOfLines={1}>
-                  {primaryTag ? tagLabel(primaryTag).toUpperCase() : experience.category.toUpperCase()}
+                  {experience.region ?? 'NY'}
                 </Text>
                 <Text style={styles.recommendationBannerTitle} numberOfLines={2}>{experience.title}</Text>
                 {!!experience.description && <Text style={styles.recommendationDescription} numberOfLines={2}>{experience.description}</Text>}
-                <View style={styles.recommendationBannerFooter}>
-                  <View style={styles.recommendationRegionRow}>
-                    <Ionicons name="location-outline" size={18} color={COLORS.secondary} />
-                    <Text style={styles.recommendationBannerRegion}>{experience.region ?? 'NY'}</Text>
-                  </View>
-
-                </View>
               </View>
             </TouchableOpacity>
           );

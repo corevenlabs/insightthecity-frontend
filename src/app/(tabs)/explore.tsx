@@ -1,7 +1,6 @@
 import { Text, TextInput } from '../../components/typography';
 import { AdaptiveGrid } from '../../components/AdaptiveGrid';
 import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
-import { ExperienceTags } from '@/components/ExperienceTags';
 import { TagFilter } from '@/components/TagFilter';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -93,7 +92,7 @@ export default function ExploreScreen() {
             onPress={() => openExperience(event.id)}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel={`${event.title}, ${event.region ?? 'NY'}, ${event.location}`}
+            accessibilityLabel={`${event.title}, ${event.region ?? 'NY'}`}
           >
             <Image source={{ uri: event.image }} style={styles.image} />
 
@@ -101,7 +100,6 @@ export default function ExploreScreen() {
               <View style={styles.topRow}>
                 <View style={styles.categoryRow}>
                   <View style={styles.regionBadge}><Text style={styles.regionBadgeText}>{event.region ?? 'NY'}</Text></View>
-                  <ExperienceTags tags={getExperienceTags(event)} />
                 </View>
                 <View style={[styles.badge, event.access === 'premium' ? styles.premiumBadge : styles.freeBadge]}>
                   <Text style={[styles.badgeText, event.access === 'premium' && styles.premiumBadgeText]}>
@@ -111,10 +109,6 @@ export default function ExploreScreen() {
               </View>
               <Text style={styles.eventTitle}>{event.title}</Text>
               <MemberBenefitSummary experience={event} />
-              <View style={styles.locationRow}>
-                <Ionicons name="location-outline" size={15} color="#A6A6A6" />
-                <Text style={styles.location}>{event.location}</Text>
-              </View>
               <Text style={styles.time}>{event.date}</Text>
             </View>
           </TouchableOpacity>

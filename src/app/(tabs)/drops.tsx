@@ -1,7 +1,6 @@
 import { Text } from '../../components/typography';
 import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
 import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
-import { ExperienceTags } from '@/components/ExperienceTags';
 import { TagFilter } from '@/components/TagFilter';
 import { ExpandableText } from '@/components/ExpandableContent';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import type { Experience } from '../../constants/experiences';
-import { getExperienceTags, matchesExperienceTags } from '../../lib/experienceFilters';
+import { matchesExperienceTags } from '../../lib/experienceFilters';
 import { fetchExperiences } from '../../lib/experiences';
 
 type MiniDropCardProps = {
@@ -20,7 +19,6 @@ type MiniDropCardProps = {
   image: string;
   title: string;
   subtitle: string;
-  tags: string[];
   access: 'free' | 'premium';
   showBenefitOnCard?: boolean;
   cardBenefit?: string | null;
@@ -93,13 +91,9 @@ export default function DropsScreen() {
               <Text style={styles.badge}> {t('drops.featured')} </Text>
               <View style={styles.regionBadge}><Text style={styles.regionBadgeText}>{featured.region ?? 'NY'}</Text></View>
             </View>
-            <ExperienceTags tags={getExperienceTags(featured)} />
             <Text style={styles.heroTitle}> {featured.title} </Text>
             <MemberBenefitSummary experience={featured} />
             <ExpandableText key={featured.id} text={featured.description} style={styles.heroDescription} color="#FDDD56" />
-            <Text style={styles.location}>
-              {featured.location}
-            </Text>
             <Text style={styles.endsIn}> {t('drops.endsIn')} </Text>
             <View style={styles.countdownContainer}>
               <View style={styles.timeBox}>
@@ -129,7 +123,7 @@ export default function DropsScreen() {
 
         {upcoming.map((item) => (
           <MiniDropCard key={item.id} id={item.id} image={item.image} title={item.title}
-            subtitle={item.date || item.description} tags={getExperienceTags(item)} access={item.access} showBenefitOnCard={item.showBenefitOnCard} cardBenefit={item.cardBenefit}
+            subtitle={item.date || item.description} access={item.access} showBenefitOnCard={item.showBenefitOnCard} cardBenefit={item.cardBenefit}
             region={item.region ?? 'NY'}
             isPremiumMember={Boolean(user?.is_premium)} />
         ))}
@@ -140,7 +134,7 @@ export default function DropsScreen() {
   );
 }
 
-function MiniDropCard({ id, image, title, subtitle, tags, access, showBenefitOnCard, cardBenefit, region, isPremiumMember }: MiniDropCardProps) {
+function MiniDropCard({ id, image, title, subtitle, access, showBenefitOnCard, cardBenefit, region, isPremiumMember }: MiniDropCardProps) {
   const router = useRouter();
   const { t } = useLanguage();
 
@@ -163,7 +157,6 @@ function MiniDropCard({ id, image, title, subtitle, tags, access, showBenefitOnC
             </Text>
           </View>
         </View>
-        <ExperienceTags tags={tags} />
         <Text style={styles.miniDropTitle}> {title} </Text>
         <MemberBenefitSummary experience={{ access, showBenefitOnCard, cardBenefit }} />
         <Text style={styles.miniDropSubtitle}> {subtitle} </Text>

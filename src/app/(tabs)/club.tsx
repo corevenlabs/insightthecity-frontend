@@ -7,7 +7,7 @@ import { AdaptiveGrid } from '../../components/AdaptiveGrid';
 import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
 import { ExperienceTags } from '@/components/ExperienceTags';
 import { TagFilter } from '@/components/TagFilter';
-import { getExperienceTags, matchesExperienceTags } from '@/lib/experienceFilters';
+import { matchesExperienceTags } from '@/lib/experienceFilters';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
@@ -36,7 +36,7 @@ function PremiumCard({ experience }: { experience: Experience }) {
 
       <View style={styles.experienceBody}>
         <View style={styles.experienceTopline}>
-          <ExperienceTags tags={getExperienceTags(experience)} />
+          <ExperienceTags tags={[experience.region ?? 'NY']} />
           <View style={styles.memberBadge}>
             <Ionicons name="star" size={11} color="#050505" />
             <Text style={styles.memberBadgeText}>CLUB</Text>
@@ -47,10 +47,6 @@ function PremiumCard({ experience }: { experience: Experience }) {
         <View style={styles.metaRow}>
           <Ionicons name="calendar-outline" size={15} color={GOLD} />
           <Text style={styles.metaText}>{experience.date}</Text>
-        </View>
-        <View style={styles.metaRow}>
-          <Ionicons name="location-outline" size={15} color={GOLD} />
-          <Text style={styles.metaText} numberOfLines={1}>{experience.location}</Text>
         </View>
       </View>
     </TouchableOpacity>
