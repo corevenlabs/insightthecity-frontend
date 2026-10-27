@@ -40,7 +40,6 @@ export function BenefitPreview({ experience, width }: { experience: Experience; 
       <View style={s.body}>
         <Text style={s.title} numberOfLines={2}>{experience.title}</Text>
         <Text style={s.description} numberOfLines={1}>{getExperienceTags(experience).map(tagLabel).join(' · ') || experience.category}</Text>
-        <View style={s.region}><Ionicons name="location-outline" size={16} color="#FFFFFF" /><Text style={s.description}>{experience.region ?? 'NY'}</Text></View>
       </View>
     </TouchableOpacity>
     {!!benefit && <View style={s.badge} pointerEvents="none"><Ionicons name="pricetag" size={14} color="#FDDD56" /><Text style={s.badgeText} numberOfLines={1}>{benefit}</Text></View>}
@@ -59,7 +58,6 @@ const s = StyleSheet.create({
   body: { position: 'absolute', bottom: 38, left: 14, right: 14, gap: 5 },
   title: { color: '#FFFFFF', fontSize: 19, lineHeight: 24, fontWeight: '700' },
   description: { color: '#E0E0E0', fontSize: 13, lineHeight: 18 },
-  region: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   badge: { position: 'absolute', top: 12, left: 12, maxWidth: '72%', flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.65)' },
   badgeText: { flexShrink: 1, color: '#FFFFFF', fontSize: 12, lineHeight: 17, fontWeight: '600' },
