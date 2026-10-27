@@ -9,11 +9,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { AccessibilityInfo, StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { Experience } from '../constants/experiences';
 import { useLanguage } from '../context/LanguageContext';
-import { getExperienceTags } from '../lib/experienceFilters';
 import { NewsImage } from './NewsImage';
 
 export function BenefitPreview({ experience, width }: { experience: Experience; width: number }) {
-  const { ui, tagLabel } = useLanguage();
+  const { ui } = useLanguage();
   const { fontScale } = useResponsiveLayout();
   const photos = Array.from(new Set([experience.image, ...(experience.images ?? [])].filter(Boolean)));
   const [index, setIndex] = useState(0);
@@ -39,7 +38,7 @@ export function BenefitPreview({ experience, width }: { experience: Experience; 
       <LinearGradient colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.92)']} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} />
       <View style={s.body}>
         <Text style={s.title} numberOfLines={2}>{experience.title}</Text>
-        <Text style={s.description} numberOfLines={1}>{getExperienceTags(experience).map(tagLabel).join(' · ') || experience.category}</Text>
+        <Text style={s.description} numberOfLines={1}>{experience.region ?? 'NY'}</Text>
       </View>
     </TouchableOpacity>
     {!!benefit && <View style={s.badge} pointerEvents="none"><Ionicons name="pricetag" size={14} color="#FDDD56" /><Text style={s.badgeText} numberOfLines={1}>{benefit}</Text></View>}

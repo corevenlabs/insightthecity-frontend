@@ -1,6 +1,5 @@
 import { Text } from '../typography';
 import { ExperienceTags } from '@/components/ExperienceTags';
-import { getExperienceTags } from '@/lib/experienceFilters';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 // Definimos la interfaz del evento para que TypeScript esté feliz
@@ -15,14 +14,13 @@ export function EventListItem({ event }: EventListItemProps) {
 
       <View style={styles.cardContent}>
         <View style={styles.topRow}>
-          <ExperienceTags tags={getExperienceTags(event)} />
+          <ExperienceTags tags={[event.region ?? 'NY']} />
           <View style={[styles.badge, event.free ? styles.freeBadge : styles.premiumBadge]}>
             <Text style={styles.badgeText}>{event.free ? 'GRATIS' : 'PREMIUM'}</Text>
           </View>
         </View>
 
         <Text style={styles.eventTitle}>{event.title}</Text>
-        <Text style={styles.location}>📍 {event.location}</Text>
         <Text style={styles.time}>{event.time}</Text>
       </View>
     </TouchableOpacity>
@@ -40,6 +38,5 @@ const styles = StyleSheet.create({
   premiumBadge: { backgroundColor: '#303030' },
   badgeText: { color: '#000', fontSize: 11, fontWeight: '700' },
   eventTitle: { color: '#FFF', fontSize: 18, fontWeight: '700', marginTop: 10 },
-  location: { color: '#AAA', marginTop: 8 },
   time: { color: '#AAA', marginTop: 4 },
 });
