@@ -2,6 +2,8 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Ver detalle": { "en": "View details", "pt": "Ver detalhes" },
+  "Aplican condiciones": { "en": "Conditions apply", "pt": "Aplicam-se condições" },
   "Ver experiencia": { "en": "View experience", "pt": "Ver experiência" },
   "Ver publicación": { "en": "View article", "pt": "Ver publicação" },
   "Ver más resultados": { "en": "View more results", "pt": "Ver mais resultados" },

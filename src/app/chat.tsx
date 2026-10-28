@@ -25,7 +25,7 @@ const COLORS = {
   gold: '#FDDD56', goldSoft: '#F0D778', text: '#FFFFFF', muted: '#B8B8B8', black: '#080808',
 };
 
-type AppItem = { id: string | number; kind: 'experience' | 'news'; title: string; section?: string; source?: string; category?: string; region?: string; hasBenefit?: boolean; memberBenefit?: string; memberBenefitDetails?: string; };
+type AppItem = { id: string | number; kind: 'experience' | 'news'; title: string; section?: string; source?: string; category?: string; region?: string; hasBenefit?: boolean; hasConditions?: boolean; memberBenefit?: string; memberBenefitDetails?: string; };
 type Message = { id: string; from: 'user' | 'bot'; text: string; writing?: boolean; appItems?: AppItem[]; showMembership?: boolean };
 
 function TypingDots({ label }: { label: string }) {
@@ -73,7 +73,11 @@ export default function ChatScreen() {
       const data = await response.json();
       if (!response.ok || !data?.success) throw new Error(data?.message);
       // El historial del servidor es memoria, no conversación visible de esta apertura.
-      if (sessionRef.current === session) { setMessages([]); setConsent(data.aiConsent ?? null); }
+      if (sessionRef.current === session) {
+        setMessages(typeof data.greeting === 'string' && data.greeting.trim() ? [{ id: `greeting-${session}`, from: 'bot', text: data.greeting.trim() }] : []);
+        setVisibleResults({});
+        setConsent(data.aiConsent ?? null);
+      }
     } catch {
       if (sessionRef.current === session) setMessages([{ id: 'history-error', from: 'bot', text: t('chat.error') }]);
     } finally { if (sessionRef.current === session) setLoading(false); }
@@ -226,7 +230,8 @@ export default function ChatScreen() {
             <Text style={styles.resultSource}>{recommendation.kind === 'news' ? recommendation.section === 'ny-al-dia' ? ui('NY al día') : ui('Qué hacer en NY') : recommendation.hasBenefit ? 'ITC Club' : ui('En la app')}{recommendation.region ? ` · ${recommendation.region}` : ''}</Text>
             <Text style={styles.placeTitle}>{recommendation.title}</Text>
             {recommendation.hasBenefit && !!recommendation.memberBenefit && <Text style={styles.resultBenefit}>{recommendation.memberBenefit}</Text>}
-            {recommendation.hasBenefit && !!recommendation.memberBenefitDetails && <Text style={styles.resultConditions}>{recommendation.memberBenefitDetails}</Text>}
+            {recommendation.hasBenefit && !recommendation.memberBenefit && <Text style={styles.resultBenefit}>{ui('Beneficio para miembros ITC Club')}</Text>}
+            {recommendation.hasConditions && <Text style={styles.resultConditions}>{ui('Aplican condiciones')}</Text>}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={ui('Abrir {title}', { title: recommendation.title })}
@@ -238,7 +243,7 @@ export default function ChatScreen() {
               }}
               style={({ pressed }) => [styles.actionButton, { marginTop: 10, alignSelf: 'flex-start' }, pressed && styles.pressed]}
             >
-              <Text style={styles.actionText}>{ui(recommendation.kind === 'experience' ? 'Ver experiencia' : 'Ver publicación')}</Text>
+              <Text style={styles.actionText}>{ui(recommendation.kind === 'experience' ? 'Ver detalle' : 'Ver publicación')}</Text>
               <Ionicons name="arrow-forward" size={16} color={COLORS.black} accessible={false} />
             </Pressable>
           </View>
