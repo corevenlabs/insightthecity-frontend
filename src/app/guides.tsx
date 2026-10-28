@@ -15,7 +15,7 @@ import { openStripePage } from '../lib/payments';
 const price = (guide: Guide) => `${guide.currency.toUpperCase()} $${(guide.priceCents / 100).toFixed(2)}`;
 
 export default function GuidesScreen() {
-  const { ui } = useLanguage();
+  const { ui, language } = useLanguage();
   const { user, token } = useAuth();
   const params = useLocalSearchParams<{ purchaseSession?: string; guideId?: string; searchQuery?: string }>();
   const confirmedSession = useRef<string | null>(null);
@@ -29,10 +29,10 @@ export default function GuidesScreen() {
   const load = useCallback(async (manual = false) => {
     if (manual) setRefreshing(true); else setLoading(true);
     setError('');
-    try { setItems(await fetchGuides(token)); }
+    try { setItems(await fetchGuides(token, language)); }
     catch (loadError) { setError((loadError as Error).message); }
     finally { setLoading(false); setRefreshing(false); }
-  }, [token]);
+  }, [token, language]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 

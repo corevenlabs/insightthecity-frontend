@@ -16,22 +16,21 @@ import * as WebBrowser from 'expo-web-browser';
 import { ActivityIndicator, FlatList, Image, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getExperienceById } from '@/constants/experiences';
 import { useAuth } from '../context/AuthContext';
 import type { Experience } from '../constants/experiences';
 import { fetchExperience } from '../lib/experiences';
 import { issueBenefitCode, type BenefitCode } from '../lib/benefits';
 
 export default function ExperienceDetailScreen() {
-  const { ui } = useLanguage();
+  const { ui, language } = useLanguage();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { user, token } = useAuth();
-  const [experience, setExperience] = useState<Experience | undefined>(() => getExperienceById(id));
+  const [experience, setExperience] = useState<Experience | undefined>(undefined);
   // Se guarda para qué id se cargó / qué foto se ve: al cambiar de experiencia
   // el estado anterior deja de aplicar sin tener que resetearlo en un efecto.
   const [loadedId, setLoadedId] = useState<string | undefined>(undefined);
   const [photo, setPhoto] = useState<{ id?: string; index: number }>({ id, index: 0 });
-  const loading = Boolean(id) && loadedId !== id;
+  const loading = Boolean(id) && loadedId !== `${id}:${language}`;
   const photoIndex = photo.id === id ? photo.index : 0;
   const [benefitCode, setBenefitCode] = useState<BenefitCode | null>(null);
   const [benefitLoading, setBenefitLoading] = useState(false);
@@ -43,14 +42,14 @@ export default function ExperienceDetailScreen() {
   useEffect(() => {
     let active = true;
     if (!id) return;
-    fetchExperience(id)
+    fetchExperience(id, language)
       .then((item) => { if (active) setExperience(item); })
-      .catch(() => undefined)
-      .finally(() => { if (active) setLoadedId(id); });
+      .catch(() => { if (active) setExperience(undefined); })
+      .finally(() => { if (active) setLoadedId(`${id}:${language}`); });
     return () => { active = false; };
-  }, [id]);
+  }, [id, language]);
 
-  if (loading && !experience) {
+  if (loading) {
     return <SafeAreaView style={styles.container}><View style={styles.emptyState}><Text style={styles.emptyTitle}>{ui("Actualizando contenido…")}</Text></View></SafeAreaView>;
   }
 
@@ -244,11 +243,11 @@ export default function ExperienceDetailScreen() {
             </TouchableOpacity>
             <ClubLogo width={96} style={{ alignSelf: "center" }} />
             <Text style={styles.qrTitle}>{ui('Tu beneficio está listo')}</Text>
-            <Text style={styles.qrSubtitle}>{benefitCode?.benefit || experience.memberBenefit}</Text>
+            <Text style={styles.qrSubtitle}>{experience.memberBenefit || benefitCode?.benefit}</Text>
             {benefitCode?.qrDataUrl && <View style={styles.qrFrame}>
               <Image source={{ uri: benefitCode.qrDataUrl }} style={styles.qrImage} accessibilityLabel={ui('Código QR para canjear el beneficio')} />
             </View>}
-            <Text style={styles.qrInstruction}>{benefitCode?.instructions || ui('Muestra este código al personal para validar el beneficio.')}</Text>
+            <Text style={styles.qrInstruction}>{experience.benefitInstructions || ui('Muestra este código al personal para validar el beneficio.')}</Text>
             <View style={styles.qrValidity}><Ionicons name="time-outline" size={18} color={COLORS.gold} /><Text style={styles.qrValidityText}>{ui('Válido por 24 horas · un solo uso')}</Text></View>
             <Text style={styles.qrReference}>{benefitCode?.reference}</Text>
             <TouchableOpacity style={styles.qrDoneButton} onPress={() => setBenefitCode(null)} accessibilityRole="button"><Text style={styles.qrDoneText}>{ui('LISTO')}</Text></TouchableOpacity>

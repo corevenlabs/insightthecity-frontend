@@ -24,7 +24,7 @@ function buildHtml(article: NewsArticle, language: AppLanguage): string {
     : '';
   const date = formatDate(article.date, language);
   return `<!DOCTYPE html>
-<html lang="es">
+<html lang="${language}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
@@ -180,23 +180,23 @@ export default function NewsDetailScreen() {
 
   // El resultado se guarda junto al id pedido: al abrir otra nota, el anterior no aplica.
   const [loaded, setLoaded] = useState<{ id: string; article?: NewsArticle; error?: string } | null>(null);
-  const current = loaded?.id === id ? loaded : null;
+  const current = loaded?.id === `${id}:${language}` ? loaded : null;
   const article = current?.article ?? null;
   const error = current?.error ?? null;
 
   useEffect(() => {
     let alive = true;
-    fetchArticle(id)
+    fetchArticle(id, language)
       .then((a) => {
-        if (alive) setLoaded({ id, article: a });
+        if (alive) setLoaded({ id: `${id}:${language}`, article: a });
       })
       .catch((e) => {
-        if (alive) setLoaded({ id, error: (e as Error).message });
+        if (alive) setLoaded({ id: `${id}:${language}`, error: (e as Error).message });
       });
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [id, language]);
 
   const header = (
     <View style={styles.header}>

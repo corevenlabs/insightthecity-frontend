@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLanguage, type AppLanguage } from '../context/LanguageContext';
 import { API_URL } from '../constants/api';
 
 // Contenido que vive en el WordPress del cliente, servido por nuestro backend
@@ -8,6 +9,8 @@ export interface NewsCard {
   id: number;
   title: string;
   excerpt: string;
+  originalTitle?: string;
+  originalExcerpt?: string;
   image: string | null;
   date: string; // ISO
   link: string;
@@ -63,10 +66,11 @@ export async function fetchNews(
   section: string,
   page = 1,
   perPage = PER_PAGE,
+  language: AppLanguage = 'es',
 ): Promise<NewsPage> {
   try {
     const res = await fetch(
-      `${API_URL}/api/news?section=${encodeURIComponent(section)}&page=${page}&perPage=${perPage}`,
+      `${API_URL}/api/news?section=${encodeURIComponent(section)}&page=${page}&perPage=${perPage}&lang=${language}`,
     );
     if (!res.ok) throw new Error('Backend de contenido no disponible.');
     const data = (await res.json()) as { success: boolean } & NewsPage;
@@ -74,18 +78,20 @@ export async function fetchNews(
       items: data.items ?? [], page: data.page ?? page, perPage: data.perPage ?? perPage,
       total: data.total ?? 0, totalPages: data.totalPages ?? 0,
     };
-  } catch {
+  } catch (error) {
+    if (language !== 'es') throw error;
     return fetchNewsFromWordPress(section, page, perPage);
   }
 }
 
-export async function fetchArticle(id: number | string): Promise<NewsArticle> {
+export async function fetchArticle(id: number | string, language: AppLanguage = 'es'): Promise<NewsArticle> {
   try {
-    const res = await fetch(`${API_URL}/api/news/${encodeURIComponent(String(id))}`);
+    const res = await fetch(`${API_URL}/api/news/${encodeURIComponent(String(id))}?lang=${language}`);
     if (!res.ok) throw new Error('Backend de contenido no disponible.');
     const data = (await res.json()) as { success: boolean; article: NewsArticle };
     return data.article;
-  } catch {
+  } catch (error) {
+    if (language !== 'es') throw error;
     const fallback = await fetch(`${WORDPRESS_API_URL}/posts/${encodeURIComponent(String(id))}?_embed=1`);
     if (!fallback.ok) throw new Error('No se pudo cargar la nota.');
     const post = await fallback.json();
@@ -112,6 +118,8 @@ interface FeedState {
 // Hook de feed paginado con scroll infinito y pull-to-refresh, reusado por
 // las pantallas "NY al día" y "Qué hacer en NY".
 export function useNewsFeed(section: string) {
+  const { language } = useLanguage();
+  const generation = useRef(0);
   const [state, setState] = useState<FeedState>({
     items: [],
     loading: true,
@@ -122,12 +130,13 @@ export function useNewsFeed(section: string) {
   });
   const pageRef = useRef(1);
   const totalPagesRef = useRef(1);
-  const inFlight = useRef(false);
+  const inFlight = useRef<number | null>(null);
 
   const load = useCallback(
     async (page: number, mode: 'initial' | 'more' | 'refresh') => {
-      if (inFlight.current) return;
-      inFlight.current = true;
+      const current = generation.current;
+      if (inFlight.current === current) return;
+      inFlight.current = current;
       setState((s) => ({
         ...s,
         loading: mode === 'initial',
@@ -136,7 +145,8 @@ export function useNewsFeed(section: string) {
         error: mode === 'initial' ? null : s.error,
       }));
       try {
-        const res = await fetchNews(section, page);
+        const res = await fetchNews(section, page, PER_PAGE, language);
+        if (current !== generation.current) return;
         pageRef.current = res.page;
         totalPagesRef.current = res.totalPages;
         setState((s) => ({
@@ -148,6 +158,7 @@ export function useNewsFeed(section: string) {
           hasMore: res.page < res.totalPages,
         }));
       } catch (e) {
+        if (current !== generation.current) return;
         setState((s) => ({
           ...s,
           loading: false,
@@ -156,19 +167,23 @@ export function useNewsFeed(section: string) {
           error: (e as Error).message,
         }));
       } finally {
-        inFlight.current = false;
+        if (inFlight.current === current) inFlight.current = null;
       }
     },
-    [section],
+    [section, language],
   );
 
   useEffect(() => {
+    generation.current += 1;
+    inFlight.current = null;
+    setState(s => ({ ...s, items: [], hasMore: true }));
     pageRef.current = 1;
     void load(1, 'initial');
+    return () => { generation.current += 1; };
   }, [load]);
 
   const loadMore = useCallback(() => {
-    if (inFlight.current || !state.hasMore) return;
+    if (inFlight.current !== null || !state.hasMore) return;
     void load(pageRef.current + 1, 'more');
   }, [load, state.hasMore]);
 
@@ -179,6 +194,7 @@ export function useNewsFeed(section: string) {
 
   const retry = useCallback(() => {
     void load(1, 'initial');
+    return () => { generation.current += 1; };
   }, [load]);
 
   return { ...state, loadMore, refresh, retry };

@@ -21,7 +21,7 @@ export function HomeSearch({ experiences, guides, tags, query, onQueryChange, on
   query: string; onQueryChange: (query: string) => void; onTagsChange: (tags: string[]) => void;
   isOpen: boolean; onOpenChange: (open: boolean) => void;
 }) {
-  const { ui, tagLabel } = useLanguage();
+  const { ui, tagLabel, language } = useLanguage();
   const { user } = useAuth();
   const setQuery = onQueryChange;
   const [focused, setFocused] = useState(false);
@@ -51,7 +51,7 @@ export function HomeSearch({ experiences, guides, tags, query, onQueryChange, on
       let page = 1;
       let totalPages = 1;
       do {
-        const result = await fetchNews(section, page, 20);
+        const result = await fetchNews(section, page, 20, language);
         if (!alive) return;
         items.push(...result.items);
         update([...new Map(items.map(item => [item.id, item])).values()]);
@@ -63,7 +63,7 @@ export function HomeSearch({ experiences, guides, tags, query, onQueryChange, on
       if (alive) { setFailed(results.some(result => result.status === 'rejected')); setLoading(false); }
     });
     return () => { alive = false; };
-  }, [requested, loadKey]);
+  }, [requested, loadKey, language]);
   const catalog = useMemo(() => searchCatalog(experiences, guides, plans, news), [experiences, guides, plans, news]);
   const results = useMemo(() => findHomeResults(catalog, query, tags), [catalog, query, tags]);
   const suggestions = active ? [...new Set(results.map(item => item.title))].slice(0, 4) :

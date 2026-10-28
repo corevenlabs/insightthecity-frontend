@@ -28,7 +28,7 @@ const url = process.env.ITC_TEST_URL || 'http://localhost:8083';
    }
    return route.fulfill({json:{success:true,user}});
   }
-  if(u.pathname.startsWith('/api/experiences'))return route.fulfill({json:u.pathname==='/api/experiences'?[experience]:experience});
+  if(u.pathname.startsWith('/api/experiences')){ const localized={...experience,description:u.searchParams.get('lang')==='en'?'English editorial description':u.searchParams.get('lang')==='pt'?'Descrição editorial em português':experience.description};return route.fulfill({json:u.pathname==='/api/experiences'?[localized]:localized}); }
   if(u.pathname.startsWith('/api/news'))return route.fulfill({json:{success:true,items:[],total:0,totalPages:0}});
   if(u.pathname.startsWith('/api/partnerships'))return route.fulfill({json:{success:true,partnership:null}});
   if(u.pathname.startsWith('/api/chat'))return route.fulfill({json:{success:true,messages:[]}});
@@ -57,7 +57,7 @@ const url = process.env.ITC_TEST_URL || 'http://localhost:8083';
  await page.getByRole('button',{name:'Filter by tags',exact:true}).click();await page.getByRole('checkbox',{name:'Museums',exact:true}).click();
  await page.getByText('Show results (1)',{exact:true}).click();await page.getByText('Test venue',{exact:true}).click();
  await page.getByText('ITC CLUB BENEFIT',{exact:true}).waitFor();await page.getByRole('button',{name:'Description',exact:true}).click();
- await page.getByText('Editorial description',{exact:true}).waitFor();
+ await page.getByText('English editorial description',{exact:true}).waitFor();
  assert.equal(await page.getByText('Address',{exact:true}).count(),1);
  await page.screenshot({path:'/tmp/itc-language-qa/detail-en.png'});
  await page.goto(url+'/guides',{waitUntil:'domcontentloaded'});await page.getByPlaceholder('Search guides...').waitFor();

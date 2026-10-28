@@ -13,6 +13,7 @@ export type Experience = {
   image: string;
   images?: string[];
   date: string;
+  originalDate?: string;
   location: string;
   locations?: { name: string; address: string; placeId: string; benefitApplies: boolean }[];
   shortAddress?: string | null;
