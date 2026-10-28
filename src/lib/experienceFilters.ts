@@ -3,7 +3,7 @@ import type { Experience } from '../constants/experiences';
 export const EXPERIENCE_FILTERS = [
   'NY', 'NJ', 'Hoy', 'Este fin de semana', 'Gratis', 'Música', 'Broadway',
   'Food', 'Arte', 'Nightlife', 'Evento', 'City Drop', 'Descuento', 'Drop',
-  'Que hacer en NY', 'Nueva York al día', 'Guía turística',
+  'Que hacer en NY', 'Nueva York al día',
   'Experiencia', 'Experiencia inmersiva', 'Museo', 'Comida', 'Miradores', 'Museos', 'Noche',
 ] as const;
 

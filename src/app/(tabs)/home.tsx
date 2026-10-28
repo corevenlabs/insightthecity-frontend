@@ -27,7 +27,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { fetchNews, formatDate, type NewsCard } from '../../lib/news';
 import { fetchExperiences } from '../../lib/experiences';
-import { fetchGuides, type Guide } from '../../lib/guides';
 import {
   fetchCurrentWeather,
   weatherDescription,
@@ -330,7 +329,6 @@ export default function HomeScreen() {
   const name = firstName(user?.name ?? null, user?.email);
   const [clubBenefits, setClubBenefits] = useState<Experience[]>([]);
   const [recommendations, setRecommendations] = useState<Experience[]>([]);
-  const [guides, setGuides] = useState<Guide[]>([]);
   const [catalog, setCatalog] = useState<Experience[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState(false);
@@ -344,19 +342,15 @@ export default function HomeScreen() {
     let alive = true;
     setCatalogLoading(true); setCatalogError(false);
     void refreshUser().catch(() => undefined);
-    void Promise.allSettled([fetchExperiences(undefined, language), fetchGuides(undefined, language)]).then(([experienceResult, guideResult]) => {
+    void fetchExperiences(undefined, language).then((experiences) => {
       if (!alive) return;
-      if (experienceResult.status === 'fulfilled') {
-        const experiences = experienceResult.value;
+
         setCatalog(experiences);
         setClubBenefits(experiences.filter(item => item.access === 'premium'));
         const curated = experiences.filter(item => item.section === 'top_today' && item.access !== 'premium');
         setRecommendations(curated.length > 0 ? curated : experiences.filter(item => item.access !== 'premium'));
-      }
-      if (guideResult.status === 'fulfilled') setGuides(guideResult.value);
-      setCatalogError(experienceResult.status === 'rejected' || guideResult.status === 'rejected');
-      setCatalogLoading(false);
-    });
+    }).catch(() => { if (alive) setCatalogError(true); })
+      .finally(() => { if (alive) setCatalogLoading(false); });
     return () => { alive = false; };
   // Retry changes the focus callback so a failed catalogue load can be repeated.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -385,7 +379,7 @@ export default function HomeScreen() {
           <HeaderWeather />
         </View>
 
-        <HomeSearch key={user?.id ?? 'guest'} experiences={catalog} guides={guides} tags={selectedTags}
+        <HomeSearch key={user?.id ?? 'guest'} experiences={catalog} tags={selectedTags}
           isOpen={searchOpen} onOpenChange={setSearchOpen}
           catalogLoading={catalogLoading} catalogError={catalogError} onRetryCatalog={() => setCatalogRetry(value => value + 1)}
           onTagsChange={setSelectedTags} query={searchQuery} onQueryChange={setSearchQuery} />
@@ -1153,32 +1147,6 @@ clubGold: {
 
   premiumSmallText: {
     color: COLORS.gold,
-  },
-
-  guideCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
-
-  guideImage: {
-    width: '100%',
-    height: 180,
-  },
-
-  guideContent: {
-    padding: 16,
-  },
-
-  guideTitle: {
-    color: COLORS.white,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-
-  guideDate: {
-    color: COLORS.secondary,
-    marginTop: 6,
   },
 
   featureCard: {

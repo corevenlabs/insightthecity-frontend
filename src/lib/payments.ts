@@ -21,7 +21,6 @@ export type Plan = {
 export type CheckoutReturn = {
   result: 'success' | 'cancel' | 'portal' | 'dismiss';
   sessionId?: string;
-  guideId?: string;
 };
 
 async function json<T>(response: Response, fallback: string): Promise<T> {
@@ -37,11 +36,11 @@ export function parseCheckoutReturn(url: string): CheckoutReturn {
     const raw = queryParams?.[key];
     return typeof raw === 'string' && raw ? raw : undefined;
   };
+  if (value('guide_id')) return { result: 'dismiss' }; // Retired checkout links must not enter the membership flow.
   const result = value('result');
   return {
     result: result === 'success' || result === 'cancel' || result === 'portal' ? result : 'dismiss',
     sessionId: value('session_id'),
-    guideId: value('guide_id'),
   };
 }
 

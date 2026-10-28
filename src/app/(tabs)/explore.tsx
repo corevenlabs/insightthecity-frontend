@@ -13,7 +13,7 @@ import type { Experience } from '../../constants/experiences';
 import { getExperienceTags, matchesExperienceTags } from '../../lib/experienceFilters';
 import { fetchExperiences } from '../../lib/experiences';
 
-const CONTENT_SECTIONS = new Set(['ny_al_dia', 'que_hacer', 'guias']);
+const CONTENT_SECTIONS = new Set(['ny_al_dia', 'que_hacer']);
 
 export default function ExploreScreen() {
   const router = useRouter();

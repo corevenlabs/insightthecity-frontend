@@ -1,0 +1,6 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
+const moduleValue={exports:{}};
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/payments.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{module:moduleValue,exports:moduleValue.exports,require:name=>({'expo-linking':{createURL:()=> 'itcclub://checkout-return',parse:url=>({queryParams:Object.fromEntries(new URL(url).searchParams)})},'expo-web-browser':{},'../constants/api':{API_URL:'https://example.test'}}[name])});
+const {parseCheckoutReturn}=moduleValue.exports;
+test('Retired purchase callbacks cannot be interpreted as a membership payment',()=>{const parsed=parseCheckoutReturn('itcclub://checkout-return?result=success&session_id=cs_old&guide_id=1');assert.equal(parsed.result,'dismiss');assert.equal(parsed.sessionId,undefined);});
+test('Subscription and billing portal callbacks keep their existing behavior',()=>{const parsed=parseCheckoutReturn('itcclub://checkout-return?result=success&session_id=cs_subscription');assert.equal(parsed.result,'success');assert.equal(parsed.sessionId,'cs_subscription');assert.equal(parseCheckoutReturn('itcclub://checkout-return?result=portal').result,'portal');});

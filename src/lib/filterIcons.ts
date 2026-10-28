@@ -17,7 +17,6 @@ export function filterIcon(tag: string): ComponentProps<typeof Ionicons>['name']
   if (/compras/.test(value)) return 'bag-outline';
   if (/mirador/.test(value)) return 'eye-outline';
   if (/gratis|descuento|drop/.test(value)) return 'pricetag-outline';
-  if (/guia/.test(value)) return 'book-outline';
   if (/dia/.test(value)) return 'newspaper-outline';
   return 'compass-outline';
 }

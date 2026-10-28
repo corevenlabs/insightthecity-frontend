@@ -7,11 +7,8 @@ export default function CheckoutReturnScreen() {
   const first = (value?: string | string[]) => (Array.isArray(value) ? value[0] : value);
   const result = first(params.result);
   const sessionId = first(params.session_id);
-  const guideId = first(params.guide_id);
 
-  if (result === 'success' && sessionId && guideId) {
-    return <Redirect href={{ pathname: '/guides', params: { purchaseSession: sessionId, guideId } }} />;
-  }
+  if (first(params.guide_id)) return <Redirect href="/home" />; // Compatibility with retired payment links.
   if (result === 'success' && sessionId) {
     return <Redirect href={{ pathname: '/success', params: { session_id: sessionId } }} />;
   }
