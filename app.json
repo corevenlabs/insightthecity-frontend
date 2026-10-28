@@ -36,9 +36,7 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
-      "runtimeVersion": {
-        "policy": "fingerprint"
-      }
+      "runtimeVersion": "048455bfbefe7f2fa4e27854bde26e92b9860649"
     },
     "web": {
       "output": "static",
@@ -59,7 +57,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Permite que ITC Club use Face ID para proteger y desbloquear tu sesi\u00f3n."
+          "faceIDPermission": "Permite que ITC Club use Face ID para proteger y desbloquear tu sesión."
         }
       ],
       [
@@ -73,10 +71,10 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "ITC Club usa tu ubicaci\u00f3n solo cuando pides lugares cercanos en el chat, para mostrarte opciones cerca de ti. No guardamos tu ubicaci\u00f3n.",
+          "locationWhenInUsePermission": "ITC Club usa tu ubicación solo cuando pides lugares cercanos en el chat, para mostrarte opciones cerca de ti. No guardamos tu ubicación.",
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,
-          "motionUsagePermission": "ITC Club no usa los datos de movimiento de tu dispositivo. Este permiso solo existe porque lo incluye el componente de ubicaci\u00f3n del sistema; la app nunca lo solicita.",
+          "motionUsagePermission": "ITC Club no usa los datos de movimiento de tu dispositivo. Este permiso solo existe porque lo incluye el componente de ubicación del sistema; la app nunca lo solicita.",
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false
         }
