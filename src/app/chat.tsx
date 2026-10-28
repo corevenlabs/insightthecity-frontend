@@ -1,5 +1,6 @@
 import { Text, TextInput } from '../components/typography';
 import { ClubLogo } from '../components/ClubLogo';
+import { NewsImage } from '../components/NewsImage';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -25,7 +26,7 @@ const COLORS = {
   gold: '#FDDD56', goldSoft: '#F0D778', text: '#FFFFFF', muted: '#B8B8B8', black: '#080808',
 };
 
-type AppItem = { id: string | number; kind: 'experience' | 'news'; title: string; section?: string; source?: string; category?: string; region?: string; hasBenefit?: boolean; hasConditions?: boolean; memberBenefit?: string; memberBenefitDetails?: string; };
+type AppItem = { id: string | number; kind: 'experience' | 'news'; title: string; image?: string | null; preview?: string; section?: string; source?: string; category?: string; region?: string; hasBenefit?: boolean; hasConditions?: boolean; memberBenefit?: string; memberBenefitDetails?: string; };
 type Message = { id: string; from: 'user' | 'bot'; text: string; writing?: boolean; appItems?: AppItem[]; showMembership?: boolean };
 
 function TypingDots({ label }: { label: string }) {
@@ -226,9 +227,12 @@ export default function ChatScreen() {
           <Text style={item.from === 'user' ? styles.userText : styles.botText}>{item.text}</Text>
         </View>
         {!item.writing && !!item.appItems?.length && <View style={styles.places}>{item.appItems.slice(0, visibleResults[item.id] || 3).map((recommendation) => (
-          <View key={`${recommendation.kind}:${recommendation.id}`} style={styles.placeCard}>
+          <View key={`${recommendation.kind}:${recommendation.id}`} style={[styles.placeCard, styles.resultPhotoCard]}>
+            {!!recommendation.image && <NewsImage uri={recommendation.image} style={styles.resultPhoto} accessibilityLabel={recommendation.title} />}
+            <View style={styles.resultCardBody}>
             <Text style={styles.resultSource}>{recommendation.kind === 'news' ? recommendation.section === 'ny-al-dia' ? ui('NY al día') : ui('Qué hacer en NY') : recommendation.hasBenefit ? 'ITC Club' : ui('En la app')}{recommendation.region ? ` · ${recommendation.region}` : ''}</Text>
             <Text style={styles.placeTitle}>{recommendation.title}</Text>
+            {!!recommendation.preview && <Text style={styles.resultPreview} numberOfLines={2}>{recommendation.preview}</Text>}
             {recommendation.hasBenefit && !!recommendation.memberBenefit && <Text style={styles.resultBenefit}>{recommendation.memberBenefit}</Text>}
             {recommendation.hasBenefit && !recommendation.memberBenefit && <Text style={styles.resultBenefit}>{ui('Beneficio para miembros ITC Club')}</Text>}
             {recommendation.hasConditions && <Text style={styles.resultConditions}>{ui('Aplican condiciones')}</Text>}
@@ -246,6 +250,7 @@ export default function ChatScreen() {
               <Text style={styles.actionText}>{ui(recommendation.kind === 'experience' ? 'Ver detalle' : 'Ver publicación')}</Text>
               <Ionicons name="arrow-forward" size={16} color={COLORS.black} accessible={false} />
             </Pressable>
+            </View>
           </View>
         ))}
           {item.appItems.length > (visibleResults[item.id] || 3) && <Pressable accessibilityRole="button" onPress={() => setVisibleResults(current => ({ ...current, [item.id]: (current[item.id] || 3) + 6 }))} style={({ pressed }) => [styles.moreResults, pressed && styles.pressed]}>
@@ -309,6 +314,10 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
+  resultPhotoCard: { padding: 0, overflow: 'hidden' },
+  resultPhoto: { width: '100%', height: 132 },
+  resultCardBody: { padding: 14 },
+  resultPreview: { color: COLORS.text, fontSize: 13, lineHeight: 19, marginTop: 6 },
   resultSource: { color: COLORS.muted, fontSize: 11, lineHeight: 16, marginBottom: 5 },
   resultBenefit: { color: COLORS.gold, fontSize: 15, fontWeight: '700', lineHeight: 21, marginTop: 8 },
   resultConditions: { color: COLORS.text, fontSize: 13, lineHeight: 19, marginTop: 5 },
