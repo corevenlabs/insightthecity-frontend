@@ -2,6 +2,19 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "No se pudo generar el código. Inténtalo otra vez.": {"en": "Could not generate the code. Please try again.", "pt": "Não foi possível gerar o código. Tente novamente."},
+  "Este beneficio no está disponible.": {"en": "This benefit is unavailable.", "pt": "Este benefício não está disponível."},
+  "Tu cuenta no está activa.": {"en": "Your account is not active.", "pt": "Sua conta não está ativa."},
+  "Necesitas una membresía ITC Club activa.": {"en": "You need an active ITC Club membership.", "pt": "Você precisa de uma assinatura ITC Club ativa."},
+  "Este beneficio no está disponible en este momento.": {"en": "This benefit is currently unavailable.", "pt": "Este benefício não está disponível no momento."},
+  "Ya utilizaste el máximo de cupones permitido para este beneficio.": {"en": "You have reached the redemption limit for this benefit.", "pt": "Você atingiu o limite de resgates deste benefício."},
+  "Este beneficio está agotado.": {"en": "This benefit is sold out.", "pt": "Este benefício está esgotado."},
+
+  "Quiero recibir promociones, novedades e información de Insight The City por correo electrónico.": { en: "I want to receive promotions, news and information from Insight The City by email.", pt: "Quero receber promoções, novidades e informações da Insight The City por e-mail." },
+  "Opcional. Puedes crear tu cuenta sin activar esta opción.": { en: "Optional. You can create your account without enabling this option.", pt: "Opcional. Você pode criar sua conta sem ativar esta opção." },
+  "No se pudo actualizar el idioma. Inténtalo de nuevo.": { en: "Could not update the language. Please try again.", pt: "Não foi possível atualizar o idioma. Tente novamente." },
+  "VER MI QR": { en: "VIEW MY QR", pt: "VER MEU QR" },
+
   "Buscar lugares y eventos": {en: "Search places and events", pt: "Buscar lugares e eventos"},
   "DESCUBRE NYC & NJ": {en: "DISCOVER NYC & NJ", pt: "DESCUBRA NYC & NJ"},
   "Ocultar contraseña": {"en": "Hide password", "pt": "Ocultar senha"},
