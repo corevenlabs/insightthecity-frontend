@@ -10,13 +10,12 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { availableExperienceTags } from '../lib/experienceFilters';
 import { findHomeResults, searchCatalog, type SearchItem } from '../lib/homeSearch';
-import type { Guide } from '../lib/guides';
 import { fetchNews, type NewsCard } from '../lib/news';
 import { NewsImage } from './NewsImage';
 import { TagFilter } from './TagFilter';
 
-export function HomeSearch({ experiences, guides, tags, query, onQueryChange, onTagsChange, catalogLoading, catalogError, onRetryCatalog, isOpen, onOpenChange }: {
-  experiences: Experience[]; guides: Guide[]; tags: string[];
+export function HomeSearch({ experiences, tags, query, onQueryChange, onTagsChange, catalogLoading, catalogError, onRetryCatalog, isOpen, onOpenChange }: {
+  experiences: Experience[]; tags: string[];
   catalogLoading: boolean; catalogError: boolean; onRetryCatalog: () => void;
   query: string; onQueryChange: (query: string) => void; onTagsChange: (tags: string[]) => void;
   isOpen: boolean; onOpenChange: (open: boolean) => void;
@@ -64,7 +63,7 @@ export function HomeSearch({ experiences, guides, tags, query, onQueryChange, on
     });
     return () => { alive = false; };
   }, [requested, loadKey, language]);
-  const catalog = useMemo(() => searchCatalog(experiences, guides, plans, news), [experiences, guides, plans, news]);
+  const catalog = useMemo(() => searchCatalog(experiences, plans, news), [experiences, plans, news]);
   const results = useMemo(() => findHomeResults(catalog, query, tags), [catalog, query, tags]);
   const suggestions = active ? [...new Set(results.map(item => item.title))].slice(0, 4) :
     availableExperienceTags(experiences).filter(tag => experiences.some(item => `${item.category} ${(item.tags ?? []).join(' ')}`.toLowerCase().includes(tag.toLowerCase()))).slice(0, 4);
@@ -79,16 +78,15 @@ export function HomeSearch({ experiences, guides, tags, query, onQueryChange, on
   const open = (item: SearchItem) => {
     remember(query); Keyboard.dismiss();
     if (item.kind === 'experience') router.push({ pathname: '/experience-detail', params: { id: item.id } });
-    else if (item.kind === 'guide') router.push({ pathname: '/guides', params: { searchQuery: item.title } });
     else router.push({ pathname: '/news-detail', params: { id: item.id, source: item.kind, section: item.kind === 'que-hacer' ? ui('QUÉ HACER EN NEW YORK') : ui('NY AL DÍA') } });
   };
-  const label = (kind: SearchItem['kind']) => ui(kind === 'guide' ? 'Guías' : kind === 'que-hacer' ? 'Qué hacer en New York' : kind === 'ny-al-dia' ? 'NY al día' : 'Lugares y beneficios');
+  const label = (kind: SearchItem['kind']) => ui(kind === 'que-hacer' ? 'Qué hacer en New York' : kind === 'ny-al-dia' ? 'NY al día' : 'Lugares y beneficios');
   return <View onTouchStart={event => event.stopPropagation()}>
     <View style={[s.search, focused && s.focused]}>
       <Ionicons name="search-outline" size={23} color="#A6A6A6" accessible={false} />
       <TextInput ref={input} value={query} onChangeText={setQuery} onFocus={() => { onOpenChange(true); setFocused(true); if (!requested) setLoading(true); setRequested(true); }} onBlur={() => setFocused(false)}
         onSubmitEditing={() => { remember(query); input.current?.blur(); }} returnKeyType="search" autoCorrect={false}
-        placeholder={ui('Buscar lugares, eventos y guías')} placeholderTextColor="#A6A6A6" accessibilityLabel={ui('Buscar lugares, eventos y guías')} style={s.input} />
+        placeholder={ui('Buscar lugares y eventos')} placeholderTextColor="#A6A6A6" accessibilityLabel={ui('Buscar lugares y eventos')} style={s.input} />
       {!!query && <TouchableOpacity style={s.iconButton} onPress={() => { setQuery(''); close(); }} accessibilityRole="button" accessibilityLabel={ui('Borrar búsqueda')}><Ionicons name="close-circle" size={22} color="#A6A6A6" /></TouchableOpacity>}
     </View>
     <View style={s.filters}><TagFilter items={experiences} selected={tags} onChange={onTagsChange} /></View>

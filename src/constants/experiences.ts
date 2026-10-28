@@ -109,7 +109,7 @@ export const experiences: Experience[] = [
     access: 'premium',
     description:
       'Una selección de entradas con precio especial para vivir Broadway sin pagar tarifa completa. Ideal para descubrir musicales clásicos y nuevas producciones.',
-    includes: ['Acceso a ofertas seleccionadas', 'Guía de obras recomendadas', 'Tips para elegir mejores asientos'],
+    includes: ['Acceso a ofertas seleccionadas', 'Selección de obras recomendadas', 'Tips para elegir mejores asientos'],
     recommendation:
       'Si es tu primera vez, elige una obra con horario temprano para combinarla con cena cerca del teatro.',
   },
@@ -180,7 +180,7 @@ export const experiences: Experience[] = [
     access: 'premium',
     description:
       'Uno de los clubes de comedia más conocidos de Nueva York. Una experiencia nocturna clásica con shows íntimos, energía local y posibles invitados sorpresa.',
-    includes: ['Show de comedia', 'Recomendación de horarios', 'Guía para combinar con cena cercana'],
+    includes: ['Show de comedia', 'Recomendación de horarios', 'Ideas para combinar con cena cercana'],
     recommendation:
       'Confirma reglas de consumo mínimo y llega con margen porque el acceso suele ser estricto.',
   },
@@ -278,7 +278,7 @@ export const experiences: Experience[] = [
     access: 'premium',
     description:
       'Un beneficio para subir a uno de los observatorios más llamativos de Nueva York, con vistas abiertas hacia Manhattan y el Hudson.',
-    includes: ['Descuento en entradas seleccionadas', 'Tip de horario', 'Guía para combinar con Hudson Yards'],
+    includes: ['Descuento en entradas seleccionadas', 'Tip de horario', 'Ideas para combinar con Hudson Yards'],
     recommendation:
       'Combínalo con Little Island o High Line para armar una tarde completa.',
   },
@@ -309,20 +309,6 @@ export const experiences: Experience[] = [
     includes: ['Resumen actualizado', 'Alertas prácticas', 'Contexto para moverte mejor'],
     recommendation:
       'Revísalo antes de salir, especialmente si vas a Manhattan o cruzas entre NYC y NJ.',
-  },
-  {
-    id: 'nyc-local-guides',
-    title: 'Guías para vivir NYC como local',
-    category: 'GUÍA TURÍSTICA',
-    image: 'https://images.unsplash.com/photo-1518391846015-55a9cc003b25',
-    date: 'Guía recomendada',
-    location: 'Nueva York',
-    access: 'premium',
-    description:
-      'Rutas, miradores, museos, rooftops y planes seleccionados para organizar tu visita sin perder tiempo buscando entre cientos de opciones.',
-    includes: ['Ruta sugerida por zonas', 'Lugares para fotos', 'Tips de horarios y transporte'],
-    recommendation:
-      'Úsala como base para planificar un día completo y ajusta según clima y distancia.',
   },
 ];
 

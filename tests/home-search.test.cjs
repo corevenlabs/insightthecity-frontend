@@ -14,16 +14,16 @@ const experiences = [
   { id: '2', title: 'Cena en Brooklyn', description: 'Restaurante italiano', category: 'Food', location: 'Brooklyn', region: 'NY', access: 'premium', image: 'photo' },
 ];
 test('busca varias palabras, sin tildes, y combina texto con filtros', () => {
-  const items = searchCatalog(experiences, [], [], []);
+  const items = searchCatalog(experiences, [], []);
   assert.deepEqual(findHomeResults(items, 'brooklyn MUSICA', []).map(item => item.id), ['1']);
   assert.deepEqual(findHomeResults(items, 'Brooklyn', ['Food']).map(item => item.id), ['2']);
   assert.equal(findHomeResults(items, 'inexistente', []).length, 0);
   assert.equal(findHomeResults(items, 'Brooklyn', ['NJ']).length, 0);
 });
-test('guías y NY al día siguen encontrándose con filtros; cada contenido tiene identidad propia', () => {
-  const items = searchCatalog(experiences, [{ id: 1, title: 'Brooklyn esencial', coverUrl: null }], [{ id: 1, title: 'Restaurantes en Brooklyn', excerpt: 'Comida local' }], [{ id: 1, title: 'Brooklyn hoy', excerpt: 'Actualidad' }]);
+test('NY al día y planes siguen encontrándose con filtros; cada contenido tiene identidad propia', () => {
+  const items = searchCatalog(experiences, [{ id: 1, title: 'Restaurantes en Brooklyn', excerpt: 'Comida local' }], [{ id: 1, title: 'Brooklyn hoy', excerpt: 'Actualidad' }]);
   assert.equal(new Set(items.map(item => item.key)).size, items.length);
-  assert.deepEqual(findHomeResults(items, 'Brooklyn', ['Food']).map(item => item.kind).sort(), ['experience', 'guide', 'ny-al-dia', 'que-hacer']);
+  assert.deepEqual(findHomeResults(items, 'Brooklyn', ['Food']).map(item => item.kind).sort(), ['experience', 'ny-al-dia', 'que-hacer']);
 });
 test('planes sin metadatos usan el texto real y no inventan beneficios gratis', () => {
   assert.equal(matchesPlanTags({ title: 'Cena', excerpt: 'Restaurante con reserva' }, ['Food']), true);

@@ -1,14 +1,12 @@
 import type { Experience } from '../constants/experiences';
-import type { Guide } from './guides';
 import type { NewsCard } from './news';
 import { getExperienceTags, matchesExperienceTags, normalize } from './experienceFilters';
 
-export type SearchItem = { key: string; id: string; kind: 'experience' | 'guide' | 'que-hacer' | 'ny-al-dia'; title: string; description: string; image: string | null; terms: string; canonicalText?: string; experience?: Experience };
+export type SearchItem = { key: string; id: string; kind: 'experience' | 'que-hacer' | 'ny-al-dia'; title: string; description: string; image: string | null; terms: string; canonicalText?: string; experience?: Experience };
 
-export function searchCatalog(experiences: Experience[], guides: Guide[], plans: NewsCard[], news: NewsCard[]): SearchItem[] {
+export function searchCatalog(experiences: Experience[], plans: NewsCard[], news: NewsCard[]): SearchItem[] {
   return [
     ...experiences.map(item => ({ key: `experience:${item.id}`, id: item.id, kind: 'experience' as const, title: item.title, description: item.location, image: item.image, terms: [item.title, item.description, item.location, item.region, item.category, ...getExperienceTags(item)].join(' '), experience: item })),
-    ...guides.map(item => ({ key: `guide:${item.id}`, id: String(item.id), kind: 'guide' as const, title: item.title, description: item.description || '', image: item.coverUrl, terms: [item.title, item.description, item.category].join(' ') })),
     ...plans.map(item => ({ key: `que-hacer:${item.id}`, id: String(item.id), kind: 'que-hacer' as const, title: item.title, description: item.excerpt, image: item.image, canonicalText: `${item.originalTitle ?? item.title} ${item.originalExcerpt ?? item.excerpt}`, terms: `${item.title} ${item.excerpt} ${item.originalTitle ?? ""} ${item.originalExcerpt ?? ""}` })),
     ...news.map(item => ({ key: `ny-al-dia:${item.id}`, id: String(item.id), kind: 'ny-al-dia' as const, title: item.title, description: item.excerpt, image: item.image, canonicalText: `${item.originalTitle ?? item.title} ${item.originalExcerpt ?? item.excerpt}`, terms: `${item.title} ${item.excerpt} ${item.originalTitle ?? ""} ${item.originalExcerpt ?? ""}` })),
   ];
