@@ -18,7 +18,7 @@ const CONTENT_SECTIONS = new Set(['ny_al_dia', 'que_hacer', 'guias']);
 export default function ExploreScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { t, ui } = useLanguage();
+  const { t, ui, language } = useLanguage();
   const [items, setItems] = useState<Experience[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string[]>([]);
   const [search, setSearch] = useState('');
@@ -27,14 +27,14 @@ export default function ExploreScreen() {
   useFocusEffect(useCallback(() => {
     let active = true;
     setLoading(true);
-    void fetchExperiences()
+    void fetchExperiences(undefined, language)
       .then((records) => {
         if (active) setItems(records.filter((item) => !item.section || !CONTENT_SECTIONS.has(item.section)));
       })
       .catch(() => undefined)
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, []));
+  }, [language]));
 
   const searchResults = useMemo(() => {
     const term = search.trim().toLowerCase();

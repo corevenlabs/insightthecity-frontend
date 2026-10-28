@@ -56,7 +56,7 @@ function PremiumCard({ experience }: { experience: Experience }) {
 export default function ClubScreen() {
   const router = useRouter();
   const { user, loading, refreshUser } = useAuth();
-  const { t, ui } = useLanguage();
+  const { t, ui, language, tagLabel } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   // Precio real de Stripe: nunca anunciar un precio distinto al que se cobra.
@@ -76,12 +76,12 @@ export default function ClubScreen() {
     setContentLoading(true);
     setContentError(false);
     setPlanError(false);
-    void fetchExperiences().then(value => { if (active) setExperiences(value); })
+    void fetchExperiences(undefined, language).then(value => { if (active) setExperiences(value); })
       .catch(() => { if (active) setContentError(true); })
       .finally(() => { if (active) setContentLoading(false); });
     void fetchPlan().then(value => { if (active) setPlan(value); }).catch(() => { if (active) setPlanError(true); });
     return () => { active = false; };
-  }, [refreshUser, attempt]));
+  }, [refreshUser, attempt, language]));
 
   const premiumExperiences = useMemo(
     () => experiences.filter((experience) => experience.access === 'premium'), [experiences]
@@ -108,7 +108,7 @@ export default function ClubScreen() {
           <TagFilter items={premiumExperiences} selected={selectedCategory} onChange={setSelectedCategory} />
 
           <View style={styles.resultsHeader}>
-            <Text style={styles.resultsTitle}>{selectedCategory.length === 0 ? t('club.allMembers') : selectedCategory.join(' · ')}</Text>
+            <Text style={styles.resultsTitle}>{selectedCategory.length === 0 ? t('club.allMembers') : selectedCategory.map(tagLabel).join(' · ')}</Text>
             <Text style={styles.resultsCount}>{filteredExperiences.length}</Text>
           </View>
           {filteredExperiences.length === 0 && <Text style={styles.memberSubtitle}>{ui('No hay contenidos con estas etiquetas.')}</Text>}

@@ -185,10 +185,10 @@ function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionPr
     let alive = true;
     const itemLimit = isNewsSection ? 5 : 4;
     const load = async () => {
-      const first = await fetchNews(section, 1, filteringPlans ? 20 : itemLimit);
+      const first = await fetchNews(section, 1, filteringPlans ? 20 : itemLimit, language);
       const loaded = [...first.items];
       if (filteringPlans) for (let page = 2; page <= first.totalPages && alive; page++) {
-        loaded.push(...(await fetchNews(section, page, 20)).items);
+        loaded.push(...(await fetchNews(section, page, 20, language)).items);
       }
       return loaded;
     };
@@ -201,7 +201,7 @@ function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionPr
       .catch(() => { if (alive) setError('No se pudo cargar el contenido.'); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [isNewsSection, section, reloadKey, filteringPlans]);
+  }, [isNewsSection, section, reloadKey, filteringPlans, language]);
 
   const visibleItems = isNewsSection ? items : items.filter(item => matchesPlanTags(item, tags)).slice(0, 4);
 
@@ -322,7 +322,7 @@ function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionPr
 export default function HomeScreen() {
   const { carouselWidth: benefitCardWidth, gutter, width, fontScale } = useResponsiveLayout();
   const { user, refreshUser } = useAuth();
-  const { t, ui } = useLanguage();
+  const { t, ui, language } = useLanguage();
   const name = firstName(user?.name ?? null, user?.email);
   const [clubBenefits, setClubBenefits] = useState<Experience[]>([]);
   const [recommendations, setRecommendations] = useState<Experience[]>([]);
@@ -340,7 +340,7 @@ export default function HomeScreen() {
     let alive = true;
     setCatalogLoading(true); setCatalogError(false);
     void refreshUser().catch(() => undefined);
-    void Promise.allSettled([fetchExperiences(), fetchGuides()]).then(([experienceResult, guideResult]) => {
+    void Promise.allSettled([fetchExperiences(undefined, language), fetchGuides(undefined, language)]).then(([experienceResult, guideResult]) => {
       if (!alive) return;
       if (experienceResult.status === 'fulfilled') {
         const experiences = experienceResult.value;
@@ -356,7 +356,7 @@ export default function HomeScreen() {
     return () => { alive = false; };
   // Retry changes the focus callback so a failed catalogue load can be repeated.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshUser, catalogRetry]));
+  }, [refreshUser, catalogRetry, language]));
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}
