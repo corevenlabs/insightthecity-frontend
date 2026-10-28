@@ -23,6 +23,7 @@ export type Experience = {
   /** Derived from the activated partner associated with this publication. */
   partnerOffer?: 'founding' | 'strategic' | null;
   description: string;
+  cardDescription?: string;
   includes: string[];
   showBenefitOnCard?: boolean;
   cardBenefit?: string | null;
