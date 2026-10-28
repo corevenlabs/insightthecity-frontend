@@ -2,6 +2,12 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Ver experiencia": { "en": "View experience", "pt": "Ver experiência" },
+  "Ver publicación": { "en": "View article", "pt": "Ver publicação" },
+  "Ver más resultados": { "en": "View more results", "pt": "Ver mais resultados" },
+  "Conocer la membresía": { "en": "Explore membership", "pt": "Conhecer a assinatura" },
+  "Qué hacer en NY": { "en": "Things to do in NY", "pt": "O que fazer em NY" },
+  "En la app": { "en": "In the app", "pt": "No app" },
   "Este correo aún no tiene cuenta": {"en": "This email does not have an account yet", "pt": "Este e-mail ainda não tem uma conta"},
   "No encontramos una cuenta con {email}. Puedes crear una con este mismo correo.": {"en": "We could not find an account for {email}. You can create one with this email.", "pt": "Não encontramos uma conta com {email}. Você pode criar uma com este mesmo e-mail."},
   "Usar otro correo": {"en": "Use another email", "pt": "Usar outro e-mail"},

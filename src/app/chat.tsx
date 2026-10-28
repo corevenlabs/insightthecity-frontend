@@ -8,7 +8,6 @@ import {
   Animated,
   FlatList,
   KeyboardAvoidingView,
-  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -16,7 +15,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getLocation } from '../../services/location';
 import { API_URL } from '../constants/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -27,21 +25,8 @@ const COLORS = {
   gold: '#FDDD56', goldSoft: '#F0D778', text: '#FFFFFF', muted: '#B8B8B8', black: '#080808',
 };
 
-type Place = {
-  id?: string;
-  displayName?: { text?: string };
-  formattedAddress?: string;
-  location?: { latitude?: number; longitude?: number };
-  rating?: number;
-  userRatingCount?: number;
-  primaryTypeDisplayName?: { text?: string };
-  googleMapsUri?: string;
-  currentOpeningHours?: { openNow?: boolean };
-};
-
-type AppItem = { id: string | number; kind: 'experience' | 'news'; title: string; section?: string };
-
-type Message = { id: string; from: 'user' | 'bot'; text: string; writing?: boolean; places?: Place[]; appItems?: AppItem[] };
+type AppItem = { id: string | number; kind: 'experience' | 'news'; title: string; section?: string; source?: string; category?: string; region?: string; hasBenefit?: boolean; memberBenefit?: string; memberBenefitDetails?: string; };
+type Message = { id: string; from: 'user' | 'bot'; text: string; writing?: boolean; appItems?: AppItem[]; showMembership?: boolean };
 
 function TypingDots({ label }: { label: string }) {
   const [dots] = useState(() => [new Animated.Value(0.3), new Animated.Value(0.3), new Animated.Value(0.3)]);
@@ -70,6 +55,7 @@ export default function ChatScreen() {
   const openingRecommendationRef = useRef(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [visibleResults, setVisibleResults] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [writing, setWriting] = useState<{ id: string; text: string } | null>(null);
@@ -151,15 +137,11 @@ export default function ChatScreen() {
     setInput('');
     setSending(true);
     try {
-      let location: { lat: number; lng: number } | null = null;
-      if (/cerca|nearby|near me|perto/i.test(userText)) {
-        try { location = await getLocation(); } catch { location = null; }
-      }
       if (sessionRef.current !== session) return;
       const response = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ message: userText, lat: location?.lat, lng: location?.lng }),
+        body: JSON.stringify({ message: userText }),
       });
       const data = await response.json();
       if (sessionRef.current !== session) return;
@@ -175,7 +157,7 @@ export default function ChatScreen() {
       const replyId = String(data.messageId || `bot-${Date.now()}`);
       setWriting({ id: replyId, text: String(data.reply || '') });
       setMessages((current) => [...current, {
-        id: replyId, from: 'bot', text: '', writing: true, places: data.places || [], appItems: data.appItems || [],
+        id: replyId, from: 'bot', text: '', writing: true, appItems: data.appItems || [], showMembership: data.showMembership === true,
       }]);
     } catch {
       if (sessionRef.current !== session) return;
@@ -233,56 +215,18 @@ export default function ChatScreen() {
     </ScrollView>
   );
 
-  const openMaps = (place: Place) => {
-    const lat = place.location?.latitude;
-    const lng = place.location?.longitude;
-    const url = place.googleMapsUri || (lat != null && lng != null
-      ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : undefined);
-    if (url) void Linking.openURL(url);
-  };
-
-  const openWaze = (place: Place) => {
-    const lat = place.location?.latitude;
-    const lng = place.location?.longitude;
-    if (lat != null && lng != null) void Linking.openURL(`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`);
-  };
-
-  const renderPlace = (place: Place, index: number) => (
-    <View key={place.id || `${place.displayName?.text}-${index}`} style={styles.placeCard}>
-      <View style={styles.placeTitleRow}>
-        <Ionicons name="location-outline" size={20} color={COLORS.gold} accessible={false} />
-        <View style={styles.placeHeading}>
-          <Text style={styles.placeTitle}>{place.displayName?.text}</Text>
-          {!!place.primaryTypeDisplayName?.text && <Text style={styles.placeType}>{place.primaryTypeDisplayName.text}</Text>}
-        </View>
-      </View>
-      <View style={styles.placeMeta}>
-        {place.rating != null && <Text style={styles.rating}>★ {place.rating.toFixed(1)}{place.userRatingCount ? ` (${place.userRatingCount})` : ''}</Text>}
-        {place.currentOpeningHours?.openNow != null && (
-          <Text style={styles.openStatus}>{place.currentOpeningHours.openNow ? t('chat.open') : t('chat.closed')}</Text>
-        )}
-      </View>
-      {!!place.formattedAddress && <Text style={styles.placeAddress}>{place.formattedAddress}</Text>}
-      <View style={styles.actionsRow}>
-        <Pressable accessibilityRole="button" accessibilityLabel={ui("Abrir en Google Maps")} onPress={() => openMaps(place)} style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
-          <Ionicons name="map-outline" size={18} color={COLORS.black} accessible={false} /><Text style={styles.actionText}>Maps</Text>
-        </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={ui("Abrir en Waze")} onPress={() => openWaze(place)} style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
-          <Ionicons name="navigate-outline" size={18} color={COLORS.black} accessible={false} /><Text style={styles.actionText}>Waze</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-
   const renderMessage = ({ item }: { item: Message }) => (
     <View style={[styles.messageGroup, item.from === 'user' && styles.userGroup]}>
       <View style={styles.messageContent}>
         <View style={[styles.message, item.from === 'user' ? styles.userMessage : styles.botMessage]}>
           <Text style={item.from === 'user' ? styles.userText : styles.botText}>{item.text}</Text>
         </View>
-        {!item.writing && !!item.appItems?.length && <View style={styles.places}>{item.appItems.slice(0, 3).map((recommendation) => (
+        {!item.writing && !!item.appItems?.length && <View style={styles.places}>{item.appItems.slice(0, visibleResults[item.id] || 3).map((recommendation) => (
           <View key={`${recommendation.kind}:${recommendation.id}`} style={styles.placeCard}>
+            <Text style={styles.resultSource}>{recommendation.kind === 'news' ? recommendation.section === 'ny-al-dia' ? ui('NY al día') : ui('Qué hacer en NY') : recommendation.hasBenefit ? 'ITC Club' : ui('En la app')}{recommendation.region ? ` · ${recommendation.region}` : ''}</Text>
             <Text style={styles.placeTitle}>{recommendation.title}</Text>
+            {recommendation.hasBenefit && !!recommendation.memberBenefit && <Text style={styles.resultBenefit}>{recommendation.memberBenefit}</Text>}
+            {recommendation.hasBenefit && !!recommendation.memberBenefitDetails && <Text style={styles.resultConditions}>{recommendation.memberBenefitDetails}</Text>}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={ui('Abrir {title}', { title: recommendation.title })}
@@ -294,12 +238,20 @@ export default function ChatScreen() {
               }}
               style={({ pressed }) => [styles.actionButton, { marginTop: 10, alignSelf: 'flex-start' }, pressed && styles.pressed]}
             >
-              <Text style={styles.actionText}>{recommendation.kind === 'experience' ? 'Ver evento' : 'Ver guía'}</Text>
+              <Text style={styles.actionText}>{ui(recommendation.kind === 'experience' ? 'Ver experiencia' : 'Ver publicación')}</Text>
               <Ionicons name="arrow-forward" size={16} color={COLORS.black} accessible={false} />
             </Pressable>
           </View>
-        ))}</View>}
-        {!item.writing && !!item.places?.length && <View style={styles.places}>{item.places.map(renderPlace)}</View>}
+        ))}
+          {item.appItems.length > (visibleResults[item.id] || 3) && <Pressable accessibilityRole="button" onPress={() => setVisibleResults(current => ({ ...current, [item.id]: (current[item.id] || 3) + 6 }))} style={({ pressed }) => [styles.moreResults, pressed && styles.pressed]}>
+            <Text style={styles.moreResultsText}>{ui('Ver más resultados')} ({item.appItems.length - (visibleResults[item.id] || 3)})</Text>
+          </Pressable>}
+        </View>}
+        {!item.writing && item.showMembership && !user?.is_premium && <Pressable accessibilityRole="button" onPress={() => { openingRecommendationRef.current = true; router.push('/(tabs)/club'); }} style={({ pressed }) => [styles.membershipAction, pressed && styles.pressed]}>
+          <Ionicons name="star-outline" size={17} color={COLORS.gold} accessible={false} />
+          <Text style={styles.membershipActionText}>{ui('Conocer la membresía')}</Text>
+          <Ionicons name="arrow-forward" size={16} color={COLORS.gold} accessible={false} />
+        </Pressable>}
       </View>
     </View>
   );
@@ -352,6 +304,14 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
+  resultSource: { color: COLORS.muted, fontSize: 11, lineHeight: 16, marginBottom: 5 },
+  resultBenefit: { color: COLORS.gold, fontSize: 15, fontWeight: '700', lineHeight: 21, marginTop: 8 },
+  resultConditions: { color: COLORS.text, fontSize: 13, lineHeight: 19, marginTop: 5 },
+  moreResults: { minHeight: 44, alignItems: 'center', justifyContent: 'center', padding: 12, borderWidth: 1, borderColor: COLORS.border, borderRadius: 14 },
+  moreResultsText: { color: COLORS.gold, fontSize: 14, fontWeight: '700' },
+  membershipAction: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, padding: 14, marginTop: 10, borderWidth: 1, borderColor: COLORS.gold, borderRadius: 16, backgroundColor: COLORS.surface },
+  membershipActionText: { color: COLORS.gold, fontSize: 14, fontWeight: '700', flexShrink: 1 },
+
   flex: { flex: 1 }, container: { flex: 1, backgroundColor: COLORS.background }, center: { flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' },
   header: { width: '100%', maxWidth: 780, alignSelf: 'center', minHeight: 88, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border },
   iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }, identity: { flex: 1, minWidth: 0, alignItems: 'center', justifyContent: 'center', paddingVertical: 10 },
