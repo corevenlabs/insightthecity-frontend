@@ -1,0 +1,41 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs'), vm=require('node:vm'), ts=require('typescript');
+function load(file, deps, React){const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.React}}).outputText,{React,exports:m.exports,module:m,require:n=>{if(!(n in deps))throw Error('Missing '+n);return deps[n];},fetch:(...args)=>deps.fetch(...args),URLSearchParams,Date});return m.exports;}
+function nodes(n){return Array.isArray(n)?n.flatMap(nodes):n&&typeof n==='object'?[n,...nodes(n.children||[])]:[];}
+function harness(){
+ let cursor=0,effects=[],lang='es',token='account-one',pendingTranslation,issues=0,reserved=false;
+ const slots=[]; const same=(a,b)=>a&&b&&a.length===b.length&&a.every((v,i)=>v===b[i]);
+ const React={createElement:(type,props,...children)=>({type,props:props||{},children}),useState(initial){const i=cursor++;if(!(i in slots))slots[i]=initial;return [slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},useRef(initial){const i=cursor++;return slots[i]??(slots[i]={current:initial});},useEffect(fn,deps){const i=cursor++;if(!slots[i]||!same(slots[i].deps,deps)){const prev=slots[i];effects.push(()=>{prev?.cleanup?.();slots[i]={deps,cleanup:fn()};});}}};
+ const item={id:'venue',title:'Venue',access:'premium',benefitAction:'qr',couponStatus:'available',image:'https://example.test/photo',includes:[],description:'Source',recommendation:'Source',memberBenefit:'20% OFF'};
+ const deps={react:React,'../constants/api':{API_URL:'https://api.example.test'},fetch:async(url,options)=>{
+  if(url.endsWith('/reservation'))return {ok:true,json:async()=>({reserved})};
+  issues++;reserved=true;return {ok:true,json:async()=>({qrDataUrl:'data:image/png;base64,SAME',reference:'ITC-7',expiresAt:new Date(Date.now()+86400000).toISOString()})};
+ }};
+ const benefits=load('src/lib/benefits.ts',deps,React);
+ Object.assign(deps,{
+  '../components/ExperienceSocialLinks':{ExperienceSocialLinks:'social'},'../components/ExperienceLocation':{ExperienceLocation:'location'},'../components/typography':{Text:'text'},'../lib/partnerDisclosure':{partnerDisclosure:()=>null},'../components/ClubLogo':{ClubLogo:'logo'},'../hooks/useResponsiveLayout':{useResponsiveLayout:()=>({width:390,height:844})},'../components/SaveButton':{SaveButton:'save'},'../context/SavedContext':{savedExperience:x=>x},'@/context/LanguageContext':{useLanguage:()=>({language:lang,ui:s=>s})},'@/components/ExperienceTags':{ExperienceTags:'tags'},'@/lib/experienceFilters':{getExperienceTags:()=>[]},'@/components/ExpandableContent':{ExpandableSection:'section',ExpandableText:'expand'},'@expo/vector-icons':{Ionicons:'icon'},'expo-router':{router:{},useLocalSearchParams:()=>({id:'venue'})},'expo-web-browser':{},'react-native':{ActivityIndicator:'busy',FlatList:'list',Image:'image',Modal:'modal',ScrollView:'scroll',TouchableOpacity:'button',View:'view',StyleSheet:{create:x=>x}},'react-native-safe-area-context':{SafeAreaView:'safe'},'../context/AuthContext':{useAuth:()=>({user:{id:token,is_premium:true},token})},'../lib/experiences':{fetchExperience:async(id,language)=>language==='es'?item:new Promise(resolve=>{pendingTranslation=()=>resolve({...item,memberBenefit:'Localized',couponStatus:'sold_out'});})},'../lib/benefits':benefits,
+ });
+ const screen=load('src/app/experience-detail.tsx',deps,React).default;
+ return {render(){cursor=0;effects=[];const result=screen();effects.forEach(fn=>fn());return nodes(result);},setLanguage:l=>{lang=l;},resolve:()=>pendingTranslation(),switchAccount:()=>{token='account-two';reserved=false;},get issues(){return issues;},benefits};
+}
+const settle=()=>new Promise(resolve=>setImmediate(resolve));
+test('An open QR survives ES → EN → PT and delayed translation; another account never sees it',async()=>{
+ const h=harness();h.render();await settle();let n=h.render();
+ await n.find(x=>x.type==='button'&&x.props.accessibilityHint==='Genera un código QR válido durante 24 horas').props.onPress();await settle();
+ n=h.render();assert.equal(n.find(x=>x.type==='modal').props.visible,true);
+ for(const locale of ['en','pt']){
+  h.setLanguage(locale);n=h.render();assert.equal(n.find(x=>x.type==='modal').props.visible,true,'QR stays visible during translation');
+  h.resolve();await settle();n=h.render();assert.equal(n.find(x=>x.type==='modal').props.visible,true);
+  assert.equal(n.find(x=>x.type==='image'&&x.props.source?.uri?.startsWith('data:')).props.source.uri,'data:image/png;base64,SAME');
+ }
+ assert.equal(h.issues,1,'language never reissues or revokes the QR');
+ h.switchAccount();n=h.render();assert.equal(n.find(x=>x.type==='modal').props.visible,false);
+});
+test('Only the owner of a reservation can reopen the final reserved coupon; paused stays blocked',()=>{
+ const {benefits}=harness();
+ assert.equal(benefits.qrUnavailable('sold_out',true),false);
+ assert.equal(benefits.qrUnavailable('sold_out',false),true);
+ assert.equal(benefits.qrUnavailable('paused',true),true);
+ assert.equal(benefits.qrUnavailable('available',false),false);
+});

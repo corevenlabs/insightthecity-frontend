@@ -14,12 +14,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { ActivityIndicator, FlatList, Image, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import type { Experience } from '../constants/experiences';
 import { fetchExperience } from '../lib/experiences';
-import { issueBenefitCode, type BenefitCode } from '../lib/benefits';
+import { issueBenefitCode, useBenefitReservation, qrUnavailable, type BenefitCode } from '../lib/benefits';
 
 export default function ExperienceDetailScreen() {
   const { ui, language } = useLanguage();
@@ -30,21 +30,32 @@ export default function ExperienceDetailScreen() {
   // el estado anterior deja de aplicar sin tener que resetearlo en un efecto.
   const [loadedId, setLoadedId] = useState<string | undefined>(undefined);
   const [photo, setPhoto] = useState<{ id?: string; index: number }>({ id, index: 0 });
-  const loading = Boolean(id) && loadedId !== `${id}:${language}`;
+  const refreshing = Boolean(id) && loadedId !== `${id}:${language}`;
+  const loading = refreshing && experience?.id !== id;
+  const [contentError, setContentError] = useState(false);
+  const requestScope = `${id}:${token || ''}`;
+  const currentScope = useRef(requestScope);
   const photoIndex = photo.id === id ? photo.index : 0;
-  const [benefitCode, setBenefitCode] = useState<BenefitCode | null>(null);
+  const [benefitCode, setBenefitCode] = useState<(BenefitCode & { scope: string }) | null>(null);
+  const hasReservation = useBenefitReservation(experience?.id === id && experience?.benefitAction === 'qr' && user?.is_premium ? id : undefined, token, benefitCode?.reference);
   const [benefitLoading, setBenefitLoading] = useState(false);
   const [benefitError, setBenefitError] = useState('');
+  const visibleCode = benefitCode?.scope === requestScope ? benefitCode : null;
   const { width: availableWidth, height: screenHeight } = useResponsiveLayout();
   const screenWidth = Math.min(availableWidth, 860);
   const heroHeight = Math.min(480, Math.max(220, Math.min(screenWidth * 0.8, screenHeight * 0.6)));
 
   useEffect(() => {
+    currentScope.current = requestScope;
+    return () => { currentScope.current = ''; };
+  }, [requestScope]);
+
+  useEffect(() => {
     let active = true;
     if (!id) return;
     fetchExperience(id, language)
-      .then((item) => { if (active) setExperience(item); })
-      .catch(() => { if (active) setExperience(undefined); })
+      .then((item) => { if (active) { setExperience(item); setContentError(false); } })
+      .catch(() => { if (active) setContentError(true); })
       .finally(() => { if (active) setLoadedId(`${id}:${language}`); });
     return () => { active = false; };
   }, [id, language]);
@@ -53,7 +64,7 @@ export default function ExperienceDetailScreen() {
     return <SafeAreaView style={styles.container}><View style={styles.emptyState}><Text style={styles.emptyTitle}>{ui("Actualizando contenido…")}</Text></View></SafeAreaView>;
   }
 
-  if (!experience) {
+  if (!experience || experience.id !== id) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyState}>
@@ -72,7 +83,7 @@ export default function ExperienceDetailScreen() {
   const ticketCta = ui(experience.ticketCta?.trim() || '') || ui("COMPRAR BOLETOS");
   const benefitAction = experience.benefitAction || 'none';
   const disclosure = requiresPremium ? partnerDisclosure(experience.partnerOffer, isPaidEvent || (benefitAction === 'external' && Boolean(experience.benefitUrl))) : null;
-  const couponUnavailable = benefitAction === 'qr' && ['sold_out', 'paused'].includes(experience.couponStatus || '');
+  const couponUnavailable = benefitAction === 'qr' && qrUnavailable(experience.couponStatus, Boolean(hasReservation));
   const hasBenefitAction = requiresPremium && !isLocked && !couponUnavailable && (benefitAction === 'qr' || (benefitAction === 'external' && Boolean(experience.benefitUrl)));
   const benefitCta = ui(experience.benefitCta?.trim() || '') || ui('OBTENER BENEFICIO');
   const isCtaEnabled = isPaidEvent || isLocked || hasBenefitAction;
@@ -85,8 +96,11 @@ export default function ExperienceDetailScreen() {
     if (benefitAction === 'qr' && experience && token) {
       setBenefitLoading(true);
       setBenefitError('');
-      try { setBenefitCode(await issueBenefitCode(experience.id, token)); }
-      catch (error) { setBenefitError(error instanceof Error ? error.message : ui('No se pudo generar el código.')); }
+      try {
+        const code = await issueBenefitCode(experience.id, token);
+        if (currentScope.current === requestScope) setBenefitCode({ ...code, scope: requestScope });
+      }
+      catch (error) { if (currentScope.current === requestScope) setBenefitError(ui(error instanceof Error ? error.message : 'No se pudo generar el código.')); }
       finally { setBenefitLoading(false); }
     }
   }
@@ -94,6 +108,7 @@ export default function ExperienceDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        {contentError && <Text style={styles.ctaError} accessibilityRole="alert">{ui('No se pudo actualizar el idioma. Inténtalo de nuevo.')}</Text>}
         <View style={[styles.hero, { height: heroHeight }]}>
           <FlatList
             key={`${screenWidth}`}
@@ -217,6 +232,8 @@ export default function ExperienceDetailScreen() {
               ? ticketCta.toUpperCase()
               : isLocked
               ? ui("SUSCRÍBETE PARA DESBLOQUEAR")
+              : benefitAction === 'qr' && hasReservation && experience.couponStatus !== 'paused'
+                ? ui('VER MI QR')
               : experience.couponStatus === 'sold_out'
                 ? ui('AGOTADO')
               : experience.couponStatus === 'paused'
@@ -235,7 +252,7 @@ export default function ExperienceDetailScreen() {
 
         <View style={{ height: 70 }} />
       </ScrollView>
-      <Modal visible={Boolean(benefitCode)} transparent animationType="fade" onRequestClose={() => setBenefitCode(null)}>
+      <Modal visible={Boolean(visibleCode)} transparent animationType="fade" onRequestClose={() => setBenefitCode(null)}>
         <ScrollView style={styles.modalScrim} contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.qrModal} accessibilityViewIsModal>
             <TouchableOpacity style={styles.modalClose} onPress={() => setBenefitCode(null)} accessibilityRole="button" accessibilityLabel={ui('Cerrar código QR')} hitSlop={8}>
@@ -243,13 +260,13 @@ export default function ExperienceDetailScreen() {
             </TouchableOpacity>
             <ClubLogo width={96} style={{ alignSelf: "center" }} />
             <Text style={styles.qrTitle}>{ui('Tu beneficio está listo')}</Text>
-            <Text style={styles.qrSubtitle}>{experience.memberBenefit || benefitCode?.benefit}</Text>
-            {benefitCode?.qrDataUrl && <View style={styles.qrFrame}>
-              <Image source={{ uri: benefitCode.qrDataUrl }} style={styles.qrImage} accessibilityLabel={ui('Código QR para canjear el beneficio')} />
+            <Text style={styles.qrSubtitle}>{experience.memberBenefit || visibleCode?.benefit}</Text>
+            {visibleCode?.qrDataUrl && <View style={styles.qrFrame}>
+              <Image source={{ uri: visibleCode.qrDataUrl }} style={styles.qrImage} accessibilityLabel={ui('Código QR para canjear el beneficio')} />
             </View>}
             <Text style={styles.qrInstruction}>{experience.benefitInstructions || ui('Muestra este código al personal para validar el beneficio.')}</Text>
             <View style={styles.qrValidity}><Ionicons name="time-outline" size={18} color={COLORS.gold} /><Text style={styles.qrValidityText}>{ui('Válido por 24 horas · un solo uso')}</Text></View>
-            <Text style={styles.qrReference}>{benefitCode?.reference}</Text>
+            <Text style={styles.qrReference}>{visibleCode?.reference}</Text>
             <TouchableOpacity style={styles.qrDoneButton} onPress={() => setBenefitCode(null)} accessibilityRole="button"><Text style={styles.qrDoneText}>{ui('LISTO')}</Text></TouchableOpacity>
           </View>
         </ScrollView>
