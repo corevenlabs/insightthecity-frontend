@@ -172,6 +172,7 @@ function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionPr
   const { t, ui, language } = useLanguage();
   const { planWidth } = useResponsiveLayout();
   const [items, setItems] = useState<NewsCard[]>([]);
+  const [loadedLanguage, setLoadedLanguage] = useState(language);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isNewsSection = section === 'ny-al-dia';
@@ -196,14 +197,17 @@ function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionPr
       .then((loaded) => {
         if (!alive) return;
         setItems(loaded);
+        setLoadedLanguage(language);
         setError(null);
       })
-      .catch(() => { if (alive) setError('No se pudo cargar el contenido.'); })
+      .catch(() => { if (alive) { setItems([]); setLoadedLanguage(language); setError('No se pudo cargar el contenido.'); } })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [isNewsSection, section, reloadKey, filteringPlans, language]);
 
-  const visibleItems = isNewsSection ? items : items.filter(item => matchesPlanTags(item, tags)).slice(0, 4);
+  const waitingForLanguage = loadedLanguage !== language;
+  const currentItems = waitingForLanguage ? [] : items;
+  const visibleItems = isNewsSection ? currentItems : currentItems.filter(item => matchesPlanTags(item, tags)).slice(0, 4);
 
   const retry = () => {
     setLoading(true);
@@ -293,7 +297,7 @@ function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionPr
         </TouchableOpacity>
       </View>
 
-      {loading ? (
+      {loading || waitingForLanguage ? (
         <View style={styles.newsState} accessibilityLabel={ui('Cargando {title}', { title: title })}>
           <ActivityIndicator color={COLORS.gold} />
         </View>
@@ -394,7 +398,7 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {ui('BENEFICIOS ITC CLUB').replace(/\s*CLUB$/i, '')} <Text style={styles.headerBrandGold}>CLUB</Text>
+            {ui('BENEFICIOS ITC CLUB').split(/(CLUB)/).map((part, index) => part === 'CLUB' ? <Text key={index} style={styles.headerBrandGold}>{part}</Text> : part)}
           </Text>
 
           <TouchableOpacity
