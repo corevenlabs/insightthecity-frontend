@@ -2,9 +2,10 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Buscar lugares y eventos": {en: "Search places and events", pt: "Buscar lugares e eventos"},
+  "DESCUBRE NYC & NJ": {en: "DISCOVER NYC & NJ", pt: "DESCUBRA NYC & NJ"},
   "Ocultar contraseña": {"en": "Hide password", "pt": "Ocultar senha"},
   "Mostrar contraseña": {"en": "Show password", "pt": "Mostrar senha"},
-  "Guías": {"en": "Guides", "pt": "Guias"},
   "Qué hacer en New York": {"en": "Things to do in New York", "pt": "O que fazer em Nova York"},
   "Lugares y beneficios": {"en": "Places and benefits", "pt": "Lugares e benefícios"},
   "Quitar de guardados": {"en": "Remove from saved", "pt": "Remover dos salvos"},
@@ -70,7 +71,6 @@ export const UI_TRANSLATIONS = {
   "Contraseña": {"en": "Password", "pt": "Senha"},
   "Beneficios cerca de ti": {"en": "Benefits near you", "pt": "Benefícios perto de você"},
   "Ver beneficios": {"en": "View benefits", "pt": "Ver benefícios"},
-  "Buscar lugares, eventos y guías": {"en": "Search places, events and guides", "pt": "Buscar lugares, eventos e guias"},
   "Borrar búsqueda": {"en": "Clear search", "pt": "Limpar busca"},
   "Buscar": {"en": "Search", "pt": "Buscar"},
   "Cerrar búsqueda": {"en": "Close search", "pt": "Fechar busca"},
@@ -426,10 +426,6 @@ export const UI_TRANSLATIONS = {
     "en": "New York news",
     "pt": "Notícias de Nova York"
   },
-  "Guía turística": {
-    "en": "City guide",
-    "pt": "Guia turístico"
-  },
   "Experiencia": {
     "en": "Experience",
     "pt": "Experiência"
@@ -498,10 +494,6 @@ export const UI_TRANSLATIONS = {
     "en": "for a limited time.",
     "pt": "por tempo limitado."
   },
-  "Guías especiales": {
-    "en": "Special guides",
-    "pt": "Guias especiais"
-  },
   "creadas por expertos locales.": {
     "en": "created by local experts.",
     "pt": "criados por especialistas locais."
@@ -542,14 +534,6 @@ export const UI_TRANSLATIONS = {
     "en": "Things to do in NY",
     "pt": "O que fazer em NY?"
   },
-  "GUÍA TURÍSTICA": {
-    "en": "CITY GUIDE",
-    "pt": "GUIA TURÍSTICO"
-  },
-  "Guías para vivir NYC como local": {
-    "en": "Experience NYC like a local",
-    "pt": "Viva NYC como um morador local"
-  },
   "Rutas, miradores, museos, rooftops y planes gratis para organizar tu viaje.": {
     "en": "Routes, observation decks, museums, rooftops and free activities for your trip.",
     "pt": "Roteiros, mirantes, museus, rooftops e passeios gratuitos para sua viagem."
@@ -566,17 +550,9 @@ export const UI_TRANSLATIONS = {
     "en": "Could not load the article.",
     "pt": "Não foi possível carregar a notícia."
   },
-  "GUÍAS NYC": {
-    "en": "NYC GUIDES",
-    "pt": "GUIAS NYC"
-  },
   "Descubre lugares, experiencias y secretos de Nueva York.": {
     "en": "Discover New York's places, experiences and hidden gems.",
     "pt": "Descubra lugares, experiências e segredos de Nova York."
-  },
-  "Buscar guía...": {
-    "en": "Search guides...",
-    "pt": "Buscar guia..."
   },
   "Destacada de la semana": {
     "en": "This week's featured guide",
@@ -585,10 +561,6 @@ export const UI_TRANSLATIONS = {
   "DESTACADA": {
     "en": "FEATURED",
     "pt": "DESTAQUE"
-  },
-  "Más guías": {
-    "en": "More guides",
-    "pt": "Mais guias"
   },
   "Los mejores rooftops de NYC": {
     "en": "NYC's best rooftops",
@@ -918,10 +890,6 @@ export const UI_TRANSLATIONS = {
     "en": "LEARN MORE",
     "pt": "SAIBA MAIS"
   },
-  "NYC & NJ GUIDE": {
-    "en": "NYC & NJ GUIDE",
-    "pt": "GUIA NYC & NJ"
-  },
   "Hoy · 7:00 PM": {
     "en": "Today · 7:00 PM",
     "pt": "Hoje · 19:00"
@@ -954,22 +922,6 @@ export const UI_TRANSLATIONS = {
   "Ver todos los drops": {
     "en": "See all drops",
     "pt": "Ver todos os drops"
-  },
-  "Ver todas las guías": {
-    "en": "See all guides",
-    "pt": "Ver todos os guias"
-  },
-  "Descubre esta guía seleccionada por Insight The City.": {
-    "en": "Discover this guide curated by Insight The City.",
-    "pt": "Descubra este guia selecionado pela Insight The City."
-  },
-  "Abrir guías": {
-    "en": "Open guides",
-    "pt": "Abrir guias"
-  },
-  "Todavía no hay guías publicadas.": {
-    "en": "No guides have been published yet.",
-    "pt": "Ainda não há guias publicados."
   },
   "No se pudo abrir la gestión de la membresía.": {
     "en": "Could not open membership management.",
@@ -1203,10 +1155,6 @@ export const UI_TRANSLATIONS = {
     "en": "If you have an ITC Club membership, we cancel it immediately and you will not be charged again.",
     "pt": "Se você tiver uma assinatura ITC Club, nós a cancelamos imediatamente e você não será cobrado novamente."
   },
-  "Pierdes el acceso a las guías que compraste.": {
-    "en": "You lose access to the guides you purchased.",
-    "pt": "Você perde o acesso aos guias que comprou."
-  },
   "Stripe puede conservar el registro de tus pagos por obligaciones legales y fiscales.": {
     "en": "Stripe may keep records of your payments for legal and tax obligations.",
     "pt": "A Stripe pode manter o registro dos seus pagamentos por obrigações legais e fiscais."
@@ -1287,41 +1235,13 @@ export const UI_TRANSLATIONS = {
     "en": "Purchase confirmed",
     "pt": "Compra confirmada"
   },
-  "La guía ya está disponible en tu cuenta.": {
-    "en": "The guide is now available in your account.",
-    "pt": "O guia já está disponível na sua conta."
-  },
   "No se pudo iniciar la compra.": {
     "en": "Could not start the purchase.",
     "pt": "Não foi possível iniciar a compra."
   },
-  "Compra una guía individual o disfrútala incluida con tu membresía ITC Club.": {
-    "en": "Buy a single guide or enjoy it included with your ITC Club membership.",
-    "pt": "Compre um guia avulso ou aproveite-o incluído na sua assinatura ITC Club."
-  },
-  "Cargando guías": {
-    "en": "Loading guides",
-    "pt": "Carregando guias"
-  },
   "COMPRADA": {
     "en": "PURCHASED",
     "pt": "COMPRADO"
-  },
-  "Descargar guía PDF": {
-    "en": "Download PDF guide",
-    "pt": "Baixar guia em PDF"
-  },
-  "DESCARGAR GUÍA PDF": {
-    "en": "DOWNLOAD PDF GUIDE",
-    "pt": "BAIXAR GUIA EM PDF"
-  },
-  "Comprar guía": {
-    "en": "Buy guide",
-    "pt": "Comprar guia"
-  },
-  "COMPRAR GUÍA": {
-    "en": "BUY GUIDE",
-    "pt": "COMPRAR GUIA"
   },
   "Obtener con ITC Club": {
     "en": "Get with ITC Club",
@@ -1330,10 +1250,6 @@ export const UI_TRANSLATIONS = {
   "OBTENER CON ITC CLUB": {
     "en": "GET WITH ITC CLUB",
     "pt": "OBTER COM ITC CLUB"
-  },
-  "No hay guías disponibles.": {
-    "en": "No guides available.",
-    "pt": "Não há guias disponíveis."
   },
   "No se pudo cargar el documento. Revisa tu conexión e inténtalo de nuevo.": {
     "en": "Could not load the document. Check your connection and try again.",

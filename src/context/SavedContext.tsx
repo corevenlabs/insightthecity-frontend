@@ -8,7 +8,7 @@ import type { Experience } from '../constants/experiences';
 import type { NewsCard } from '../lib/news';
 
 export type SavedItem = { key: string; id: string; kind: 'experience' | 'plan'; canSave?: boolean; title: string; image: string | null };
-export const savedExperience = (item: Experience): SavedItem => ({ key: `experience:${item.id}`, id: item.id, kind: 'experience', canSave: !['ny_al_dia', 'guias', 'ny-al-dia', 'guides'].includes(item.section || ''), title: item.title, image: item.image });
+export const savedExperience = (item: Experience): SavedItem => ({ key: `experience:${item.id}`, id: item.id, kind: 'experience', canSave: !['ny_al_dia', 'ny-al-dia'].includes(item.section || ''), title: item.title, image: item.image });
 export const savedPlan = (item: NewsCard): SavedItem => ({ key: `plan:${item.id}`, id: String(item.id), kind: 'plan', title: item.title, image: item.image });
 const Context = createContext<{ items: SavedItem[]; ready: boolean; toggle: (item: SavedItem) => Promise<void> }>({ items: [], ready: false, toggle: async () => {} });
 
@@ -27,7 +27,7 @@ export function SavedProvider({ children }: { children: ReactNode }) {
       const parsed: SavedItem[] = raw ? JSON.parse(raw) : [];
       if (!Array.isArray(parsed)) throw new Error('Invalid saved items');
       if (active) {
-        current.current = { key: storageKey, items: parsed.filter(item => item && ['experience', 'plan'].includes(item.kind) && item.canSave !== false), ready: true };
+        current.current = { key: storageKey, items: parsed.filter(item => item && ['experience', 'plan'].includes(item.kind) && item.canSave !== false && item.id !== 'nyc-local-guides'), ready: true };
         setState(current.current);
       }
     }).catch(() => { if (active) Alert.alert(ui('Guardados'), ui('No se pudieron cargar tus guardados.')); });

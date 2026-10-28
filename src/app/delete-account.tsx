@@ -122,7 +122,6 @@ export default function DeleteAccountScreen() {
           {[
             ui('Borramos tu perfil, tu foto, tus mensajes del chat y tus códigos de beneficios.'),
             ui('Solicitamos la cancelación de tu membresía en Stripe antes de borrar la cuenta. Si ocurre un problema, reintentamos y te confirmamos cuando termine.'),
-            ui('Pierdes el acceso a las guías que compraste.'),
             ui('Stripe puede conservar el registro de tus pagos por obligaciones legales y fiscales.'),
           ].map((item) => (
             <View key={item} style={styles.listItem}>

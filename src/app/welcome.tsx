@@ -155,7 +155,7 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
       >
         <View style={styles.kickerRow}>
           <Ionicons name="sparkles" size={16} color={GOLD} />
-          <Text style={styles.kicker}>{ui("NYC & NJ GUIDE")}</Text>
+          <Text style={styles.kicker}>{ui("DESCUBRE NYC & NJ")}</Text>
         </View>
 
         <TouchableOpacity

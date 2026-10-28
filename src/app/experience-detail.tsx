@@ -109,7 +109,7 @@ export default function ExperienceDetailScreen() {
             onMomentumScrollEnd={(event) => setPhoto({ id, index: Math.round(event.nativeEvent.contentOffset.x / screenWidth) })}
           />
           <View style={styles.heroShade} pointerEvents="none" />
-          {!['ny_al_dia', 'guias'].includes(experience.section || '') && <SaveButton item={savedExperience(experience)} />}
+          {!['ny_al_dia'].includes(experience.section || '') && <SaveButton item={savedExperience(experience)} />}
           <View style={styles.heroOverlay} pointerEvents="box-none">
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={22} color="#FDDD56" />
