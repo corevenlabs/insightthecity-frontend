@@ -17,7 +17,7 @@ import { AppState, Platform } from 'react-native';
 import { API_URL } from '../constants/api';
 import type { AppLanguage } from './LanguageContext';
 
-export type DeletionVerification = {google:true} | {challenge:string;code:string} | {apple:true;identityToken?:string;nonce?:string};
+export type DeletionVerification = {google:true;identityToken?:string} |{challenge:string;code:string} | {apple:true;identityToken?:string;nonce?:string};
 
 export type ProfileUpdate = Partial<Pick<User, 'name' | 'language' | 'home_area' | 'interests'>>;
 
@@ -440,9 +440,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const deleteAccount = useCallback(async (password: string, emailVerification?: DeletionVerification) => {
     if (!token) throw new Error('Inicia sesión para eliminar tu cuenta');
     if (emailVerification && 'google' in emailVerification) {
-      const response = await fetch(`${API_URL}/api/users/google/delete`, {method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({confirm:true})});
+      const response = await fetch(`${API_URL}/api/users/google/delete`, {method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({...emailVerification,confirm:true})});
       const data = await response.json().catch(()=>null);
-      if (!response.ok || !data?.success) throw new Error(data?.message || 'No se pudo eliminar la cuenta.');
+      if (!response.ok || !data?.success) throw Object.assign(new Error(data?.message || 'No se pudo eliminar la cuenta.'),{code:data?.code});
     } else if (emailVerification && 'apple' in emailVerification) {
       const response=await fetch(`${API_URL}/api/users/apple/delete`,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({...emailVerification,confirm:true})});
       const data=await response.json().catch(()=>null);
