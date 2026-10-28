@@ -98,7 +98,7 @@ export function TopTodayBanner({ experiences, visible = true }: { experiences: E
             <Text variant="banner" style={styles.eyebrow}>{ui('TOP DE HOY')}</Text>
             <View style={styles.row}><View style={styles.text}>
               <Text variant="banner" style={styles.title} numberOfLines={fontScale > 1.35 ? 3 : 2}>{item.title}</Text>
-              {!!item.description && <Text style={styles.description} numberOfLines={2}>{item.description}</Text>}
+              {!!item.cardDescription && <Text style={styles.description} numberOfLines={2}>{item.cardDescription}</Text>}
             </View><Ionicons name="chevron-forward" size={30} color="#FFFFFF" accessible={false} /></View>
           </View>
         </Pressable>)}
@@ -113,5 +113,5 @@ const styles = StyleSheet.create({
   eyebrow: { color: '#FDDD56', fontSize: 12, lineHeight: 18, fontWeight: '800' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 }, text: { flex: 1, minWidth: 0, gap: 6 },
   title: { color: '#FFFFFF', fontSize: 22, lineHeight: 26, fontWeight: '800' },
-  description: { color: '#E2E2E2', fontSize: 13, lineHeight: 18 },
+  description: { color: '#FFFFFF', fontSize: 13, lineHeight: 18 },
 });

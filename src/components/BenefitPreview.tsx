@@ -31,14 +31,15 @@ export function BenefitPreview({ experience, width }: { experience: Experience; 
   }, [paused, reduceMotion, photos.length]));
   const benefit = experience.cardBenefit?.trim() || experience.memberBenefit?.trim();
   return <View style={[s.card, { width }]}>
-    <TouchableOpacity style={[s.imageWrap, { minHeight: Math.max(230, 170 * fontScale) }]} activeOpacity={0.85} accessibilityRole="button"
+    <TouchableOpacity style={[s.imageWrap, { minHeight: Math.max(230, 210 * fontScale) }]} activeOpacity={0.85} accessibilityRole="button"
       accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
       onPress={() => router.push({ pathname: '/experience-detail', params: { id: experience.id } })}>
       <NewsImage uri={photos[index] || experience.image} style={s.image} accessibilityLabel={experience.title} />
       <LinearGradient colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.92)']} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} />
       <View style={s.body}>
         <Text style={s.title} numberOfLines={2}>{experience.title}</Text>
-        <Text style={s.description} numberOfLines={1}>{experience.region ?? 'NY'}</Text>
+        {!!experience.cardDescription && <Text style={s.description} numberOfLines={2}>{experience.cardDescription}</Text>}
+        <Text style={s.region} numberOfLines={1}>{experience.region ?? 'NY'}</Text>
       </View>
     </TouchableOpacity>
     {!!benefit && <View style={s.badge} pointerEvents="none"><Ionicons name="pricetag" size={14} color="#FDDD56" /><Text style={s.badgeText} numberOfLines={1}>{benefit}</Text></View>}
@@ -56,7 +57,8 @@ const s = StyleSheet.create({
   image: { width: '100%', height: '100%' },
   body: { position: 'absolute', bottom: 38, left: 14, right: 14, gap: 5 },
   title: { color: '#FFFFFF', fontSize: 19, lineHeight: 24, fontWeight: '700' },
-  description: { color: '#E0E0E0', fontSize: 13, lineHeight: 18 },
+  description: { color: '#FFFFFF', fontSize: 13, lineHeight: 18 },
+  region: { color: '#B8B8B8', fontSize: 13, lineHeight: 18 },
   badge: { position: 'absolute', top: 12, left: 12, maxWidth: '72%', flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.65)' },
   badgeText: { flexShrink: 1, color: '#FFFFFF', fontSize: 12, lineHeight: 17, fontWeight: '600' },

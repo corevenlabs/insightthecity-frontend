@@ -150,7 +150,7 @@ function RecommendationsCarousel({ experiences }: { experiences: Experience[] })
                   {experience.region ?? 'NY'}
                 </Text>
                 <Text style={styles.recommendationBannerTitle} numberOfLines={2}>{experience.title}</Text>
-                {!!experience.description && <Text style={styles.recommendationDescription} numberOfLines={2}>{experience.description}</Text>}
+                {!!experience.cardDescription && <Text style={styles.recommendationDescription} numberOfLines={2}>{experience.cardDescription}</Text>}
               </View>
             </TouchableOpacity>
           );
@@ -855,7 +855,7 @@ clubGold: {
   recommendationBannerOverlay: { flex: 1, minWidth: 0, justifyContent: 'center', padding: 10 },
   recommendationBannerCategory: { color: COLORS.gold, fontSize: 9, lineHeight: 13, letterSpacing: 1, paddingRight: 22 },
   recommendationBannerTitle: { marginTop: 4, color: COLORS.white, fontSize: 16, lineHeight: 21, fontWeight: '700', paddingRight: 16 },
-  recommendationDescription: { color: COLORS.secondary, fontSize: 12, lineHeight: 17, marginTop: 5 },
+  recommendationDescription: { color: COLORS.white, fontSize: 12, lineHeight: 17, marginTop: 5 },
   recommendationBannerFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
   recommendationRegionRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   recommendationBannerRegion: { color: COLORS.secondary, fontSize: 12, lineHeight: 16 },
