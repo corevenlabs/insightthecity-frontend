@@ -29,7 +29,7 @@ export function matchesExperienceFilter(experience: Experience, filter: string) 
   if (getExperienceTags(experience).some((tag) => normalize(tag) === normalize(filter))) return true;
   if (filter === 'NY' || filter === 'NJ') return (experience.region ?? 'NY') === filter;
   if (filter === 'Gratis') return experience.access === 'free' && !experience.isPaidEvent;
-  const date = normalize(experience.date);
+  const date = normalize(experience.originalDate ?? experience.date);
   if (filter === 'Hoy') return date.includes('hoy');
   if (filter === 'Este fin de semana') {
     return ['fin de semana', 'viernes', 'sabado', 'domingo'].some((term) => date.includes(term));

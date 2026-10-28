@@ -30,13 +30,15 @@ export default function DropsScreen() {
   const { width } = useResponsiveLayout();
   const router = useRouter();
   const { user } = useAuth();
-  const { t, ui } = useLanguage();
+  const { t, ui, language } = useLanguage();
   const [items, setItems] = useState<Experience[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string[]>([]);
 
   useFocusEffect(useCallback(() => {
-    void fetchExperiences('drops').then(setItems).catch(() => undefined);
-  }, []));
+    let active = true;
+    void fetchExperiences('drops', language).then(items => { if (active) setItems(items); }).catch(() => undefined);
+    return () => { active = false; };
+  }, [language]));
 
   const filteredItems = useMemo(
     () => items.filter((item) => matchesExperienceTags(item, selectedFilter)),
@@ -98,15 +100,15 @@ export default function DropsScreen() {
             <View style={styles.countdownContainer}>
               <View style={styles.timeBox}>
                 <Text style={styles.timeNumber}>23</Text>
-                <Text style={styles.timeLabel}>HRS</Text>
+                <Text style={styles.timeLabel}>{ui('HRS')}</Text>
               </View>
               <View style={styles.timeBox}>
                 <Text style={styles.timeNumber}>14</Text>
-                <Text style={styles.timeLabel}>MIN</Text>
+                <Text style={styles.timeLabel}>{ui('MIN')}</Text>
               </View>
               <View style={styles.timeBox}>
                 <Text style={styles.timeNumber}>55</Text>
-                <Text style={styles.timeLabel}>SEC</Text>
+                <Text style={styles.timeLabel}>{ui('SEC')}</Text>
               </View>
             </View>
             <TouchableOpacity accessibilityRole="button"

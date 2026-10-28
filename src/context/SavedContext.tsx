@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveAccountLocalItem } from '../lib/accountLocalData';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Alert } from 'react-native';
+import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
 import type { Experience } from '../constants/experiences';
 import type { NewsCard } from '../lib/news';
@@ -13,6 +14,7 @@ const Context = createContext<{ items: SavedItem[]; ready: boolean; toggle: (ite
 
 export function SavedProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { ui } = useLanguage();
   const storageKey = `itc:saved:${user?.id ?? 'guest'}`;
   const [state, setState] = useState<{ key: string; items: SavedItem[]; ready: boolean }>({ key: '', items: [], ready: false });
   const current = useRef(state);
@@ -28,9 +30,9 @@ export function SavedProvider({ children }: { children: ReactNode }) {
         current.current = { key: storageKey, items: parsed.filter(item => item && ['experience', 'plan'].includes(item.kind) && item.canSave !== false), ready: true };
         setState(current.current);
       }
-    }).catch(() => { if (active) Alert.alert('Guardados', 'No se pudieron cargar tus guardados.'); });
+    }).catch(() => { if (active) Alert.alert(ui('Guardados'), ui('No se pudieron cargar tus guardados.')); });
     return () => { active = false; };
-  }, [storageKey]);
+  }, [storageKey, ui]);
   const toggle = (item: SavedItem) => {
     queue.current = queue.current.then(async () => {
       if (item.canSave === false || !current.current.ready || current.current.key !== storageKey) return;
@@ -39,7 +41,7 @@ export function SavedProvider({ children }: { children: ReactNode }) {
       try {
         await saveAccountLocalItem(storageKey, JSON.stringify(items));
         if (current.current.key === storageKey) { current.current = { key: storageKey, items, ready: true }; setState(current.current); }
-      } catch { Alert.alert('Guardados', 'No se pudo guardar el cambio. Inténtalo otra vez.'); }
+      } catch { Alert.alert(ui('Guardados'), ui('No se pudo guardar el cambio. Inténtalo otra vez.')); }
     });
     return queue.current;
   };

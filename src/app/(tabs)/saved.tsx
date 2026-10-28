@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react';
+import { fetchExperience } from '../../lib/experiences';
+import { fetchArticle } from '../../lib/news';
 import { ScreenBackButton } from '../../components/ScreenBackButton';
 import { Text } from '../../components/typography';
 import { AdaptiveGrid } from '../../components/AdaptiveGrid';
@@ -11,8 +14,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function SavedScreen() {
-  const { ui } = useLanguage();
+  const { ui, language } = useLanguage();
   const { items, ready } = useSaved();
+  const [titles, setTitles] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let active = true;
+    void Promise.all(items.map(async item => {
+      try { return [item.key, (item.kind === 'plan' ? await fetchArticle(item.id, language) : await fetchExperience(item.id, language)).title] as const; }
+      catch { return [item.key, item.title] as const; }
+    })).then(entries => { if (active) setTitles(Object.fromEntries(entries)); });
+    return () => { active = false; };
+  }, [items, language]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -26,11 +38,11 @@ export default function SavedScreen() {
       {!ready ? <ActivityIndicator color="#FDDD56" style={{ marginTop: 40 }} /> : items.length > 0 ? (
         <ScrollView contentContainerStyle={{ paddingVertical: 20, gap: 14, paddingBottom: 120 }}>
           <AdaptiveGrid>{items.map(item => <View key={item.key} style={{ borderRadius: 14, overflow: 'hidden', backgroundColor: '#121212' }}>
-            <TouchableOpacity accessibilityRole="button" accessibilityLabel={item.title} onPress={() => router.push(item.kind === 'experience'
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel={titles[item.key] ?? item.title} onPress={() => router.push(item.kind === 'experience'
               ? { pathname: '/experience-detail', params: { id: item.id } }
               : { pathname: '/news-detail', params: { id: item.id, section: '¿Qué hacer en NY?', source: 'que-hacer' } })}>
-              <NewsImage uri={item.image} style={{ width: '100%', aspectRatio: 1.8 }} accessibilityLabel={item.title} />
-              <Text style={{ color: '#FFFFFF', fontSize: 17, padding: 14 }}>{item.title}</Text>
+              <NewsImage uri={item.image} style={{ width: '100%', aspectRatio: 1.8 }} accessibilityLabel={titles[item.key] ?? item.title} />
+              <Text style={{ color: '#FFFFFF', fontSize: 17, padding: 14 }}>{titles[item.key] ?? item.title}</Text>
             </TouchableOpacity>
 
           </View>)}</AdaptiveGrid>

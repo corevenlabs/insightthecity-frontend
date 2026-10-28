@@ -29,9 +29,9 @@ async function json<T>(response: Response, fallback: string): Promise<T> {
   return body as T;
 }
 
-export async function fetchGuides(token?: string | null) {
+export async function fetchGuides(token?: string | null, language: 'es' | 'en' | 'pt' = 'es') {
   const path = token ? '/api/guides/mine' : '/api/guides';
-  const response = await fetch(`${API_URL}${path}?fresh=${Date.now()}`, {
+  const response = await fetch(`${API_URL}${path}?lang=${language}&fresh=${Date.now()}`, {
     headers: {
       'Cache-Control': 'no-cache',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
