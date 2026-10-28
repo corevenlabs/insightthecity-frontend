@@ -1,14 +1,14 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs'),vm=require('node:vm'),ts=require('typescript');
-function harness(file,params={},errorCode='ACCOUNT_NOT_FOUND') {
+function harness(file,params={},errorCode='ACCOUNT_NOT_FOUND',signUp=async()=>{}) {
   const state=[];let cursor=0,pushed;
   const React={createElement:(type,props,...children)=>({type,props:props||{},children}),Fragment:'fragment',
     useState(initial){const index=cursor++;if(!(index in state))state[index]=typeof initial==='function'?initial():initial;return [state[index],v=>{state[index]=typeof v==='function'?v(state[index]):v;}];},useRef:()=>({current:null}),useCallback:fn=>fn};
   const modules={react:React,'./unused':{},'expo-router':{router:{push:v=>{pushed=v;},back(){},replace(){},dismissAll(){}},useLocalSearchParams:()=>params,useFocusEffect(){}},
     'react-native':{ActivityIndicator:'spinner',Alert:{alert(){}},Keyboard:{dismiss(){}},KeyboardAvoidingView:'keyboard',Platform:{OS:'ios'},Pressable:'button',ScrollView:'scroll',StyleSheet:{create:s=>s},TouchableOpacity:'button',View:'view'},
-    '@expo/vector-icons':{Ionicons:'icon'},'react-native-safe-area-context':{SafeAreaView:'safe'},'../components/typography':{Text:'text',TextInput:'input'},
-    '../context/AuthContext':{useAuth:()=>({signIn:async()=>{throw Object.assign(Error('login failed'),{code:errorCode});},biometricAvailable:false,biometricEnabled:false,loading:false})},
+    '@expo/vector-icons':{Ionicons:'icon'},'react-native-safe-area-context':{SafeAreaView:'safe'},'../components/typography':{Text:'text',TextInput:'input'},'../components/MarketingConsent':{MarketingConsent:'marketing'},
+    '../context/AuthContext':{useAuth:()=>({signUp,signIn:async()=>{throw Object.assign(Error('login failed'),{code:errorCode});},biometricAvailable:false,biometricEnabled:false,loading:false})},
     '../context/LanguageContext':{useLanguage:()=>({language:'es',t:s=>s,ui:(s,p)=>p?s.replace('{email}',p.email):s,setLanguage(){}})}};
   const mod={exports:{}};
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.React}}).outputText,{React,module:mod,exports:mod.exports,require:n=>modules[n]});
@@ -32,4 +32,22 @@ test('registration prefills the email and leaves password empty',()=>{
   const h=harness('src/app/register.tsx',{email:'client@example.com'});const nodes=all(h.render());
   assert.equal(nodes.find(n=>n.type==='input'&&n.props.autoComplete==='email').props.value,'client@example.com');
   assert.equal(nodes.find(n=>n.type==='input'&&n.props.secureTextEntry).props.value,'');
+});
+
+test('Marketing consent is unchecked, separate from terms and never required to register',async()=>{
+ for(const marketing of [false,true]){
+  let args;
+  const h=harness('src/app/register.tsx',{email:'client@example.test'},undefined,async(...v)=>{args=v;});
+  let n=all(h.render());
+  assert.equal(n.find(x=>x.type==='marketing').props.checked,false);
+  n.find(x=>x.type==='input'&&x.props.autoComplete==='name').props.onChangeText('Client');
+  n.find(x=>x.type==='input'&&x.props.secureTextEntry).props.onChangeText('test-password');
+  n.find(x=>x.props.accessibilityRole==='checkbox').props.onPress();
+  if(marketing)n.find(x=>x.type==='marketing').props.onChange(true);
+  n=all(h.render());
+  const submit=n.find(x=>x.type==='button'&&text(x)==='register.submit');
+  assert.equal(Boolean(submit.props.disabled),false);
+  await submit.props.onPress();
+  assert.equal(args[4],true);assert.equal(args[5],marketing);
+ }
 });

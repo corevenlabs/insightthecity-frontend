@@ -1,3 +1,4 @@
+import { MarketingConsent } from '../components/MarketingConsent';
 import { Text, TextInput } from '../components/typography';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -30,6 +31,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [acceptedMarketing, setAcceptedMarketing] = useState(false);
   const [acceptedLegal, setAcceptedLegal] = useState(false);
 
   const emailRef = useRef<TextInput>(null);
@@ -55,7 +57,7 @@ export default function RegisterScreen() {
 
     setSubmitting(true);
     try {
-      await signUp(name.trim(), email.trim(), password, language, acceptedLegal);
+      await signUp(name.trim(), email.trim(), password, language, acceptedLegal, acceptedMarketing);
       router.dismissAll();
       router.replace('/choose-access' as any);
     } catch (err: any) {
@@ -215,6 +217,8 @@ export default function RegisterScreen() {
                   <Text style={styles.legalLink}>{ui('Leer Política de Privacidad')}</Text>
                 </Pressable>
               </View>
+
+              <MarketingConsent checked={acceptedMarketing} onChange={setAcceptedMarketing} />
 
               {error && <Text style={styles.errorText} accessibilityRole="alert" accessibilityLiveRegion="polite">{error}</Text>}
             </View>

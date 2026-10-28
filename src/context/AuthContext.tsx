@@ -59,7 +59,7 @@ type AuthContextValue = {
   signInWithApple: (body: Record<string, unknown>) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   /** acceptLegal: el usuario marcó la casilla de Términos y Privacidad */
-  signUp: (name: string, email: string, password: string, language: AppLanguage, acceptLegal: boolean) => Promise<void>;
+  signUp: (name: string, email: string, password: string, language: AppLanguage, acceptLegal: boolean, acceptMarketing?: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   enableBiometric: () => Promise<boolean>;
   forgetBiometric: () => Promise<void>;
@@ -302,13 +302,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [forgetBiometric]);
 
   const signUp = useCallback(
-    async (name: string, email: string, password: string, language: AppLanguage, acceptLegal: boolean) => {
+    async (name: string, email: string, password: string, language: AppLanguage, acceptLegal: boolean, acceptMarketing?: boolean) => {
       const { token: t, user: u } = await postAuth('/api/users/register', {
         name,
         email,
         password,
         language,
         acceptLegal,
+        acceptMarketing: acceptMarketing === true,
       });
       await forgetBiometric();
       await persist(t, u);
