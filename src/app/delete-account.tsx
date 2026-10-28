@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { appleDeletionCredential, isAppleCancellation } from '../lib/appleDeletion';
+import { googleDeletionCredential, isGoogleCancellation } from '../lib/googleDeletion';
 import { API_URL } from '../constants/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -38,7 +39,9 @@ export default function DeleteAccountScreen() {
   const [method,setMethod] = useState<'loading'|'password'|'apple'|'google'|'email'|'unavailable'>(user?.has_password ? 'password' : 'loading');
   const [methodAttempt,setMethodAttempt] = useState(0);
   const useApple = method === 'apple' && Platform.OS === 'ios';
-  const useEmail = method === 'email' || (method === 'apple' && Platform.OS !== 'ios');
+  // Sin Google nativo (web), el borrado se confirma con el código por correo, como Apple fuera de iOS.
+  const useGoogle = method === 'google' && Platform.OS !== 'web';
+  const useEmail = method === 'email' || (method === 'apple' && Platform.OS !== 'ios') || (method === 'google' && !useGoogle);
   useEffect(() => {
     let alive=true;
     void fetch(`${API_URL}/api/users/me/deletion-method`,{headers:{Authorization:`Bearer ${token}`}}).then(async response=>{
@@ -68,15 +71,19 @@ export default function DeleteAccountScreen() {
     } finally { setSending(false); }
   };
 
-  const canDelete = confirmed && (method === 'google' || useApple || (useEmail ? !!challenge && /^\d{8}$/.test(code) : method === 'password' && password.length > 0)) && !busy && !sending;
+  const canDelete = confirmed && (useGoogle || useApple || (useEmail ? !!challenge && /^\d{8}$/.test(code) : method === 'password' && password.length > 0)) && !busy && !sending;
 
   const submit = async () => {
     if (!canDelete) return;
     setBusy(true);
     setError('');
     try {
-      if(method === 'google') {
-        await deleteAccount('', {google:true});
+      if(useGoogle) {
+        try { await deleteAccount('', {google:true}); }
+        catch(caught){
+          if((caught as Error & {code?:string}).code!=='GOOGLE_REAUTH_REQUIRED')throw caught;
+          await deleteAccount('',await googleDeletionCredential());
+        }
       } else if(useApple){
         try { await deleteAccount('',{apple:true}); }
         catch(caught){
@@ -86,7 +93,7 @@ export default function DeleteAccountScreen() {
       } else await deleteAccount(password, useEmail ? {challenge,code} : undefined);
       Alert.alert(ui('Solicitud de eliminación recibida'), ui('Tu cuenta está bloqueada y la eliminación está en proceso. Te enviaremos un correo cuando termine. Si no recibes la confirmación en 48 horas, contacta a ITC Club.'), [{ text: 'OK', onPress: () => { router.dismissAll(); router.replace('/welcome'); } }]);
     } catch (err) {
-      if(!isAppleCancellation(err))setError(err instanceof Error ? ui(err.message) : ui('No se pudo eliminar la cuenta.'));
+      if(!isAppleCancellation(err) && !isGoogleCancellation(err))setError(err instanceof Error ? ui(err.message) : ui('No se pudo eliminar la cuenta.'));
     } finally {
       setBusy(false);
     }
@@ -130,7 +137,7 @@ export default function DeleteAccountScreen() {
 
           {method === 'loading' && <ActivityIndicator color={GOLD} />}
           {method === 'unavailable' && <Pressable style={styles.cancelButton} accessibilityRole="button" onPress={()=>{setMethod('loading');setMethodAttempt(value=>value+1);}}><Text style={styles.cancelText}>{ui('No se pudo verificar el acceso. Reintentar')}</Text></Pressable>}
-          {useApple || method === 'google' ? null : useEmail ? <>
+          {useApple || useGoogle ? null : useEmail ? <>
             <Text style={styles.body}>{ui('Para eliminar tu cuenta, confirma tu identidad con el código que enviaremos a tu correo registrado.')}</Text>
             <Pressable style={styles.cancelButton} accessibilityRole="button" disabled={sending || busy || resendSeconds > 0} onPress={() => { void sendCode(); }} accessibilityState={{disabled:sending || busy || resendSeconds > 0,busy:sending}}>
               {sending ? <ActivityIndicator color={GOLD} /> : <Text style={styles.cancelText}>{ui(challenge ? 'Reenviar código' : 'Enviar código de confirmación')}{resendSeconds > 0 ? ` (${resendSeconds}s)` : ''}</Text>}
