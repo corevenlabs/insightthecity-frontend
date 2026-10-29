@@ -1,9 +1,10 @@
+import { Image } from 'expo-image';
 import { Text } from './typography';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, AppState, Image, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, AppState, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import type { Experience } from '../constants/experiences';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { useLanguage } from '../context/LanguageContext';
@@ -91,7 +92,7 @@ export function TopTodayBanner({ experiences, visible = true }: { experiences: E
           onAccessibilityAction={event => goTo(active + (event.nativeEvent.actionName === 'increment' ? 1 : -1))}
           onHoverIn={() => setTouching(true)} onHoverOut={() => setTouching(false)} onFocus={() => setTouching(true)} onBlur={() => setTouching(false)}
           onPress={() => { setTouching(false); router.push({ pathname: '/experience-detail', params: { id: item.id } }); }}>
-          <Image source={{ uri: item.image }} style={StyleSheet.absoluteFill} resizeMode="cover" accessible={false}
+          <Image source={{ uri: item.image }} style={StyleSheet.absoluteFill} contentFit="cover" transition={reduceMotion ? 0 : 160} accessible={false}
             onError={() => setFailed(current => current.includes(item.id + '|' + item.image) ? current : [...current, item.id + '|' + item.image])} />
           <LinearGradient colors={['rgba(0,0,0,0.88)', 'rgba(0,0,0,0.65)', 'rgba(0,0,0,0.28)']} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
           <View style={styles.copy}>

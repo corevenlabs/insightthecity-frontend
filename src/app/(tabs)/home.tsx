@@ -1,3 +1,5 @@
+import { useHomeEntrance } from '../../hooks/useHomeEntrance';
+import { HomeCardsSkeleton } from '../../components/HomeCardsSkeleton';
 import { Text } from '../../components/typography';
 import { ClubLogo } from '../../components/ClubLogo';
 import { HomeSearch } from '../../components/HomeSearch';
@@ -13,7 +15,7 @@ import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
-  Image,
+  Animated,
   Keyboard,
   ScrollView,
   StyleSheet,
@@ -144,7 +146,7 @@ function RecommendationsCarousel({ experiences }: { experiences: Experience[] })
               accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
               onPress={() => openExperience(experience.id)}
             >
-              <Image source={{ uri: experience.image }} style={styles.recommendationBannerImage} />
+              <NewsImage uri={experience.image} style={styles.recommendationBannerImage} loadingPlaceholder accessibilityLabel={experience.title} />
               <View style={styles.recommendationBannerOverlay}>
                 <Text style={styles.recommendationBannerCategory} numberOfLines={1}>
                   {experience.region ?? 'NY'}
@@ -169,7 +171,7 @@ type HomeNewsSectionProps = {
 
 function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionProps) {
   const { t, ui, language } = useLanguage();
-  const { planWidth } = useResponsiveLayout();
+  const { planWidth, contentWidth } = useResponsiveLayout();
   const [items, setItems] = useState<NewsCard[]>([]);
   const [loadedLanguage, setLoadedLanguage] = useState(language);
   const [loading, setLoading] = useState(true);
@@ -224,6 +226,7 @@ function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionPr
   const renderImage = (item: NewsCard, imageStyle: object) => (
     <NewsImage
       uri={item.image}
+      loadingPlaceholder
       style={imageStyle}
       accessibilityLabel={ui('Imagen de {title}', { title: item.title })}
     />
@@ -297,9 +300,7 @@ function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionPr
       </View>
 
       {loading || waitingForLanguage ? (
-        <View style={styles.newsState} accessibilityLabel={ui('Cargando {title}', { title: title })}>
-          <ActivityIndicator color={COLORS.gold} />
-        </View>
+        <HomeCardsSkeleton width={isNewsSection ? contentWidth : carouselCardWidth} compact={isNewsSection} height={isNewsSection ? 88 : undefined} single={isNewsSection} />
       ) : error ? (
         <View style={styles.newsState}>
           <Ionicons name="cloud-offline-outline" size={28} color={COLORS.secondary} />
@@ -325,6 +326,7 @@ function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionPr
 export default function HomeScreen() {
   const { carouselWidth: benefitCardWidth, gutter, width, fontScale } = useResponsiveLayout();
   const { user, refreshUser } = useAuth();
+  const entrance = useHomeEntrance(user?.id);
   const { t, ui, language } = useLanguage();
   const name = firstName(user?.name ?? null, user?.email);
   const [clubBenefits, setClubBenefits] = useState<Experience[]>([]);
@@ -365,6 +367,7 @@ export default function HomeScreen() {
         keyboardDismissMode="on-drag"
         contentContainerStyle={[styles.content, { paddingHorizontal: gutter }]}
       >
+        <Animated.View style={entrance[0]}>
         {/* HEADER */}
 
         <View style={[styles.header, (width < 360 || fontScale > 1.35) && { flexWrap: 'wrap', rowGap: 8 }]}>
@@ -383,11 +386,17 @@ export default function HomeScreen() {
           isOpen={searchOpen} onOpenChange={setSearchOpen}
           catalogLoading={catalogLoading} catalogError={catalogError} onRetryCatalog={() => setCatalogRetry(value => value + 1)}
           onTagsChange={setSelectedTags} query={searchQuery} onQueryChange={setSearchQuery} />
+        </Animated.View>
 
         <View style={searchActive ? { display: 'none' } : undefined}>
+        <Animated.View style={entrance[1]}>
         <HomePromotion />
-        <TopTodayBanner experiences={catalog.filter(item => matchesExperienceTags(item, selectedTags))} visible={!searchActive} />
+        {catalogLoading && catalog.length === 0 ? <View style={{ marginTop: 20 }}>
+          <HomeCardsSkeleton width={width - gutter * 2} height={fontScale > 1.35 ? Math.ceil(36 + fontScale * 144) : width - gutter * 2 < 350 ? 170 : 160} single />
+        </View> : <TopTodayBanner experiences={catalog.filter(item => matchesExperienceTags(item, selectedTags))} visible={!searchActive} />}
+        </Animated.View>
 
+        <Animated.View style={entrance[2]}>
         {/* BENEFICIOS ITC CLUB */}
 
         <View style={styles.sectionHeader}>
@@ -406,7 +415,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView
+        {catalogLoading && clubBenefits.length === 0 ? <HomeCardsSkeleton width={benefitCardWidth} /> : <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.benefitsCarousel}
@@ -418,7 +427,7 @@ export default function HomeScreen() {
               width={benefitCardWidth}
             />
           ))}
-        </ScrollView>
+        </ScrollView>}
         {selectedTags.length > 0 && !clubBenefits.some(item => matchesExperienceTags(item, selectedTags)) && <Text style={styles.emptyText}>{ui('No hay beneficios con estos filtros.')}</Text>}
 
         {/* ITC RECOMIENDA */}
@@ -439,7 +448,8 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        <RecommendationsCarousel experiences={recommendations.filter(item => matchesExperienceTags(item, selectedTags))} />
+        {catalogLoading && recommendations.length === 0 ? <HomeCardsSkeleton width={benefitCardWidth} compact />
+          : <RecommendationsCarousel experiences={recommendations.filter(item => matchesExperienceTags(item, selectedTags))} />}
 
         {selectedTags.length > 0 && !recommendations.some(item => matchesExperienceTags(item, selectedTags)) && <Text style={styles.emptyText}>{ui('No hay recomendaciones con estos filtros.')}</Text>}
         {/* QUE HACER EN NEW YORK */}
@@ -457,6 +467,7 @@ export default function HomeScreen() {
           route="/ny-al-dia"
         />
 
+        </Animated.View>
         </View>
 
       </ScrollView>

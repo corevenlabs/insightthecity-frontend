@@ -1,0 +1,39 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
+function load(file,deps={},extra={}){const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.React}}).outputText,{module:m,exports:m.exports,React:deps.react,require:n=>{if(!(n in deps))throw Error('Unexpected '+n);return deps[n];},...extra});return m.exports;}
+function runtime(){let cursor=0,effects=[];const state=[];const React={createElement:(type,props,...children)=>({type,props:props||{},children}),createContext:()=>({Provider:'provider'}),useCallback:f=>f,useMemo:f=>f(),useState(initial){const i=cursor++;if(!(i in state))state[i]=typeof initial==='function'?initial():initial;return [state[i],v=>{state[i]=typeof v==='function'?v(state[i]):v;}];},useRef(v){const i=cursor++;return state[i]??(state[i]={current:v});},useEffect(fn,deps){const i=cursor++;if(!state[i]||!deps.every((x,j)=>state[i].deps[j]===x)){const old=state[i];effects.push(()=>{old?.cleanup?.();state[i]={deps,cleanup:fn()};});}}};return {React,render(fn){cursor=0;effects=[];const t=fn();effects.forEach(f=>f());return t;}};}
+const settle=()=>new Promise(r=>setImmediate(r));
+test('Entrance is account scoped, consumed once, and logout cancels a pending entry',()=>{
+ const q=load('src/lib/homeEntrance.ts');q.queueHomeEntrance(1);assert.equal(q.consumeHomeEntrance(2),false);assert.equal(q.consumeHomeEntrance(1),true);assert.equal(q.consumeHomeEntrance(1),false);q.queueHomeEntrance(1);q.clearHomeEntrance();assert.equal(q.consumeHomeEntrance(1),false);
+});
+function motion(mode=false){const h=runtime(),q=load('src/lib/homeEntrance.ts'),values=[],animations=[],timers=new Map();let focus,listener,id=0;
+ class Value{constructor(value){this.value=value;values.push(this);}setValue(v){this.value=v;}interpolate(x){return x;}}
+ const deps={react:h.React,'expo-router':{useFocusEffect:f=>{focus=f;}},'../lib/homeEntrance':q,'react-native':{AccessibilityInfo:{isReduceMotionEnabled:()=>mode==='hang'?new Promise(()=>{}):mode==='error'?Promise.reject(Error('native unavailable')):Promise.resolve(mode),addEventListener:(_type,fn)=>{listener=fn;return{remove(){listener=null;}};}},Animated:{Value,timing:(value,config)=>{const a={value,config,stopped:false,start(){},stop(){this.stopped=true;}};animations.push(a);return a;}},Easing:{cubic:'cubic',out:x=>x}}};
+ const api=load('src/hooks/useHomeEntrance.ts',deps,{setTimeout:(fn,ms)=>{const key=++id;timers.set(key,{fn,ms});return key;},clearTimeout:id=>timers.delete(id)});
+ return {q,values,animations,timers,render:()=>h.render(()=>api.useHomeEntrance(1)),focus:()=>focus(),reduce:()=>listener(true)};}
+test('Login starts a short native-driver entrance; returning from a detail never replays or leaves hidden content',async()=>{
+ const h=motion();h.q.queueHomeEntrance(1);h.render();const blur=h.focus();await settle();assert.equal(h.animations.length,3);assert.ok(h.animations.every(a=>a.config.useNativeDriver&&a.config.isInteraction===false));assert.ok(Math.max(...h.animations.map(a=>a.config.delay+a.config.duration))<=600);
+ blur();assert.ok(h.values.every(v=>v.value===1));assert.ok(h.animations.every(a=>a.stopped));h.focus();await settle();assert.equal(h.animations.length,3);assert.equal(h.timers.size,0);
+});
+test('Reduced motion, a failed preference lookup and a stalled bridge always show content without animations',async()=>{
+ for(const mode of [true,'error','hang']){const h=motion(mode);h.q.queueHomeEntrance(1);h.render();const blur=h.focus();await settle();if(mode==='hang')for(const timer of h.timers.values())timer.fn();assert.equal(h.animations.length,0);assert.ok(h.values.every(v=>v.value===1));blur();}
+ const h=motion();h.q.queueHomeEntrance(1);h.render();const blur=h.focus();await settle();h.reduce();assert.ok(h.values.every(v=>v.value===1));assert.ok(h.animations.every(a=>a.stopped));blur();
+});
+function auth(saved=false){const h=runtime(),q=load('src/lib/homeEntrance.ts'),user={id:42,name:'Test',email:'test@example.test',is_premium:false},store=new Map(saved?[['itc_user',JSON.stringify(user)],['itc_biometric_enabled','true']]:[]),secure=new Map(saved?[['itc_token','saved-test-token'],['itc_biometric_token','saved-test-token']]:[]);let fail=false;
+ const deps={react:h.React,'../lib/homeEntrance':q,'@react-native-async-storage/async-storage':{getItem:async k=>store.get(k)??null,setItem:async(k,v)=>store.set(k,v),removeItem:async k=>store.delete(k),multiGet:async keys=>keys.map(k=>[k,store.get(k)??null]),multiRemove:async keys=>keys.forEach(k=>store.delete(k))},'../lib/accountLocalData':{resumeAccountLocalDeletion:async()=>{},deleteAccountLocalData:async()=>{}},'expo-local-authentication':{hasHardwareAsync:async()=>true,isEnrolledAsync:async()=>true,supportedAuthenticationTypesAsync:async()=>[2],AuthenticationType:{FACIAL_RECOGNITION:2}},'expo-secure-store':{getItemAsync:async k=>secure.get(k)??null,setItemAsync:async(k,v)=>secure.set(k,v),deleteItemAsync:async k=>secure.delete(k)},'react-native':{Platform:{OS:'ios'},AppState:{addEventListener:()=>({remove(){}})}},'../constants/api':{API_URL:'https://example.test'}};
+ const api=load('src/context/AuthContext.tsx',deps,{fetch:async()=>({ok:!fail,status:fail?401:200,json:async()=>({success:!fail,token:'new-test-token',user,message:'failed'})})});
+ const render=()=>h.render(()=>api.AuthProvider({children:null})).props.value;return{render,q,setFail:v=>{fail=v;}};
+}
+test('Actual auth flows queue only after successful persistence; restoration and failed sign-in never animate',async()=>{
+ for(const method of ['signIn','signInWithGoogle','signInWithApple','signUp']){const h=auth();h.render();await settle();let a=h.render();assert.equal(h.q.consumeHomeEntrance(42),false);
+ const args=method==='signIn'?['test@example.test','test-password']:method==='signUp'?['Test','test@example.test','test-password','es',true]:[{identityToken:'test-identity'}];await a[method](...args);assert.equal(h.render().user.id,42);assert.equal(h.q.consumeHomeEntrance(42),true);assert.equal(h.q.consumeHomeEntrance(42),false);
+ h.q.queueHomeEntrance(42);await h.render().signOut();assert.equal(h.q.consumeHomeEntrance(42),false);h.setFail(true);await assert.rejects(h.render().signIn('test@example.test','wrong'));assert.equal(h.q.consumeHomeEntrance(42),false);}
+ const saved=auth(true);saved.render();await settle();const a=saved.render();assert.equal(a.user.id,42);assert.equal(saved.q.consumeHomeEntrance(42),false);await a.unlockWithBiometrics();assert.equal(saved.q.consumeHomeEntrance(42),true);
+});
+const all=n=>Array.isArray(n)?n.flatMap(all):n&&typeof n==='object'?[n,...all(n.children||[])]:[];
+test('Skeletons have stable responsive dimensions and loading semantics without fake actions',()=>{const h=runtime();const {HomeCardsSkeleton}=load('src/components/HomeCardsSkeleton.tsx',{react:h.React,'react-native':{ScrollView:'scroll',View:'view',StyleSheet:{create:x=>x,hairlineWidth:1/3}},'../context/LanguageContext':{useLanguage:()=>({ui:s=>s})}});
+ for(const props of [{width:260},{width:335,compact:true},{width:700,height:88,single:true,compact:true}]){const n=all(h.render(()=>HomeCardsSkeleton(props)));assert.ok(n.some(x=>x.props.accessibilityRole==='progressbar'&&x.props.accessibilityState.busy));assert.ok(!n.some(x=>x.props.onPress));assert.ok(n.some(x=>Array.isArray(x.props.style)&&x.props.style[1]?.width===props.width));}
+});
+
+test('Unlocking biometrics over an already focused Home starts once and stops listening after blur',async()=>{
+ const h=motion();h.render();const blur=h.focus();assert.equal(h.animations.length,0);h.q.queueHomeEntrance(1);await settle();assert.equal(h.animations.length,3);assert.equal(h.q.consumeHomeEntrance(1),false);blur();h.q.queueHomeEntrance(1);await settle();assert.equal(h.animations.length,3);
+});

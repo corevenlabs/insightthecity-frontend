@@ -8,9 +8,10 @@ type NewsImageProps = {
   uri: string | null;
   style: StyleProp<ImageStyle>;
   accessibilityLabel?: string;
+  loadingPlaceholder?: boolean;
 };
 
-export function NewsImage({ uri, style, accessibilityLabel }: NewsImageProps) {
+export function NewsImage({ uri, style, accessibilityLabel, loadingPlaceholder = false }: NewsImageProps) {
   const { ui } = useLanguage();
   // Se recuerda qué URL falló: si cambia la URL, se vuelve a intentar.
   const [failedUri, setFailedUri] = useState<string | null>(null);
@@ -27,7 +28,7 @@ export function NewsImage({ uri, style, accessibilityLabel }: NewsImageProps) {
   return (
     <Image
       source={{ uri }}
-      style={style}
+      style={[style, loadingPlaceholder && styles.loadingSurface]}
       contentFit="cover"
       cachePolicy="memory-disk"
       recyclingKey={uri}
@@ -39,6 +40,7 @@ export function NewsImage({ uri, style, accessibilityLabel }: NewsImageProps) {
 }
 
 const styles = StyleSheet.create({
+  loadingSurface: { backgroundColor: '#1A1A1A' },
   fallback: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -1,3 +1,4 @@
+import { clearHomeEntrance, queueHomeEntrance } from '../lib/homeEntrance';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { deleteAccountLocalData, resumeAccountLocalDeletion } from '../lib/accountLocalData';
 import * as LocalAuthentication from 'expo-local-authentication';
@@ -275,6 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     await forgetBiometric();
     await persist(t, u);
+    queueHomeEntrance(u.id);
     setHasSignedOut(false);
     setToken(t);
     setUser(u);
@@ -285,6 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { token: t, user: u } = await postAuth('/api/users/apple/login', body);
     await forgetBiometric();
     await persist(t, u);
+    queueHomeEntrance(u.id);
     setHasSignedOut(false);
     setToken(t);
     setUser(u);
@@ -295,6 +298,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { token: t, user: u } = await postAuth('/api/users/google/login', body);
     await forgetBiometric();
     await persist(t, u);
+    queueHomeEntrance(u.id);
     setHasSignedOut(false);
     setToken(t);
     setUser(u);
@@ -313,6 +317,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       await forgetBiometric();
       await persist(t, u);
+      queueHomeEntrance(u.id);
       setHasSignedOut(false);
       setToken(t);
       setUser(u);
@@ -322,6 +327,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    clearHomeEntrance();
     setHasSignedOut(true);
     profileRevision.current += 1;
     await Promise.all([
@@ -393,6 +399,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // A concurrent logout/forget must not be undone by a late server response.
       if (revision !== profileRevision.current) throw new Error('Autenticación cancelada.');
       await persist(savedToken, data.user);
+      queueHomeEntrance(data.user.id);
       setHasSignedOut(false);
       setToken(savedToken);
       setUser(data.user);

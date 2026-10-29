@@ -35,7 +35,7 @@ export function BenefitPreview({ experience, width, variant = 'carousel' }: { ex
     <TouchableOpacity style={[s.imageWrap, { minHeight: Math.max(230, 210 * fontScale) }]} activeOpacity={0.85} accessibilityRole="button"
       accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
       onPress={() => router.push({ pathname: '/experience-detail', params: { id: experience.id } })}>
-      <NewsImage uri={photos[index] || experience.image} style={s.image} accessibilityLabel={experience.title} />
+      <NewsImage uri={photos[index] || experience.image} style={s.image} accessibilityLabel={experience.title} loadingPlaceholder={variant === 'carousel'} />
       <LinearGradient colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.92)']} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} />
       <View style={s.body}>
         <Text style={s.title} numberOfLines={2}>{experience.title}</Text>
