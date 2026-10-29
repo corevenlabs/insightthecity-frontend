@@ -4,14 +4,13 @@ import { ClubLogo } from '../../components/ClubLogo';
 import { MemberBenefitBanner } from '../../components/MemberBenefitBanner';
 import { MembershipPrice } from '../../components/MembershipPrice';
 import { AdaptiveGrid } from '../../components/AdaptiveGrid';
-import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
-import { ExperienceTags } from '@/components/ExperienceTags';
+import { BenefitPreview } from '../../components/BenefitPreview';
 import { TagFilter } from '@/components/TagFilter';
 import { matchesExperienceTags } from '@/lib/experienceFilters';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Experience } from '../../constants/experiences';
@@ -21,38 +20,6 @@ import { fetchExperiences } from '../../lib/experiences';
 import { fetchPlan, type Plan } from '../../lib/payments';
 
 const GOLD = '#FDDD56';
-function PremiumCard({ experience }: { experience: Experience }) {
-  const { ui } = useLanguage();
-  const router = useRouter();
-  return (
-    <TouchableOpacity
-      style={styles.experienceCard}
-      activeOpacity={0.85}
-      accessibilityRole="button"
-      accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
-      onPress={() => router.push({ pathname: '/experience-detail', params: { id: experience.id } })}
-    >
-      <Image source={{ uri: experience.image }} style={styles.experienceImage} />
-
-      <View style={styles.experienceBody}>
-        <View style={styles.experienceTopline}>
-          <ExperienceTags tags={[experience.region ?? 'NY']} />
-          <View style={styles.memberBadge}>
-            <Ionicons name="star" size={11} color="#050505" />
-            <Text style={styles.memberBadgeText}>CLUB</Text>
-          </View>
-        </View>
-        <Text style={styles.experienceTitle}>{experience.title}</Text>
-        <MemberBenefitSummary experience={experience} />
-        <View style={styles.metaRow}>
-          <Ionicons name="calendar-outline" size={15} color={GOLD} />
-          <Text style={styles.metaText}>{experience.date}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
 export default function ClubScreen() {
   const router = useRouter();
   const { user, loading, refreshUser } = useAuth();
@@ -112,7 +79,7 @@ export default function ClubScreen() {
             <Text style={styles.resultsCount}>{filteredExperiences.length}</Text>
           </View>
           {filteredExperiences.length === 0 && <Text style={styles.memberSubtitle}>{ui('No hay contenidos con estas etiquetas.')}</Text>}
-          <AdaptiveGrid>{filteredExperiences.map((experience) => <PremiumCard key={experience.id} experience={experience} />)}</AdaptiveGrid>
+          <AdaptiveGrid>{filteredExperiences.map((experience) => <BenefitPreview key={experience.id} experience={experience} variant="grid" />)}</AdaptiveGrid>
         </ScrollView>
       </SafeAreaView>
     );
@@ -221,14 +188,4 @@ const styles = StyleSheet.create({
   resultsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 26, marginBottom: 14 },
   resultsTitle: { color: '#FFF', fontSize: 20, fontWeight: '700' },
   resultsCount: { color: '#050505', backgroundColor: GOLD, minWidth: 28, height: 28, textAlign: 'center', lineHeight: 28, borderRadius: 14, fontWeight: '700' },
-  experienceCard: { backgroundColor: '#121212', borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: '#242424', marginBottom: 16 },
-  experienceImage: { width: '100%', aspectRatio: 1.8, backgroundColor: '#1A1A1A' },
-  experienceBody: { padding: 16 },
-  experienceTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  category: { color: GOLD, fontSize: 11, letterSpacing: 1, fontWeight: '700' },
-  memberBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: GOLD, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 },
-  memberBadgeText: { color: '#050505', fontSize: 9, fontWeight: '700' },
-  experienceTitle: { color: '#FFF', fontSize: 20, lineHeight: 25, fontWeight: '700', marginBottom: 12 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 7, minHeight: 24 },
-  metaText: { color: '#A7A7A7', fontSize: 13, flex: 1 },
 });

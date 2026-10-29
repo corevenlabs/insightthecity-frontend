@@ -11,9 +11,10 @@ import type { Experience } from '../constants/experiences';
 import { useLanguage } from '../context/LanguageContext';
 import { NewsImage } from './NewsImage';
 
-export function BenefitPreview({ experience, width }: { experience: Experience; width: number }) {
+export function BenefitPreview({ experience, width, variant = 'carousel' }: { experience: Experience; width?: number; variant?: 'carousel' | 'grid' }) {
   const { ui } = useLanguage();
-  const { fontScale } = useResponsiveLayout();
+  const { fontScale, gridCardWidth } = useResponsiveLayout();
+  const cardWidth = width ?? gridCardWidth;
   const photos = Array.from(new Set([experience.image, ...(experience.images ?? [])].filter(Boolean)));
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -30,7 +31,7 @@ export function BenefitPreview({ experience, width }: { experience: Experience; 
     return () => clearInterval(timer);
   }, [paused, reduceMotion, photos.length]));
   const benefit = experience.cardBenefit?.trim() || experience.memberBenefit?.trim();
-  return <View style={[s.card, { width }]}>
+  return <View style={[s.card, variant === 'grid' && s.gridCard, { width: width ?? '100%' }]}>
     <TouchableOpacity style={[s.imageWrap, { minHeight: Math.max(230, 210 * fontScale) }]} activeOpacity={0.85} accessibilityRole="button"
       accessibilityLabel={ui('Abrir {title}', { title: experience.title })}
       onPress={() => router.push({ pathname: '/experience-detail', params: { id: experience.id } })}>
@@ -45,7 +46,7 @@ export function BenefitPreview({ experience, width }: { experience: Experience; 
     {!!benefit && <View style={s.badge} pointerEvents="none"><Ionicons name="pricetag" size={14} color="#FDDD56" /><Text style={s.badgeText} numberOfLines={1}>{benefit}</Text></View>}
     <SaveButton item={savedExperience(experience)} />
     {photos.length > 1 && <>
-      <View style={s.indicators}>{photos.map((photo, i) => <TouchableOpacity key={photo} style={[s.dotTap, { width: Math.min(32, (width - 16) / photos.length) }]}
+      <View style={s.indicators}>{photos.map((photo, i) => <TouchableOpacity key={photo} style={[s.dotTap, { width: Math.min(32, (cardWidth - 16) / photos.length) }]}
         accessibilityRole="button" accessibilityLabel={`${ui('Foto')} ${i + 1} / ${photos.length}`} accessibilityState={{ selected: index === i }}
         onPress={() => { setPaused(true); setIndex(i); }}><View style={[s.dot, index === i && s.active]} /></TouchableOpacity>)}</View>
     </>}
@@ -53,6 +54,7 @@ export function BenefitPreview({ experience, width }: { experience: Experience; 
 }
 const s = StyleSheet.create({
   card: { overflow: 'hidden', marginRight: 12, borderRadius: 16, backgroundColor: '#121212' },
+  gridCard: { marginRight: 0, marginBottom: 16, borderRadius: 18, borderWidth: StyleSheet.hairlineWidth, borderColor: '#333333' },
   imageWrap: { width: '100%', aspectRatio: 1.36, minHeight: 230 },
   image: { width: '100%', height: '100%' },
   body: { position: 'absolute', bottom: 38, left: 14, right: 14, gap: 5 },
