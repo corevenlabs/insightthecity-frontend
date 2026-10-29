@@ -1,28 +1,33 @@
 import { useEffect, useState } from 'react';
 import { fetchExperience } from '../../lib/experiences';
-import { fetchArticle } from '../../lib/news';
+import { fetchArticle, formatDate, type NewsCard } from '../../lib/news';
+import type { Experience } from '../../constants/experiences';
+import { BenefitPreview } from '../../components/BenefitPreview';
+import { SaveButton } from '../../components/SaveButton';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenBackButton } from '../../components/ScreenBackButton';
 import { Text } from '../../components/typography';
 import { AdaptiveGrid } from '../../components/AdaptiveGrid';
-import { useSaved } from '../../context/SavedContext';
+import { useSaved, type SavedItem } from '../../context/SavedContext';
 import { NewsImage } from '../../components/NewsImage';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function SavedScreen() {
   const { ui, language } = useLanguage();
+  const { fontScale } = useWindowDimensions();
   const { items, ready } = useSaved();
-  const [titles, setTitles] = useState<Record<string, string>>({});
+  const [loaded, setLoaded] = useState<{ items: SavedItem[]; language: string; data: Record<string, Experience | NewsCard> } | null>(null);
   useEffect(() => {
     let active = true;
     void Promise.all(items.map(async item => {
-      try { return [item.key, (item.kind === 'plan' ? await fetchArticle(item.id, language) : await fetchExperience(item.id, language)).title] as const; }
-      catch { return [item.key, item.title] as const; }
-    })).then(entries => { if (active) setTitles(Object.fromEntries(entries)); });
+      try { return [item.key, item.kind === 'plan' ? await fetchArticle(item.id, language) : await fetchExperience(item.id, language)] as const; }
+      catch { return [item.key, item.experience ?? item.plan] as const; }
+    })).then(entries => { if (active) setLoaded({ items, language, data: Object.fromEntries(entries.filter((entry): entry is readonly [string, Experience | NewsCard] => !!entry[1])) }); });
     return () => { active = false; };
   }, [items, language]);
 
@@ -37,15 +42,27 @@ export default function SavedScreen() {
 
       {!ready ? <ActivityIndicator color="#FDDD56" style={{ marginTop: 40 }} /> : items.length > 0 ? (
         <ScrollView contentContainerStyle={{ paddingVertical: 20, gap: 14, paddingBottom: 120 }}>
-          <AdaptiveGrid>{items.map(item => <View key={item.key} style={{ borderRadius: 14, overflow: 'hidden', backgroundColor: '#121212' }}>
-            <TouchableOpacity accessibilityRole="button" accessibilityLabel={titles[item.key] ?? item.title} onPress={() => router.push(item.kind === 'experience'
-              ? { pathname: '/experience-detail', params: { id: item.id } }
-              : { pathname: '/news-detail', params: { id: item.id, section: '¿Qué hacer en NY?', source: 'que-hacer' } })}>
-              <NewsImage uri={item.image} style={{ width: '100%', aspectRatio: 1.8 }} accessibilityLabel={titles[item.key] ?? item.title} />
-              <Text style={{ color: '#FFFFFF', fontSize: 17, padding: 14 }}>{titles[item.key] ?? item.title}</Text>
-            </TouchableOpacity>
-
-          </View>)}</AdaptiveGrid>
+          <AdaptiveGrid>{items.map(item => {
+            const content = loaded?.items === items && loaded.language === language ? loaded.data[item.key] : undefined;
+            if (item.kind === 'experience') {
+              const experience = (content ?? item.experience ?? { id: item.id, title: item.title, image: item.image || '', category: '', date: '', location: '', access: 'free', description: '', includes: [], recommendation: '' }) as Experience;
+              return <BenefitPreview key={item.key} experience={experience} variant="grid" />;
+            }
+            const plan = (content ?? item.plan) as NewsCard | undefined;
+            const title = plan?.title ?? item.title;
+            return <View key={item.key} style={styles.planCard}>
+              <TouchableOpacity style={[styles.planPhoto, { minHeight: Math.max(250, 250 * fontScale) }]} accessibilityRole="button" accessibilityLabel={title} activeOpacity={0.85} onPress={() => router.push({ pathname: '/news-detail', params: { id: item.id, section: '¿Qué hacer en NY?', source: 'que-hacer' } })}>
+                <NewsImage uri={plan?.image ?? item.image} style={styles.planImage} accessibilityLabel={title} />
+                <LinearGradient colors={['transparent', 'rgba(0,0,0,0.94)']} style={StyleSheet.absoluteFill} />
+                <View style={styles.planBody}>
+                  {!!plan?.date && <Text style={styles.planDate}>{formatDate(plan.date, language)}</Text>}
+                  <Text style={styles.planTitle} numberOfLines={3}>{title}</Text>
+                  {!!plan?.excerpt && <Text style={styles.planDescription} numberOfLines={2}>{plan.excerpt}</Text>}
+                </View>
+              </TouchableOpacity>
+              <SaveButton item={item} />
+            </View>;
+          })}</AdaptiveGrid>
         </ScrollView>
       ) : <View style={styles.emptyState}>
         <View style={styles.iconCircle}>
@@ -69,6 +86,13 @@ export default function SavedScreen() {
 }
 
 const styles = StyleSheet.create({
+  planCard: { borderRadius: 18, overflow: 'hidden', backgroundColor: '#121212', borderWidth: StyleSheet.hairlineWidth, borderColor: '#333', marginBottom: 16 },
+  planPhoto: { width: '100%', aspectRatio: 1.36 },
+  planImage: { width: '100%', height: '100%' },
+  planBody: { position: 'absolute', bottom: 16, left: 16, right: 16, gap: 6 },
+  planDate: { color: '#FDDD56', fontSize: 13, lineHeight: 18 },
+  planTitle: { color: '#FFF', fontSize: 19, lineHeight: 24, fontWeight: '700' },
+  planDescription: { color: '#FFF', fontSize: 13, lineHeight: 18 },
   container: {
     flex: 1,
     paddingHorizontal: 20,

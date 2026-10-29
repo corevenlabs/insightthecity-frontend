@@ -7,9 +7,9 @@ import { useAuth } from './AuthContext';
 import type { Experience } from '../constants/experiences';
 import type { NewsCard } from '../lib/news';
 
-export type SavedItem = { key: string; id: string; kind: 'experience' | 'plan'; canSave?: boolean; title: string; image: string | null };
-export const savedExperience = (item: Experience): SavedItem => ({ key: `experience:${item.id}`, id: item.id, kind: 'experience', canSave: !['ny_al_dia', 'ny-al-dia'].includes(item.section || ''), title: item.title, image: item.image });
-export const savedPlan = (item: NewsCard): SavedItem => ({ key: `plan:${item.id}`, id: String(item.id), kind: 'plan', title: item.title, image: item.image });
+export type SavedItem = { key: string; id: string; kind: 'experience' | 'plan'; canSave?: boolean; title: string; image: string | null; experience?: Experience; plan?: NewsCard };
+export const savedExperience = (item: Experience): SavedItem => ({ key: `experience:${item.id}`, id: item.id, kind: 'experience', canSave: !['ny_al_dia', 'ny-al-dia'].includes(item.section || ''), title: item.title, image: item.image, experience: item });
+export const savedPlan = (item: NewsCard): SavedItem => ({ key: `plan:${item.id}`, id: String(item.id), kind: 'plan', title: item.title, image: item.image, plan: { id: item.id, title: item.title, excerpt: item.excerpt, image: item.image, date: item.date, link: item.link } });
 const Context = createContext<{ items: SavedItem[]; ready: boolean; toggle: (item: SavedItem) => Promise<void> }>({ items: [], ready: false, toggle: async () => {} });
 
 export function SavedProvider({ children }: { children: ReactNode }) {
