@@ -2,6 +2,9 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Crear cuenta": { en: "Create account", pt: "Criar conta" },
+  "NY en tus manos": { en: "NY in your hands", pt: "NY nas suas mãos" },
+  "Elige cómo entrar": { en: "Choose how to join", pt: "Escolha como entrar" },
   "Elige tu idioma": { en: "Choose your language", pt: "Escolha seu idioma" },
   "No se pudo generar el código. Inténtalo otra vez.": {"en": "Could not generate the code. Please try again.", "pt": "Não foi possível gerar o código. Tente novamente."},
   "Este beneficio no está disponible.": {"en": "This benefit is unavailable.", "pt": "Este benefício não está disponível."},

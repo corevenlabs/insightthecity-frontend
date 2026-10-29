@@ -13,6 +13,7 @@ import { ExpandableSection, ExpandableText } from '@/components/ExpandableConten
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, FlatList, Image, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,9 +42,14 @@ export default function ExperienceDetailScreen() {
   const [benefitLoading, setBenefitLoading] = useState(false);
   const [benefitError, setBenefitError] = useState('');
   const visibleCode = benefitCode?.scope === requestScope ? benefitCode : null;
-  const { width: availableWidth, height: screenHeight } = useResponsiveLayout();
+  const [heroTextLayout, setHeroTextLayout] = useState<{ key: string; height: number } | null>(null);
+  const { width: availableWidth, height: screenHeight, fontScale = 1 } = useResponsiveLayout();
   const screenWidth = Math.min(availableWidth, 860);
-  const heroHeight = Math.min(480, Math.max(220, Math.min(screenWidth * 0.8, screenHeight * 0.6)));
+  const heroLayoutKey = `${id}:${language}:${screenWidth}:${fontScale}`;
+  const measuredTextHeight = heroTextLayout?.key === heroLayoutKey ? heroTextLayout.height : 0;
+  const baseHeroHeight = Math.min(480, Math.max(220, Math.min(screenWidth * 0.8, screenHeight * 0.6)));
+  // Preserve the existing photo size; grow only when the actual text needs more room.
+  const heroHeight = Math.max(baseHeroHeight, measuredTextHeight + 100);
 
   useEffect(() => {
     currentScope.current = requestScope;
@@ -77,6 +83,7 @@ export default function ExperienceDetailScreen() {
     );
   }
 
+  const summary = experience.cardDescription?.trim();
   const requiresPremium = experience.access === 'premium';
   const isLocked = requiresPremium && !user?.is_premium;
   const isPaidEvent = Boolean(experience.isPaidEvent && experience.ticketUrl);
@@ -123,7 +130,12 @@ export default function ExperienceDetailScreen() {
             renderItem={({ item }) => <Image source={{ uri: item }} style={[styles.heroImage, { width: screenWidth, height: heroHeight }]} />}
             onMomentumScrollEnd={(event) => setPhoto({ id, index: Math.round(event.nativeEvent.contentOffset.x / screenWidth) })}
           />
-          <View style={styles.heroShade} pointerEvents="none" />
+          {summary ? <LinearGradient
+            colors={['rgba(0,0,0,0.12)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.92)']}
+            locations={[0, 0.4, 1]}
+            style={styles.heroGradient}
+            pointerEvents="none"
+          /> : <View style={styles.heroShade} pointerEvents="none" />}
           {!['ny_al_dia'].includes(experience.section || '') && <SaveButton item={savedExperience(experience)} />}
           <View style={styles.heroOverlay} pointerEvents="box-none">
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} style={styles.backButton} onPress={() => router.back()}>
@@ -134,9 +146,13 @@ export default function ExperienceDetailScreen() {
               <Text style={styles.photoCountText}>{photoIndex + 1}/{photos.length}</Text>
             </View>}
 
-            <View style={styles.heroText} pointerEvents="none">
+            <View style={styles.heroText} pointerEvents="none" onLayout={({ nativeEvent }) => {
+              const height = Math.ceil(nativeEvent.layout.height);
+              setHeroTextLayout(current => current?.key === heroLayoutKey && current.height === height ? current : { key: heroLayoutKey, height });
+            }}>
               <ExperienceTags tags={getExperienceTags(experience)} />
               <Text style={styles.title}>{experience.title}</Text>
+              {!!summary && <Text style={styles.heroSummary} numberOfLines={2} ellipsizeMode="tail">{summary}</Text>}
             </View>
           </View>
         </View>
@@ -184,22 +200,35 @@ export default function ExperienceDetailScreen() {
               <Text style={styles.benefitLabel}>{ui("BENEFICIO ITC CLUB")}</Text>
             </View>
             <Text style={styles.benefitTitle}>{experience.memberBenefit}</Text>
-            {!!experience.memberBenefitDetails && <ExpandableText text={experience.memberBenefitDetails} style={styles.benefitDetails} />}
+            {!!experience.memberBenefitDetails && <ExpandableText text={experience.memberBenefitDetails} style={styles.benefitDetails} showChevron={false} />}
           </View>
         )}
 
-        <ExpandableSection key={`${experience.id}-description`} title={ui("Descripción")}>
+        {!!experience.description?.trim() && <ExpandableSection
+          key={`${experience.id}-description`}
+          title={ui("Descripción")}
+          preview={<Text style={styles.description} numberOfLines={3} ellipsizeMode="tail">{experience.description}</Text>}
+        >
           <Text style={styles.description}>{experience.description}</Text>
-        </ExpandableSection>
+        </ExpandableSection>}
 
-        <ExpandableSection key={`${experience.id}-includes`} title={ui("Qué incluye")}>
-        {experience.includes.map((item) => (
-          <View key={item} style={styles.includeRow}>
-            <Ionicons name="checkmark-circle" size={18} color="#FDDD56" />
-            <Text style={styles.includeText}>{item}</Text>
-          </View>
-        ))}
-        </ExpandableSection>
+        {experience.includes.length > 0 && <ExpandableSection
+          key={`${experience.id}-includes`}
+          title={ui("Qué incluye")}
+          preview={experience.includes.slice(0, 2).map((item, index) => (
+            <View key={index} style={styles.includeRow}>
+              <Text style={styles.includeBullet} accessible={false}>•</Text>
+              <Text style={styles.includeText} numberOfLines={2} ellipsizeMode="tail">{item}</Text>
+            </View>
+          ))}
+        >
+          {experience.includes.map((item, index) => (
+            <View key={index} style={styles.includeRow}>
+              <Text style={styles.includeBullet} accessible={false}>•</Text>
+              <Text style={styles.includeText}>{item}</Text>
+            </View>
+          ))}
+        </ExpandableSection>}
 
         {(experience.location || experience.shortAddress || !!experience.locations?.length) && <View style={styles.addressCard}>
           <Text style={styles.addressTitle}>{ui("Ubicación")}</Text>
@@ -302,6 +331,8 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
     backgroundColor: 'rgba(0,0,0,0.34)',
   },
+  heroGradient: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+  heroSummary: { color: '#FFFFFF', fontSize: 15, lineHeight: 22, marginTop: 7 },
   heroOverlay: {
     position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
     flex: 1,
@@ -414,24 +445,10 @@ const styles = StyleSheet.create({
   addressTitle: { color: COLORS.white, fontSize: 20, fontWeight: '800', marginBottom: 10 },
   addressRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   addressText: { flex: 1, color: COLORS.secondary, fontSize: 15, lineHeight: 23 },
-  description: {
-    color: COLORS.secondary,
-    fontSize: 15,
-    lineHeight: 23,
-    marginHorizontal: 20,
-  },
-  includeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginHorizontal: 20,
-    marginBottom: 10,
-  },
-  includeText: {
-    color: COLORS.white,
-    flex: 1,
-    lineHeight: 20,
-  },
+  description: { color: '#E0E0E0', fontSize: 15, lineHeight: 23 },
+  includeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 8 },
+  includeBullet: { color: '#E0E0E0', fontSize: 15, lineHeight: 23 },
+  includeText: { color: '#E0E0E0', fontSize: 15, flex: 1, lineHeight: 23 },
   recommendationCard: {
     backgroundColor: COLORS.card,
     borderRadius: 16,
