@@ -20,7 +20,6 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  TurboModuleRegistry,
   View,
 } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
@@ -54,8 +53,7 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
   const { t, ui } = useLanguage();
   const [signInButtonHeight, setSignInButtonHeight] = useState(56);
   const finishSignIn = () => router.replace('/home');
-  const hasSocialAccess = (Platform.OS === 'ios' && !!requireOptionalNativeModule('ExpoAppleAuthentication'))
-    || (Platform.OS !== 'web' && !!TurboModuleRegistry.get('RNGoogleSignin'));
+  const hasSocialAccess = Platform.OS !== 'web';
 
   const { height, width, insets, fontScale } = useResponsiveLayout();
   const [playIntro] = useState(() => !!WelcomeVideo && !fromProfile && (replay || !introShown));
@@ -63,7 +61,7 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
   const [reducedMotion, setReducedMotion] = useState(false);
   const settled = phase === 'ready';
   // Keep controls readable on short screens/large text; the page can scroll after the intro.
-  const heroHeight = Math.min(440, Math.max(230, height * (fontScale > 1.25 ? 0.36 : 0.48)));
+  const heroHeight = Math.min(440, Math.max(230, height * (fontScale > 1.25 ? 0.36 : 0.48))) + insets.top + 16;
   const [progress] = useState(() => new Animated.Value(playIntro ? 0 : 1));
   const finishStarted = useRef(!playIntro);
   const reveal = useCallback((immediate = false) => {
@@ -135,13 +133,14 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
           source={phase === 'checking' ? require('../../assets/videos/itc-welcome-first.jpg') : require('../../assets/videos/itc-welcome-final.jpg')}
           style={StyleSheet.absoluteFill}
           contentFit="cover"
+          contentPosition={{ left: '50%', top: '10%' }}
           transition={0}
           accessibilityRole="image"
           accessibilityLabel="ITC CLUB · New York"
         />}
+        <LinearGradient pointerEvents="none" colors={['transparent', BLACK]} style={styles.heroFade} />
         {(phase === 'settling' || phase === 'ready') && <WelcomeAttribution />}
         </Animated.View>
-        <LinearGradient pointerEvents="none" colors={['transparent', BLACK]} style={styles.heroFade} />
       </Animated.View>
 
       <Animated.View
@@ -166,20 +165,23 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
           style={styles.primaryButton}
           onLayout={({ nativeEvent }) => setSignInButtonHeight(nativeEvent.layout.height)}
           activeOpacity={0.86}
-          onPress={() => router.push('/register')}
-          accessibilityRole="button"
-        >
-          <Text style={styles.primaryText}>{t('welcome.createAccount')}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.secondaryButton, { minHeight: signInButtonHeight }]}
-          activeOpacity={0.86}
           onPress={() => router.push('/login')}
           accessibilityRole="button"
         >
-          <Text style={styles.secondaryText}>{t('welcome.signIn')}</Text>
+          <Text style={styles.primaryText}>{t('welcome.signIn')}</Text>
         </TouchableOpacity>
+
+        <View style={styles.registerRow}>
+          <Text style={styles.registerPrompt}>{t('login.noAccount')}</Text>
+          <TouchableOpacity
+            style={styles.registerLink}
+            activeOpacity={0.7}
+            onPress={() => router.push('/register')}
+            accessibilityRole="link"
+          >
+            <Text style={styles.secondaryText}>{t('welcome.createAccount')}</Text>
+          </TouchableOpacity>
+        </View>
 
         {hasSocialAccess && <View style={styles.socialAccess}>
           <View style={styles.accessDivider}>
@@ -187,39 +189,16 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
             <Text style={styles.accessDividerText}>{ui('O continúa con')}</Text>
             <View style={styles.accessDividerLine} />
           </View>
-          <AppleAccess onSuccess={finishSignIn} buttonHeight={signInButtonHeight} />
-          <GoogleAccess onSuccess={finishSignIn} buttonHeight={signInButtonHeight} />
-          <Text style={styles.socialHint}>{ui('Para crear una cuenta o iniciar sesión.')}</Text>
+          <View style={styles.socialRow}>
+            <AppleAccess onSuccess={finishSignIn} buttonHeight={signInButtonHeight} compact />
+            <GoogleAccess onSuccess={finishSignIn} buttonHeight={signInButtonHeight} compact />
+          </View>
         </View>}
 
         <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.replace('/home')}>
           <Text style={styles.guestText}>{t('welcome.guest')}</Text>
         </Pressable>
 
-        {/* Aviso visible antes de usar la app; la aceptación expresa se pide al crear la cuenta. */}
-        <Text style={styles.termsText}>
-          {ui('Al usar ITC Club aceptas nuestros Términos y Condiciones y nuestra Política de Privacidad.')}
-        </Text>
-        <View style={styles.termsRow}>
-          <Pressable
-            accessibilityRole="link"
-            hitSlop={8}
-            onPress={() => router.push({ pathname: '/legal', params: { slug: 'terms' } })}
-          >
-            <Text style={styles.termsLink}>{ui('Términos y Condiciones')}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="link"
-            hitSlop={8}
-            onPress={() => router.push({ pathname: '/legal', params: { slug: 'privacy' } })}
-          >
-            <Text style={styles.termsLink}>{ui('Política de Privacidad')}</Text>
-          </Pressable>
-        </View>
-
-        <Text style={styles.subtitle}>
-          {t('welcome.subtitle')}
-        </Text>
       </Animated.View>
     </ScrollView>
     </View>
@@ -268,15 +247,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '900',
   },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: GOLD,
-    borderRadius: 14,
-    paddingVertical: 17,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 12,
-  },
+  registerRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', columnGap: 5, marginTop: 8 },
+  registerPrompt: { color: '#FFFFFF', fontSize: 15 },
+  registerLink: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 4 },
+  socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   secondaryText: {
     color: GOLD,
     fontSize: 15,
@@ -286,40 +260,11 @@ const styles = StyleSheet.create({
   accessDivider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   accessDividerLine: { flex: 1, height: 1, backgroundColor: '#333333' },
   accessDividerText: { color: '#B8B8B8', fontSize: 13, flexShrink: 1, textAlign: 'center' },
-  socialHint: { color: '#B8B8B8', fontSize: 13, lineHeight: 19, textAlign: 'center' },
-  termsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    justifyContent: 'center',
-    columnGap: 18,
-    rowGap: 6,
-    marginTop: 8,
-  },
-  termsText: {
-    color: '#B8B8B8',
-    fontSize: 13,
-    lineHeight: 19,
-    textAlign: 'center',
-    marginTop: 18,
-  },
-  termsLink: {
-    color: GOLD,
-    fontSize: 13,
-    fontWeight: '700',
-    textDecorationLine: 'underline',
-  },
   guestText: {
     color: GOLD,
     textAlign: 'center',
     marginTop: 18,
     fontWeight: '800',
   },
-  subtitle: {
-    color: '#A6A6A6',
-    fontSize: 13,
-    lineHeight: 20,
-    marginTop: 18,
-    textAlign: 'center',
-  },
+
 });

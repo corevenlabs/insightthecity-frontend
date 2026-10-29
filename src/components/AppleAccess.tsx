@@ -13,7 +13,7 @@ import { useLanguage } from '../context/LanguageContext';
 const Apple: typeof import('expo-apple-authentication') | null = Platform.OS === 'ios' && requireOptionalNativeModule('ExpoAppleAuthentication')
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   ? require('expo-apple-authentication') : null;
-export default function AppleAccess({ link = false, onSuccess, buttonHeight = 56 }: { link?: boolean; onSuccess?: () => void; buttonHeight?: number }) {
+export default function AppleAccess({ link = false, onSuccess, buttonHeight = 56, compact = false }: { link?: boolean; onSuccess?: () => void; buttonHeight?: number; compact?: boolean }) {
   const { signInWithApple, token, biometricAvailable, enableBiometric } = useAuth();
   const { ui, language } = useLanguage();
   const [available,setAvailable] = useState(false);
@@ -24,7 +24,7 @@ export default function AppleAccess({ link = false, onSuccess, buttonHeight = 56
   const [error,setError] = useState('');
   useEffect(() => { let active=true; void Apple?.isAvailableAsync().then(value => { if(active) setAvailable(value); }).catch(() => {}); return () => { active=false; }; }, []);
   if (Platform.OS !== 'ios') return null;
-  if (!Apple || !available) return <SocialAccessButton provider="apple" label={ui('Continuar con Apple')} height={buttonHeight} disabled />;
+  if (!Apple || !available) return <View style={compact ? {flexGrow:1,flexBasis:0,minWidth:140} : undefined}><SocialAccessButton provider="apple" label={ui('Continuar con Apple')} height={buttonHeight} compact={compact} disabled /></View>;
   const submit = async (body:Record<string,unknown>) => {
     if(link) {
       const response=await fetch(`${API_URL}/api/users/apple/link`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(body)});
@@ -54,7 +54,7 @@ export default function AppleAccess({ link = false, onSuccess, buttonHeight = 56
       else if (!['ERR_REQUEST_CANCELED', 'ERR_REQUEST_CANCELLED', 'ERR_CANCELED', 'ERR_CANCELLED', '1001'].includes(String(e.code)) && e.message !== 'The user canceled the authorization attempt') setError(e.message || ui('No se pudo iniciar sesión.'));
     } finally { setBusy(false); }
   };
-  return <View style={{gap:16}}>
+  return <View style={[{gap:16}, compact && {flexGrow:1, flexBasis:pending ? '100%' : 0, minWidth:140}]}>
     {link && <Text style={{color:"white"}}>{ui("Vincular Apple a mi cuenta")}</Text>}
     {pending ? <>
       <Text style={{color:'white'}}>{ui('Para crear tu cuenta, acepta los términos y la privacidad.')}</Text>
@@ -63,7 +63,7 @@ export default function AppleAccess({ link = false, onSuccess, buttonHeight = 56
       <MarketingConsent checked={acceptedMarketing} onChange={setAcceptedMarketing} />
       <Pressable accessibilityRole="button" disabled={!accepted||busy} onPress={()=>void run()} style={{backgroundColor:'#FDDD56',padding:18,borderRadius:14,opacity:accepted?1:0.5}}><Text style={{textAlign:'center',color:'black'}}>{ui('Crear cuenta con Apple')}</Text></Pressable>
       <Pressable onPress={()=>{setPending(null);setAccepted(false);setAcceptedMarketing(false);}}><Text style={{color:'white'}}>{ui('Cancelar')}</Text></Pressable>
-    </> : <SocialAccessButton provider="apple" label={ui('Continuar con Apple')} height={buttonHeight} busy={busy} onPress={()=>void run()} />}
+    </> : <SocialAccessButton provider="apple" label={ui('Continuar con Apple')} height={buttonHeight} compact={compact} busy={busy} onPress={()=>void run()} />}
     {!!error && <Text accessibilityRole="alert" style={{color:'#FF8080'}}>{error}</Text>}
   </View>;
 }
