@@ -1,4 +1,5 @@
 import { clearHomeEntrance, queueHomeEntrance } from '../lib/homeEntrance';
+import { clearRememberedLogin } from '../lib/rememberedLogin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { deleteAccountLocalData, resumeAccountLocalDeletion } from '../lib/accountLocalData';
 import * as LocalAuthentication from 'expo-local-authentication';
@@ -263,6 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token, biometricEnabled]);
 
   const forgetBiometric = useCallback(async () => {
+    await clearRememberedLogin();
     profileRevision.current += 1;
     if (Platform.OS !== 'web') await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY);
     await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);

@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { clearRememberedLogin, readRememberedLogin, saveRememberedLogin } from '../lib/rememberedLogin';
 
 const GOLD = '#FDDD56';
 const BLACK = '#0A0A0A';
@@ -40,10 +41,35 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [unregisteredEmail, setUnregisteredEmail] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [remember, setRemember] = useState(false);
+  const [rememberBusy, setRememberBusy] = useState(false);
+  const edited = useRef(false);
 
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const biometricAttempted = useRef(biometric === 'skip');
+
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    void readRememberedLogin().then(saved => {
+      if (!active || edited.current) return;
+      setRemember(!!saved);
+      setEmail(saved?.email ?? '');
+      setPassword(saved?.password ?? '');
+    }).catch(() => { if (active) setError(ui('No se pudieron cargar tus datos guardados. Puedes escribirlos para continuar.')); });
+    return () => { active = false; };
+  }, [ui]));
+
+  const toggleRemember = async () => {
+    if (submitting || rememberBusy) return;
+    edited.current = true;
+    setError(null);
+    if (!remember) { setRemember(true); return; }
+    setRememberBusy(true);
+    try { await clearRememberedLogin(); setRemember(false); }
+    catch { setError(ui('No se pudieron borrar tus datos guardados. Inténtalo nuevamente.')); }
+    finally { setRememberBusy(false); }
+  };
 
   const enterAuthenticatedApp = () => {
     router.dismissAll();
@@ -51,7 +77,7 @@ export default function LoginScreen() {
   };
 
   const enterApp = async () => {
-    if (submitting) return;
+    if (submitting || rememberBusy) return;
     Keyboard.dismiss();
     setError(null);
     setUnregisteredEmail(null);
@@ -67,6 +93,13 @@ export default function LoginScreen() {
     biometricAttempted.current = true;
     try {
       await signIn(email.trim(), password);
+      try {
+        if (remember) await saveRememberedLogin(email, password);
+        else await clearRememberedLogin();
+      } catch {
+        Alert.alert(ui('Datos de acceso'), ui('Iniciaste sesión, pero no pudimos actualizar tus datos guardados en este dispositivo.'), [{ text: 'OK', onPress: enterAuthenticatedApp }]);
+        return;
+      }
       if (biometricAvailable) {
         Alert.alert(
           t('login.enableTitle', { biometric: biometricLabel }),
@@ -152,7 +185,8 @@ export default function LoginScreen() {
               <TextInput
                 ref={emailRef}
                 value={email}
-                onChangeText={value => { setEmail(value); setUnregisteredEmail(null); setError(null); }}
+                onChangeText={value => { edited.current = true; setEmail(value); setUnregisteredEmail(null); setError(null); }}
+                editable={!submitting && !rememberBusy}
                 placeholder="name@example.com"
                 placeholderTextColor="#8A8A8A"
                 keyboardType="email-address"
@@ -170,7 +204,8 @@ export default function LoginScreen() {
               <TextInput
                 ref={passwordRef}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={value => { edited.current = true; setPassword(value); }}
+                editable={!submitting && !rememberBusy}
                 placeholder="••••••••"
                 placeholderTextColor="#8A8A8A"
                 secureTextEntry
@@ -181,8 +216,15 @@ export default function LoginScreen() {
                 style={styles.input}
               />
 
-              <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/forgot-password', params: { email: email.trim() } })}>
-                <Text style={styles.forgotText}>{t('login.forgot')}</Text>
+              {Platform.OS !== 'web' && <View style={styles.rememberGroup}>
+                <Pressable accessibilityRole="checkbox" accessibilityLabel={ui('Recordar mis datos')} accessibilityState={{ checked: remember, disabled: submitting || rememberBusy }} disabled={submitting || rememberBusy} onPress={toggleRemember} style={({ pressed }) => [styles.rememberRow, pressed && { opacity: 0.7 }]}>
+                  <View style={[styles.checkbox, remember && styles.checkboxChecked]}>{remember && <Ionicons name="checkmark" size={17} color={BLACK} />}</View>
+                  <Text style={styles.rememberText}>{ui('Recordar mis datos')}</Text>
+                </Pressable>
+                <Text style={styles.rememberHint}>{ui('Solo en este dispositivo.')}</Text>
+              </View>}
+              <Pressable style={styles.forgotButton} accessibilityRole="button" onPress={() => router.push({ pathname: '/forgot-password', params: { email: email.trim() } })}>
+                <Text style={styles.forgotText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{t('login.forgot')}</Text>
               </Pressable>
 
               {error && <Text style={styles.errorText}>{error}</Text>}
@@ -193,7 +235,7 @@ export default function LoginScreen() {
           <TouchableOpacity accessibilityRole="button"
             style={[styles.primaryButton, submitting && styles.primaryButtonDisabled]}
             onPress={enterApp}
-            disabled={submitting}
+            disabled={submitting || rememberBusy}
           >
             {submitting ? (
               <ActivityIndicator color={BLACK} />
@@ -217,7 +259,7 @@ export default function LoginScreen() {
                 <Pressable accessibilityRole="button" disabled={submitting} onPress={() => {
                   Alert.alert(ui('Olvidar esta cuenta en el dispositivo'), ui('Se eliminará el acceso biométrico. Podrás entrar con tu correo y contraseña.'), [
                     { text: ui('Cancelar'), style: 'cancel' },
-                    { text: ui('Olvidar cuenta'), style: 'destructive', onPress: () => { void forgetBiometric().catch(() => setError(ui('No se pudo olvidar la cuenta. Inténtalo nuevamente.'))); } },
+                    { text: ui('Olvidar cuenta'), style: 'destructive', onPress: () => { edited.current = true; void forgetBiometric().then(() => { setRemember(false); setEmail(''); setPassword(''); }).catch(() => setError(ui('No se pudo olvidar la cuenta. Inténtalo nuevamente.'))); } },
                   ]);
                 }}><Text style={styles.forgotText}>{ui('Olvidar esta cuenta en el dispositivo')}</Text></Pressable>
             )}
@@ -235,6 +277,13 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  rememberGroup: { marginBottom: 4 },
+  rememberRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  checkbox: { width: 22, height: 22, borderRadius: 5, borderWidth: 1, borderColor: '#8A8A8A', alignItems: 'center', justifyContent: 'center' },
+  checkboxChecked: { backgroundColor: GOLD, borderColor: GOLD },
+  rememberText: { color: '#FFF', fontSize: 14, flexShrink: 1 },
+  rememberHint: { color: '#B8B8B8', fontSize: 12, lineHeight: 18, marginLeft: 32 },
+  forgotButton: { minHeight: 48, justifyContent: 'center', alignSelf: 'stretch' },
   accountNotice: { borderWidth: 1, borderColor: GOLD, borderRadius: 14, backgroundColor: '#121212', padding: 16, gap: 14, marginTop: 18 },
   noticeHeading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   noticeTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', flex: 1 },

@@ -6,6 +6,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollVie
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_URL } from '../constants/api';
 import { useLanguage } from '../context/LanguageContext';
+import { clearRememberedLogin } from '../lib/rememberedLogin';
 
 const GOLD = '#FDDD56';
 const COPY = {
@@ -21,7 +22,7 @@ async function post(path: string, body: object) {
 }
 
 export default function ForgotPasswordScreen() {
-  const { language } = useLanguage();
+  const { language, ui } = useLanguage();
   const c = COPY[language];
   const params = useLocalSearchParams<{ email?: string }>();
   const [email, setEmail] = useState(typeof params.email === 'string' ? params.email : '');
@@ -47,7 +48,7 @@ export default function ForgotPasswordScreen() {
     if (password.length < 8) return setError(c.short);
     if (password !== confirmation) return setError(c.mismatch);
     setBusy(true); setError('');
-    try { await post('confirm', { email: email.trim(), code, password }); setPassword(''); setConfirmation(''); setCode(''); setStep('done'); }
+    try { await post('confirm', { email: email.trim(), code, password }); try { await clearRememberedLogin(); } catch { setError(ui('No se pudieron borrar tus datos guardados. Inténtalo nuevamente.')); } setPassword(''); setConfirmation(''); setCode(''); setStep('done'); }
     catch (err) { setError(err instanceof Error && err.message !== 'Request failed' ? err.message : c.error); }
     finally { setBusy(false); }
   };
@@ -74,6 +75,7 @@ export default function ForgotPasswordScreen() {
           <Pressable accessibilityRole="button" disabled={busy} style={[styles.button, busy && styles.disabled]} onPress={step === 'request' ? send : changePassword}>{busy ? <ActivityIndicator color="#0A0A0A" /> : <Text style={styles.buttonText}>{step === 'request' ? c.send : c.save}</Text>}</Pressable>
           {step === 'confirm' && <Pressable accessibilityRole="button" disabled={busy} onPress={send} style={styles.retry}><Text style={styles.retryText}>{c.retry}</Text></Pressable>}
         </>}
+        {step === 'done' && !!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
         {step === 'done' && <Pressable accessibilityRole="button" style={styles.button} onPress={() => router.replace('/login')}><Text style={styles.buttonText}>{c.back}</Text></Pressable>}
       </ScrollView>
     </KeyboardAvoidingView>

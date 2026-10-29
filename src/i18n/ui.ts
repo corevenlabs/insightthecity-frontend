@@ -2,6 +2,13 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Recordar mis datos": { en: "Remember my details", pt: "Lembrar meus dados" },
+  "Solo en este dispositivo.": { en: "Only on this device.", pt: "Somente neste dispositivo." },
+  "Datos de acceso": { en: "Login details", pt: "Dados de acesso" },
+  "No se pudieron cargar tus datos guardados. Puedes escribirlos para continuar.": { en: "Your saved details could not be loaded. Enter them to continue.", pt: "Não foi possível carregar seus dados salvos. Digite-os para continuar." },
+  "No se pudieron borrar tus datos guardados. Inténtalo nuevamente.": { en: "Your saved details could not be removed. Please try again.", pt: "Não foi possível apagar seus dados salvos. Tente novamente." },
+  "Iniciaste sesión, pero no pudimos actualizar tus datos guardados en este dispositivo.": { en: "You signed in, but we could not update your saved details on this device.", pt: "Você entrou, mas não foi possível atualizar seus dados salvos neste dispositivo." },
+
   "Disponible en": { en: "Available in", pt: "Disponível em" },
   "Se activará automáticamente": { en: "It will activate automatically", pt: "Será ativado automaticamente" },
   "Comprobando disponibilidad…": { en: "Checking availability…", pt: "Verificando disponibilidade…" },
