@@ -1,3 +1,4 @@
+import { formatBenefitCountdown, useBenefitSchedule } from '../lib/benefitSchedule';
 import { ExperienceSocialLinks } from '../components/ExperienceSocialLinks';
 import { ExperienceLocation } from '../components/ExperienceLocation';
 import { Text } from '../components/typography';
@@ -15,7 +16,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, FlatList, Image, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import type { Experience } from '../constants/experiences';
@@ -41,7 +42,10 @@ export default function ExperienceDetailScreen() {
   const hasReservation = useBenefitReservation(experience?.id === id && experience?.benefitAction === 'qr' && user?.is_premium ? id : undefined, token, benefitCode?.reference);
   const [benefitLoading, setBenefitLoading] = useState(false);
   const [benefitError, setBenefitError] = useState('');
-  const visibleCode = benefitCode?.scope === requestScope ? benefitCode : null;
+  const [scheduleRevision, setScheduleRevision] = useState(0);
+  const refreshSchedule = useCallback(() => setScheduleRevision(value => value + 1), []);
+  const schedule = useBenefitSchedule(experience?.id === id ? experience : undefined, refreshSchedule);
+  const visibleCode = benefitCode?.scope === requestScope && !schedule.blocked ? benefitCode : null;
   const [heroTextLayout, setHeroTextLayout] = useState<{ key: string; height: number } | null>(null);
   const { width: availableWidth, height: screenHeight, fontScale = 1 } = useResponsiveLayout();
   const screenWidth = Math.min(availableWidth, 860);
@@ -64,7 +68,7 @@ export default function ExperienceDetailScreen() {
       .catch(() => { if (active) setContentError(true); })
       .finally(() => { if (active) setLoadedId(`${id}:${language}`); });
     return () => { active = false; };
-  }, [id, language]);
+  }, [id, language, scheduleRevision]);
 
   if (loading) {
     return <SafeAreaView style={styles.container}><View style={styles.emptyState}><Text style={styles.emptyTitle}>{ui("Actualizando contenido…")}</Text></View></SafeAreaView>;
@@ -90,13 +94,15 @@ export default function ExperienceDetailScreen() {
   const ticketCta = ui(experience.ticketCta?.trim() || '') || ui("COMPRAR BOLETOS");
   const benefitAction = experience.benefitAction || 'none';
   const disclosure = requiresPremium ? partnerDisclosure(experience.partnerOffer, isPaidEvent || (benefitAction === 'external' && Boolean(experience.benefitUrl))) : null;
-  const couponUnavailable = benefitAction === 'qr' && qrUnavailable(experience.couponStatus, Boolean(hasReservation));
+  const scheduledQr = !isPaidEvent && benefitAction === 'qr' && (schedule.phase === 'scheduled' || schedule.phase === 'checking');
+  const couponUnavailable = benefitAction === 'qr' && (schedule.blocked || qrUnavailable(experience.couponStatus, Boolean(hasReservation)));
   const hasBenefitAction = requiresPremium && !isLocked && !couponUnavailable && (benefitAction === 'qr' || (benefitAction === 'external' && Boolean(experience.benefitUrl)));
   const benefitCta = ui(experience.benefitCta?.trim() || '') || ui('OBTENER BENEFICIO');
-  const isCtaEnabled = isPaidEvent || isLocked || hasBenefitAction;
+  const isCtaEnabled = !scheduledQr && (isPaidEvent || isLocked || hasBenefitAction);
   const photos = requiresPremium && experience.images?.length ? experience.images : [experience.image];
 
   async function handleCta() {
+    if (!isCtaEnabled || benefitLoading) return;
     if (isPaidEvent && experience?.ticketUrl) return void WebBrowser.openBrowserAsync(experience.ticketUrl);
     if (isLocked) return router.push('/club-form');
     if (benefitAction === 'external' && experience?.benefitUrl) return void WebBrowser.openBrowserAsync(experience.benefitUrl);
@@ -115,7 +121,7 @@ export default function ExperienceDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {contentError && <Text style={styles.ctaError} accessibilityRole="alert">{ui('No se pudo actualizar el idioma. Inténtalo de nuevo.')}</Text>}
+        {contentError && <Text style={styles.ctaError} accessibilityRole="alert">{ui('No se pudo actualizar el contenido. Revisa tu conexión.')}</Text>}
         <View style={[styles.hero, { height: heroHeight }]}>
           <FlatList
             key={`${screenWidth}`}
@@ -169,12 +175,14 @@ export default function ExperienceDetailScreen() {
 
         <View style={[styles.accessBadge, !isPaidEvent && isLocked ? styles.premiumBadge : styles.freeBadge]}>
           <Ionicons
-            name={isPaidEvent ? 'ticket-outline' : isLocked ? 'lock-closed' : requiresPremium ? 'lock-open' : 'gift-outline'}
+            name={scheduledQr ? 'lock-closed' : isPaidEvent ? 'ticket-outline' : isLocked ? 'lock-closed' : requiresPremium ? 'lock-open' : 'gift-outline'}
             size={15}
-            color={!isPaidEvent && isLocked ? '#FDDD56' : '#050505'}
+            color={scheduledQr || (!isPaidEvent && isLocked) ? '#FDDD56' : '#050505'}
           />
           <Text style={[styles.accessText, !isPaidEvent && isLocked && styles.premiumText]}>
-            {isPaidEvent
+            {scheduledQr
+              ? ui('PRÓXIMAMENTE')
+              : isPaidEvent
               ? ui("Evento con entrada de pago")
               : isLocked
               ? ui("Premium ITC Club")
@@ -242,30 +250,42 @@ export default function ExperienceDetailScreen() {
           <Text style={styles.recommendationText}>{experience.recommendation}</Text>
         </View>
 
+        {scheduledQr && <View style={styles.countdown} accessible accessibilityRole="text" accessibilityLiveRegion="none">
+          <View style={styles.countdownHeading}>
+            <Ionicons name="time-outline" size={16} color="#FFFFFF" accessible={false} />
+            <Text style={styles.countdownCaption}>{ui('Disponible en')}</Text>
+          </View>
+          <Text style={styles.countdownTime}>{schedule.phase === 'checking'
+            ? ui('Comprobando disponibilidad…') : formatBenefitCountdown(schedule.remainingMs, ui)}</Text>
+          <Text style={styles.countdownHint}>{ui('Se activará automáticamente')}</Text>
+        </View>}
+
         <TouchableOpacity
-          style={[styles.ctaButton, !isPaidEvent && isLocked && styles.lockedButton, couponUnavailable && styles.disabledButton]}
+          style={[styles.ctaButton, !isPaidEvent && isLocked && styles.lockedButton, couponUnavailable && styles.disabledButton, scheduledQr && styles.scheduledButton]}
           onPress={() => void handleCta()}
           disabled={!isCtaEnabled || benefitLoading}
           accessibilityRole="button"
-          accessibilityLabel={isPaidEvent ? `${ticketCta}: ${experience.title}` : isLocked ? ui('Suscríbete para desbloquear') : hasBenefitAction ? `${benefitCta}: ${experience.title}` : undefined}
-          accessibilityHint={benefitAction === 'qr' && hasBenefitAction ? ui('Genera un código QR válido durante 24 horas') : isPaidEvent || benefitAction === 'external' ? ui("Abre un sitio externo") : undefined}
+          accessibilityLabel={scheduledQr ? ui('PRÓXIMAMENTE') : couponUnavailable && !isLocked && !isPaidEvent ? ui(experience.couponStatus === 'sold_out' ? 'AGOTADO' : 'NO DISPONIBLE') : isPaidEvent ? `${ticketCta}: ${experience.title}` : isLocked ? ui('Suscríbete para desbloquear') : hasBenefitAction ? `${benefitCta}: ${experience.title}` : undefined}
+          accessibilityHint={scheduledQr ? ui('El QR estará disponible cuando comience el beneficio.') : benefitAction === 'qr' && hasBenefitAction ? ui('Genera un código QR válido durante 24 horas') : isPaidEvent || benefitAction === 'external' ? ui("Abre un sitio externo") : undefined}
           accessibilityState={{ disabled: !isCtaEnabled || benefitLoading, busy: benefitLoading }}
         >
           {benefitLoading ? <ActivityIndicator color={COLORS.background} /> : <Ionicons
-            name={isPaidEvent ? 'ticket-outline' : isLocked ? 'lock-closed' : requiresPremium ? 'checkmark-circle' : 'gift-outline'}
+            name={scheduledQr ? 'lock-closed' : isPaidEvent ? 'ticket-outline' : isLocked ? 'lock-closed' : requiresPremium ? 'checkmark-circle' : 'gift-outline'}
             size={18}
-            color={!isPaidEvent && isLocked ? '#FDDD56' : '#050505'}
+            color={scheduledQr || (!isPaidEvent && isLocked) ? '#FDDD56' : '#050505'}
           />}
-          <Text style={[styles.ctaText, !isPaidEvent && isLocked && styles.lockedText]}>
-            {isPaidEvent
+          <Text style={[styles.ctaText, !isPaidEvent && isLocked && styles.lockedText, scheduledQr && styles.lockedText]}>
+            {scheduledQr
+              ? ui('PRÓXIMAMENTE')
+              : isPaidEvent
               ? ticketCta.toUpperCase()
               : isLocked
               ? ui("SUSCRÍBETE PARA DESBLOQUEAR")
-              : benefitAction === 'qr' && hasReservation && experience.couponStatus !== 'paused'
+              : benefitAction === 'qr' && hasReservation && !couponUnavailable
                 ? ui('VER MI QR')
               : experience.couponStatus === 'sold_out'
                 ? ui('AGOTADO')
-              : experience.couponStatus === 'paused'
+              : (experience.couponStatus === 'paused' || schedule.blocked)
                 ? ui('NO DISPONIBLE')
               : hasBenefitAction
                 ? benefitCta.toUpperCase()
@@ -468,6 +488,12 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     lineHeight: 22,
   },
+  countdown: { marginHorizontal: 20, marginTop: 24, alignItems: 'center', gap: 5 },
+  countdownHeading: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  countdownCaption: { color: '#FFFFFF', fontSize: 13, lineHeight: 18 },
+  countdownTime: { color: '#FFFFFF', fontSize: 16, lineHeight: 22, fontWeight: '700', textAlign: 'center', fontVariant: ['tabular-nums'] },
+  countdownHint: { color: '#B8B8B8', fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  scheduledButton: { marginTop: 16, backgroundColor: '#282411', borderWidth: 1, borderColor: '#9E8B35' },
   ctaButton: {
     flexDirection: 'row',
     alignItems: 'center',

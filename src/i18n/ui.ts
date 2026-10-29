@@ -2,6 +2,13 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Disponible en": { en: "Available in", pt: "Disponível em" },
+  "Se activará automáticamente": { en: "It will activate automatically", pt: "Será ativado automaticamente" },
+  "Comprobando disponibilidad…": { en: "Checking availability…", pt: "Verificando disponibilidade…" },
+  "PRÓXIMAMENTE": { en: "COMING SOON", pt: "EM BREVE" },
+  "El QR estará disponible cuando comience el beneficio.": { en: "The QR will be available when the benefit starts.", pt: "O QR estará disponível quando o benefício começar." },
+  "No se pudo actualizar el contenido. Revisa tu conexión.": { en: "Could not refresh the content. Check your connection.", pt: "Não foi possível atualizar o conteúdo. Verifique sua conexão." },
+  "días": { en: "days", pt: "dias" },
   "Elige tu idioma": { en: "Choose your language", pt: "Escolha seu idioma" },
   "No se pudo generar el código. Inténtalo otra vez.": {"en": "Could not generate the code. Please try again.", "pt": "Não foi possível gerar o código. Tente novamente."},
   "Este beneficio no está disponible.": {"en": "This benefit is unavailable.", "pt": "Este benefício não está disponível."},

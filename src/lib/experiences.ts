@@ -19,5 +19,8 @@ export async function fetchExperience(id: string, language: AppLanguage = 'es'):
     headers: { 'Cache-Control': 'no-cache' },
   });
   if (!response.ok) throw new Error('Contenido no disponible.');
-  return response.json() as Promise<Experience>;
+  const item = await response.json() as Experience;
+  const responseDate = response.headers?.get?.('Date');
+  const serverTime = responseDate && Number.isFinite(Date.parse(responseDate)) ? new Date(responseDate).toISOString() : item.couponServerTime;
+  return { ...item, couponServerTime: serverTime, couponReceivedAt: Date.now() };
 }

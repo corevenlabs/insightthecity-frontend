@@ -37,6 +37,9 @@ export type Experience = {
   couponTotal?: number | null;
   couponPerUser?: number;
   couponLowStock?: number;
+  couponServerTime?: string | null;
+  /** Local receipt time used only to advance the server clock for the countdown. */
+  couponReceivedAt?: number;
   couponStartsAt?: string | null;
   couponEndsAt?: string | null;
   couponActive?: boolean;
