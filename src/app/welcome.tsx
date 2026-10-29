@@ -1,3 +1,4 @@
+import { WelcomeAttribution } from '../components/WelcomeAttribution';
 import { WelcomeLanguagePicker } from '../components/WelcomeLanguagePicker';
 import GoogleAccess from '../components/GoogleAccess';
 import AppleAccess from '../components/AppleAccess';
@@ -100,7 +101,7 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
   useEffect(() => {
     if (phase !== 'playing') return;
     // A decoder failure or blocked autoplay must never prevent signing in.
-    const timeout = setTimeout(complete, 14000);
+    const timeout = setTimeout(complete, 8000);
     return () => clearTimeout(timeout);
   }, [phase, complete]);
 
@@ -129,15 +130,16 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
       <Animated.View style={[styles.logoSection, { height: mediaHeight }]} testID="welcome-hero">
         <Animated.View style={{ height: '100%', width: mediaWidth, alignSelf: 'center' }}>
         {phase === 'playing' && WelcomeVideo ? <WelcomeVideo onComplete={complete} /> : <Image
-          source={phase === 'checking' ? require('../../assets/videos/itc-welcome-definitive-first.jpg') : require('../../assets/videos/itc-welcome-definitive-final.jpg')}
+          source={phase === 'checking' ? require('../../assets/videos/itc-welcome-first.jpg') : require('../../assets/videos/itc-welcome-final.jpg')}
           style={StyleSheet.absoluteFill}
           contentFit="cover"
-          contentPosition={{ left: '50%', top: '50%' }}
+          contentPosition={{ left: '50%', top: '10%' }}
           transition={0}
           accessibilityRole="image"
           accessibilityLabel="ITC CLUB · New York"
         />}
         <LinearGradient pointerEvents="none" colors={['transparent', BLACK]} style={styles.heroFade} />
+        {(phase === 'settling' || phase === 'ready') && <WelcomeAttribution />}
         </Animated.View>
       </Animated.View>
 

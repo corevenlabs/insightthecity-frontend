@@ -4,7 +4,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useState } from 'react';
 import { AppState, StyleSheet, View } from 'react-native';
 
-const source = require('../../assets/videos/itc-welcome-definitive.mp4');
+const source = require('../../assets/videos/itc-welcome-intro.mp4');
 
 /** A single silent playback, never a loop; a poster covers decoder startup. */
 export function WelcomeVideo({ onComplete }: { onComplete: () => void }) {
@@ -40,7 +40,7 @@ export function WelcomeVideo({ onComplete }: { onComplete: () => void }) {
       onFirstFrameRender={() => setFirstFrame(true)}
     />
     {!firstFrame && <Image
-      source={require('../../assets/videos/itc-welcome-definitive-first.jpg')}
+      source={require('../../assets/videos/itc-welcome-first.jpg')}
       style={StyleSheet.absoluteFill}
       contentFit="cover"
       transition={0}
