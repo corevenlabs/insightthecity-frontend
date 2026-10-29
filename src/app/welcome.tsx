@@ -56,7 +56,7 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
   const hasSocialAccess = Platform.OS !== 'web';
 
   const { height, width, insets, fontScale } = useResponsiveLayout();
-  const [playIntro] = useState(() => !!WelcomeVideo && (replay || fromProfile || !introShown));
+  const [playIntro] = useState(() => !!WelcomeVideo && !fromProfile && (replay || !introShown));
   const [phase, setPhase] = useState<'checking' | 'playing' | 'settling' | 'ready'>(playIntro ? 'checking' : 'ready');
   const [reducedMotion, setReducedMotion] = useState(false);
   const settled = phase === 'ready';
