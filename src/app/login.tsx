@@ -216,16 +216,16 @@ export default function LoginScreen() {
                 style={styles.input}
               />
 
-              {Platform.OS !== 'web' && <View style={styles.rememberGroup}>
+              <View style={styles.loginOptions}>
+              {Platform.OS !== 'web' &&
                 <Pressable accessibilityRole="checkbox" accessibilityLabel={ui('Recordar mis datos')} accessibilityState={{ checked: remember, disabled: submitting || rememberBusy }} disabled={submitting || rememberBusy} onPress={toggleRemember} style={({ pressed }) => [styles.rememberRow, pressed && { opacity: 0.7 }]}>
                   <View style={[styles.checkbox, remember && styles.checkboxChecked]}>{remember && <Ionicons name="checkmark" size={17} color={BLACK} />}</View>
-                  <Text style={styles.rememberText}>{ui('Recordar mis datos')}</Text>
-                </Pressable>
-                <Text style={styles.rememberHint}>{ui('Solo en este dispositivo.')}</Text>
-              </View>}
+                  <Text style={styles.rememberText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{ui('Recordar mis datos')}</Text>
+                </Pressable>}
               <Pressable style={styles.forgotButton} accessibilityRole="button" onPress={() => router.push({ pathname: '/forgot-password', params: { email: email.trim() } })}>
-                <Text style={styles.forgotText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{t('login.forgot')}</Text>
+                <Text style={[styles.forgotText, styles.forgotInline]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{t('login.forgot')}</Text>
               </Pressable>
+              </View>
 
               {error && <Text style={styles.errorText}>{error}</Text>}
             </View>
@@ -277,13 +277,13 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  rememberGroup: { marginBottom: 4 },
-  rememberRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  checkbox: { width: 22, height: 22, borderRadius: 5, borderWidth: 1, borderColor: '#8A8A8A', alignItems: 'center', justifyContent: 'center' },
+  loginOptions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  rememberRow: { minHeight: 48, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  checkbox: { width: 20, height: 20, flexShrink: 0, borderRadius: 5, borderWidth: 1, borderColor: '#8A8A8A', alignItems: 'center', justifyContent: 'center' },
   checkboxChecked: { backgroundColor: GOLD, borderColor: GOLD },
-  rememberText: { color: '#FFF', fontSize: 14, flexShrink: 1 },
-  rememberHint: { color: '#B8B8B8', fontSize: 12, lineHeight: 18, marginLeft: 32 },
-  forgotButton: { minHeight: 48, justifyContent: 'center', alignSelf: 'stretch' },
+  rememberText: { color: '#FFF', fontSize: 13, flexShrink: 1 },
+  forgotButton: { minHeight: 48, flex: 1.1, justifyContent: 'center' },
+  forgotInline: { fontSize: 13 },
   accountNotice: { borderWidth: 1, borderColor: GOLD, borderRadius: 14, backgroundColor: '#121212', padding: 16, gap: 14, marginTop: 18 },
   noticeHeading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   noticeTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', flex: 1 },
