@@ -70,3 +70,11 @@ test('Registration preselects the welcome language and submits that same languag
  await n.find(x=>x.type==='press'&&text(x)===context.value.t('register.submit')).props.onPress();
  assert.equal(submitted[3],'en');assert.equal(submitted[4],true);assert.equal(submitted[5],false);
 });
+
+test('Login headline uses the approved text without punctuation and translates to English and Portuguese',async()=>{
+ const context=provider({getItem:async()=>null,setItem:async()=>{}});await settle();context.render();
+ assert.equal(context.value.t('login.title'),'Tu próximo plan de NYC empieza aquí');
+ for(const [language,title] of [['en','Your next NYC plan starts here'],['pt','Seu próximo passeio em NYC começa aqui']]){
+  await context.value.setLanguage(language);context.render();assert.equal(context.value.t('login.title'),title);
+ }
+});

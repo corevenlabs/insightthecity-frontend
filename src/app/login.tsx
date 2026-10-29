@@ -1,3 +1,8 @@
+import { LoginHero } from '../components/LoginHero';
+import { AuthSocialButtons } from '../components/AuthSocialButtons';
+import { WelcomeLanguagePicker } from '../components/WelcomeLanguagePicker';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
+import { StatusBar } from 'expo-status-bar';
 import { Text, TextInput } from '../components/typography';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -24,6 +29,9 @@ const BLACK = '#0A0A0A';
 
 export default function LoginScreen() {
   const { t, ui } = useLanguage();
+  const { height, width, insets } = useResponsiveLayout();
+  const heroHeight = Math.min(360, Math.max(240, height * 0.34));
+  const [showPassword, setShowPassword] = useState(false);
   const { returnTo, biometric } = useLocalSearchParams<{ returnTo?: string; biometric?: string }>();
   const {
     loading,
@@ -117,7 +125,14 @@ export default function LoginScreen() {
   }, [loading, biometricEnabled, biometricAvailable, unlockWithBiometrics, returnTo, ui]));
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <StatusBar style="light" />
+      <View style={[styles.header, { top: insets.top + 8, left: 16, right: 16 }]} pointerEvents="box-none">
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={22} color={GOLD} />
+        </TouchableOpacity>
+        <WelcomeLanguagePicker />
+      </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
@@ -130,18 +145,9 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
         >
-          <View style={styles.header}>
-            <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} onPress={() => router.back()} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={22} color="#FDDD56" />
-            </TouchableOpacity>
-
-            <View style={styles.logoPill}>
-              <Text style={styles.logoText}>ITC</Text>
-            </View>
-          </View>
+          <LoginHero height={heroHeight} width={Math.min(width - insets.left - insets.right, 560)} />
 
           <View style={styles.content}>
-            <Text style={styles.eyebrow}>{t('login.eyebrow')}</Text>
             <Text style={styles.title}>{t('login.title')}</Text>
             <Text style={styles.subtitle}>
               {t('login.subtitle')}
@@ -149,43 +155,52 @@ export default function LoginScreen() {
 
             <View style={styles.form}>
               <Text style={styles.label}>{t('login.email')}</Text>
-              <TextInput
-                ref={emailRef}
-                value={email}
-                onChangeText={value => { setEmail(value); setUnregisteredEmail(null); setError(null); }}
-                placeholder="name@example.com"
-                placeholderTextColor="#8A8A8A"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                accessibilityLabel={t('login.email')}
-                returnKeyType="next"
-                onSubmitEditing={() => passwordRef.current?.focus()}
-                submitBehavior="submit"
-                style={styles.input}
-              />
+              <View style={styles.inputRow}>
+                <Ionicons name="mail-outline" size={22} color="#D6D6D6" accessible={false} />
+                <TextInput
+                  ref={emailRef}
+                  value={email}
+                  onChangeText={value => { setEmail(value); setUnregisteredEmail(null); setError(null); }}
+                  placeholder="name@example.com"
+                  placeholderTextColor="#8A8A8A"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  accessibilityLabel={t('login.email')}
+                  returnKeyType="next"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
+                  submitBehavior="submit"
+                  style={styles.input}
+                />
+              </View>
 
               <Text style={styles.label}>{t('login.password')}</Text>
-              <TextInput
-                ref={passwordRef}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="••••••••"
-                placeholderTextColor="#8A8A8A"
-                secureTextEntry
-                autoComplete="current-password"
-                accessibilityLabel={t('login.password')}
-                returnKeyType="done"
-                onSubmitEditing={enterApp}
-                style={styles.input}
-              />
+              <View style={styles.inputRow}>
+                <Ionicons name="lock-closed-outline" size={21} color="#D6D6D6" accessible={false} />
+                <TextInput
+                  ref={passwordRef}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder={ui('Tu contraseña')}
+                  placeholderTextColor="#8A8A8A"
+                  secureTextEntry={!showPassword}
+                  autoComplete="current-password"
+                  accessibilityLabel={t('login.password')}
+                  returnKeyType="done"
+                  onSubmitEditing={enterApp}
+                  style={styles.input}
+                />
+                <Pressable style={styles.eye} accessibilityRole="button" accessibilityLabel={ui(showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña')} onPress={() => setShowPassword(value => !value)}>
+                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color="#BDBDBD" />
+                </Pressable>
+              </View>
 
-              <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/forgot-password', params: { email: email.trim() } })}>
+              <Pressable style={styles.forgotAction} accessibilityRole="button" onPress={() => router.push({ pathname: '/forgot-password', params: { email: email.trim() } })}>
                 <Text style={styles.forgotText}>{t('login.forgot')}</Text>
               </Pressable>
 
-              {error && <Text style={styles.errorText}>{error}</Text>}
+              {error && <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>}
             </View>
           </View>
 
@@ -222,11 +237,22 @@ export default function LoginScreen() {
                 }}><Text style={styles.forgotText}>{ui('Olvidar esta cuenta en el dispositivo')}</Text></Pressable>
             )}
 
+            <AuthSocialButtons onSuccess={enterAuthenticatedApp} />
+
             {!unregisteredEmail && <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/register', params: { email: email.trim() } })}>
               <Text style={styles.switchText}>
                 {t('login.noAccount')} <Text style={styles.switchAccent}>{t('login.createAccount')}</Text>
               </Text>
             </Pressable>}
+            <Pressable accessibilityRole="button" style={styles.guestAction} onPress={() => { router.dismissAll(); router.replace('/home'); }}>
+              <Text style={styles.guestText}>{t('welcome.guest')}  →</Text>
+            </Pressable>
+            <Text style={styles.legalNotice}>{ui('Al usar ITC Club aceptas nuestros Términos y Condiciones y nuestra Política de Privacidad.')}</Text>
+            <View style={styles.legalLinks}>
+              {(['terms', 'privacy'] as const).map(slug => <Pressable key={slug} accessibilityRole="link" style={styles.legalAction} onPress={() => router.push({ pathname: '/legal', params: { slug } })}>
+                <Text style={styles.legalText}>{ui(slug === 'terms' ? 'Términos y Condiciones' : 'Política de Privacidad')}</Text>
+              </Pressable>)}
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -249,40 +275,11 @@ const styles = StyleSheet.create({
   },
   scrollContent: { width: '100%', maxWidth: 560, alignSelf: 'center',
     flexGrow: 1,
-    paddingHorizontal: 22,
     paddingBottom: 28,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 8,
-  },
-  backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    borderWidth: 1,
-    borderColor: '#222',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoPill: {
-    backgroundColor: GOLD,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  logoText: {
-    color: BLACK,
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingTop: 28,
-  },
+  header: { position: 'absolute', zIndex: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(5,5,5,0.65)', alignItems: 'center', justifyContent: 'center' },
+  content: { paddingHorizontal: 22, marginTop: -4 },
   eyebrow: {
     color: GOLD,
     fontSize: 12,
@@ -292,9 +289,9 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 34,
+    fontSize: 30,
     fontWeight: '900',
-    lineHeight: 40,
+    lineHeight: 36,
   },
   subtitle: {
     color: '#A7A7A7',
@@ -303,7 +300,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   form: {
-    marginTop: 34,
+    marginTop: 24,
   },
   label: {
     color: '#EAEAEA',
@@ -311,25 +308,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 8,
   },
-  input: {
-    backgroundColor: '#1A1A1A',
-    borderWidth: 1,
-    borderColor: '#222',
-    borderRadius: 12,
-    color: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-    marginBottom: 16,
-  },
+  inputRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingLeft: 16, backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#333', borderRadius: 12, marginBottom: 14 },
+  input: { flex: 1, minWidth: 0, minHeight: 54, color: '#FFF', paddingVertical: 15, paddingRight: 12 },
+  eye: { minWidth: 44, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  forgotAction: { minHeight: 44, alignItems: 'flex-end', justifyContent: 'center' },
   forgotText: {
     color: GOLD,
     fontWeight: '700',
     textAlign: 'right',
   },
   footer: {
-    paddingTop: 24,
+    paddingTop: 12,
+    paddingHorizontal: 22,
   },
   primaryButton: {
+    minHeight: 56,
     backgroundColor: GOLD,
     borderRadius: 14,
     paddingVertical: 18,
@@ -381,6 +374,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 14,
   },
+  guestAction: { minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
+  guestText: { color: GOLD, fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  legalNotice: { color: '#B0B0B0', fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 12 },
+  legalLinks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 16 },
+  legalAction: { minHeight: 44, justifyContent: 'center' }, legalText: { color: GOLD, fontSize: 12, textAlign: 'center' },
   switchText: {
     color: '#888',
     textAlign: 'center',
