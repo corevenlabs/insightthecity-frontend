@@ -1,7 +1,6 @@
 import { WelcomeLanguagePicker } from '../components/WelcomeLanguagePicker';
 import GoogleAccess from '../components/GoogleAccess';
 import AppleAccess from '../components/AppleAccess';
-import { WelcomeAttribution } from '../components/WelcomeAttribution';
 import { Text } from '../components/typography';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { Ionicons } from '@expo/vector-icons';
@@ -56,7 +55,7 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
   const hasSocialAccess = Platform.OS !== 'web';
 
   const { height, width, insets, fontScale } = useResponsiveLayout();
-  const [playIntro] = useState(() => !!WelcomeVideo && !fromProfile && (replay || !introShown));
+  const [playIntro] = useState(() => !!WelcomeVideo && (replay || fromProfile || !introShown));
   const [phase, setPhase] = useState<'checking' | 'playing' | 'settling' | 'ready'>(playIntro ? 'checking' : 'ready');
   const [reducedMotion, setReducedMotion] = useState(false);
   const settled = phase === 'ready';
@@ -101,7 +100,7 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
   useEffect(() => {
     if (phase !== 'playing') return;
     // A decoder failure or blocked autoplay must never prevent signing in.
-    const timeout = setTimeout(complete, 8000);
+    const timeout = setTimeout(complete, 9000);
     return () => clearTimeout(timeout);
   }, [phase, complete]);
 
@@ -130,16 +129,15 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
       <Animated.View style={[styles.logoSection, { height: mediaHeight }]} testID="welcome-hero">
         <Animated.View style={{ height: '100%', width: mediaWidth, alignSelf: 'center' }}>
         {phase === 'playing' && WelcomeVideo ? <WelcomeVideo onComplete={complete} /> : <Image
-          source={phase === 'checking' ? require('../../assets/videos/itc-welcome-first.jpg') : require('../../assets/videos/itc-welcome-final.jpg')}
+          source={phase === 'checking' ? require('../../assets/videos/itc-welcome-definitive-short-first.jpg') : require('../../assets/videos/itc-welcome-definitive-short-final.jpg')}
           style={StyleSheet.absoluteFill}
           contentFit="cover"
-          contentPosition={{ left: '50%', top: '10%' }}
+          contentPosition={{ left: '50%', top: '50%' }}
           transition={0}
           accessibilityRole="image"
           accessibilityLabel="ITC CLUB · New York"
         />}
         <LinearGradient pointerEvents="none" colors={['transparent', BLACK]} style={styles.heroFade} />
-        {(phase === 'settling' || phase === 'ready') && <WelcomeAttribution />}
         </Animated.View>
       </Animated.View>
 
