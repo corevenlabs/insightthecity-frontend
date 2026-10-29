@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Animated,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -109,6 +110,11 @@ export default function ChatScreen() {
       setSending(false);
     };
   }, [loadHistory]));
+  const keepLatestMessageVisible = useCallback(() => {
+    if (Platform.OS === 'android' && Keyboard.isVisible()) {
+      requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: false }));
+    }
+  }, []);
   const isWriting = Boolean(writing);
   useEffect(() => {
     if (messages.length) requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: !isWriting }));
@@ -271,7 +277,11 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
         <View style={styles.header}>
           <View style={styles.headerSide}>
             <Pressable accessibilityRole="button" accessibilityLabel={ui("Volver")} hitSlop={8} onPress={() => router.back()} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
@@ -297,7 +307,7 @@ export default function ChatScreen() {
           </View>
         ) : needsConsent ? renderConsent(consent.notice) : (
           <>
-            <FlatList ref={listRef} data={messages} renderItem={renderMessage} keyExtractor={(item) => item.id} contentContainerStyle={styles.chat} keyboardShouldPersistTaps="handled" ListFooterComponent={sending ? (
+            <FlatList ref={listRef} style={styles.flex} onLayout={keepLatestMessageVisible} data={messages} renderItem={renderMessage} keyExtractor={(item) => item.id} contentContainerStyle={styles.chat} keyboardShouldPersistTaps="handled" ListFooterComponent={sending ? (
               <View style={styles.typingRow}><View style={styles.typingBubble}><TypingDots label={t('chat.typing')} /></View></View>
             ) : null} />
             <View style={styles.inputBar}>
