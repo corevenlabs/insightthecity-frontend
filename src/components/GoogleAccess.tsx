@@ -11,12 +11,13 @@ const Google: typeof import('@react-native-google-signin/google-signin') | null 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   ? require('@react-native-google-signin/google-signin') : null;
 if (Google) Google.GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, iosClientId: GOOGLE_IOS_CLIENT_ID, offlineAccess: false });
-export default function GoogleAccess({onSuccess,buttonHeight=56}:{onSuccess:()=>void;buttonHeight?:number}) {
+export default function GoogleAccess({onSuccess,buttonHeight=56,compact=false,onExpandedChange}:{onSuccess:()=>void;buttonHeight?:number;compact?:boolean;onExpandedChange?:(expanded:boolean)=>void}) {
   const {signInWithGoogle,biometricAvailable,enableBiometric}=useAuth();
   const {ui,language}=useLanguage();
   const [busy,setBusy]=useState(false);
   const [pending,setPending]=useState<string|null>(null);
   const [mode,setMode]=useState<'register'|'link'|null>(null);
+  const setAccessMode = (next: 'register' | 'link' | null) => { setMode(next); onExpandedChange?.(next !== null); };
   const [acceptedMarketing,setAcceptedMarketing] = useState(false);
   const [accepted,setAccepted]=useState(false);
   const [password,setPassword]=useState('');
@@ -37,14 +38,14 @@ export default function GoogleAccess({onSuccess,buttonHeight=56}:{onSuccess:()=>
         if(!identityToken)throw new Error(ui('Google no proporcionó una credencial.'));
       }
       await signInWithGoogle({identityToken,language,acceptLegal:accepted,acceptMarketing:acceptedMarketing,password:mode==='link'?password:undefined});
-      setPassword('');setPending(null);setMode(null);setAccepted(false);setAcceptedMarketing(false);
+      setPassword('');setPending(null);setAccessMode(null);setAccepted(false);setAcceptedMarketing(false);
       if(biometricAvailable)Alert.alert(ui('Acceso rápido'),ui('¿Quieres activar el acceso biométrico en este dispositivo?'),[{text:ui('Ahora no'),style:'cancel'},{text:ui('Activar'),onPress:()=>{void enableBiometric().catch(()=>{});}}]);
       onSuccess();
     }catch(caught){
       const e=caught as Error & {code?:string};
-      if(e.code==='REGISTRATION_REQUIRED'){setPending(identityToken);setMode('register');}
-      else if(e.code==='LINK_REQUIRED'){setPending(identityToken);setMode('link');setError(ui('Confirma tu contraseña para vincular Google a tu cuenta existente.'));}
-      else if(e.code!==Google.statusCodes.SIGN_IN_CANCELLED){setPending(null);setMode(null);setPassword('');setAccepted(false);setAcceptedMarketing(false);setError(ui('No se pudo iniciar sesión con Google. Inténtalo de nuevo.'));}
+      if(e.code==='REGISTRATION_REQUIRED'){setPending(identityToken);setAccessMode('register');}
+      else if(e.code==='LINK_REQUIRED'){setPending(identityToken);setAccessMode('link');setError(ui('Confirma tu contraseña para vincular Google a tu cuenta existente.'));}
+      else if(e.code!==Google.statusCodes.SIGN_IN_CANCELLED){setPending(null);setAccessMode(null);setPassword('');setAccepted(false);setAcceptedMarketing(false);setError(ui('No se pudo iniciar sesión con Google. Inténtalo de nuevo.'));}
     }finally{setBusy(false);}
   };
   return <View style={{gap:12}}>
@@ -54,9 +55,9 @@ export default function GoogleAccess({onSuccess,buttonHeight=56}:{onSuccess:()=>
       <MarketingConsent checked={acceptedMarketing} onChange={setAcceptedMarketing} />
     </>}
     {mode==='link'&&<View style={{gap:8}}><Text style={{color:'#fff'}}>{ui('Contraseña')}</Text><TextInput secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} textContentType="password" accessibilityLabel={ui('Contraseña')} placeholder={ui('Contraseña')} placeholderTextColor="#999" value={password} onChangeText={setPassword} style={{backgroundColor:'#171717',color:'#fff',borderWidth:1,borderColor:'#555',borderRadius:14,padding:16}} /><Pressable accessibilityRole="button" onPress={()=>setShowPassword(!showPassword)} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:'#FDDD56'}}>{ui(showPassword?'Ocultar contraseña':'Mostrar contraseña')}</Text></Pressable></View>}
-    <SocialAccessButton provider="google" label={ui('Continuar con Google')} height={buttonHeight} busy={busy}
+    <SocialAccessButton provider="google" label={compact ? 'Google' : ui('Continuar con Google')} compact={compact} height={buttonHeight} busy={busy}
       disabled={(mode==='register'&&!accepted)||(mode==='link'&&!password)} onPress={()=>void run()} />
-    {mode&&<Pressable accessibilityRole="button" onPress={()=>{setMode(null);setPending(null);setPassword('');setAccepted(false);setAcceptedMarketing(false);setError('');}} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:'#fff',textAlign:'center'}}>{ui('Cancelar')}</Text></Pressable>}
+    {mode&&<Pressable accessibilityRole="button" onPress={()=>{setAccessMode(null);setPending(null);setPassword('');setAccepted(false);setAcceptedMarketing(false);setError('');}} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:'#fff',textAlign:'center'}}>{ui('Cancelar')}</Text></Pressable>}
     {!!error&&<Text accessibilityRole="alert" style={{color:'#FF8080'}}>{error}</Text>}
   </View>;
 }
