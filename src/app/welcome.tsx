@@ -1,3 +1,4 @@
+import { WelcomeLanguagePicker } from '../components/WelcomeLanguagePicker';
 import GoogleAccess from '../components/GoogleAccess';
 import AppleAccess from '../components/AppleAccess';
 import { WelcomeAttribution } from '../components/WelcomeAttribution';
@@ -114,6 +115,9 @@ function WelcomeExperience({ replay = false, fromProfile = false, allowGuestBack
   return (
     <View style={styles.container}>
       <StatusBar style="light" hidden={!settled} />
+      {settled && <View style={[styles.languagePicker, { top: insets.top + 8, right: insets.right + 16, maxWidth: Math.max(120, width - insets.left - insets.right - 96) }]}>
+        <WelcomeLanguagePicker />
+      </View>}
       {allowGuestBack && <Pressable
         accessibilityRole="button"
         accessibilityLabel={ui('Volver a explorar como invitado')}
@@ -227,6 +231,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BLACK,
   },
+  languagePicker: { position: 'absolute', zIndex: 10 },
   guestBack: { position: 'absolute', zIndex: 10, width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.65)' },
   logoSection: {
     width: '100%',
