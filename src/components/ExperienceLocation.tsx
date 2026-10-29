@@ -9,8 +9,9 @@ export function ExperienceLocation({ experience, full = false, color = '#CCC' }:
   const { ui } = useLanguage();
   const branches = experience.locations?.filter(item => item.benefitApplies !== false) ?? [];
   const address = full ? experience.location?.trim() || experience.shortAddress?.trim() || branches[0]?.address : experience.shortAddress?.trim();
-  const label = `${experience.region ?? 'NY'}${address ? ` · ${address}` : ''}${branches.length > 1 ? ` · ${ui('{count} ubicaciones', { count: branches.length })}` : ''}`;
   const url = eventMapsUrl(experience);
+  const displayAddress = address || (full && url ? ui('Abrir en Google Maps') : '');
+  const label = `${experience.region ?? 'NY'}${displayAddress ? ` · ${displayAddress}` : ''}${branches.length > 1 ? ` · ${ui('{count} ubicaciones', { count: branches.length })}` : ''}`;
   const content = <><Ionicons name="location-outline" size={16} color={color} /><Text style={[styles.label, { color }]} numberOfLines={full ? undefined : 1}>{label}</Text>{url && <Ionicons name="open-outline" size={14} color={color} />}</>;
   if (!url) return <View style={styles.row}>{content}</View>;
   return <Pressable style={styles.row} accessibilityRole="link" accessibilityLabel={`${label}. ${ui('Abrir en Google Maps')}`} hitSlop={4}

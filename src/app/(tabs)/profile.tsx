@@ -10,7 +10,7 @@ import { PrivateAvatar } from '../../components/PrivateAvatar';
 import { requireOptionalNativeModule } from 'expo';
 import { Redirect, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, type AppLanguage } from '../../context/LanguageContext';
@@ -22,9 +22,9 @@ const GOLD = '#FDDD56';
 const BLACK = '#0A0A0A';
 const INTERESTS = ['Museos', 'Experiencias', 'Broadway', 'Gastronomía', 'Arte', 'Miradores', 'Música', 'Familia'];
 const COPY = {
-  es: { title: 'Mi perfil', edit: 'Editar perfil', personal: 'Información personal', preferences: 'Mis preferencias', area: 'Zona habitual', interests: 'Intereses', membership: 'Mi membresía', active: 'Activa', plan: 'Consulta tu plan y tus beneficios', manage: 'Ver mi membresía', help: 'Ayuda y soporte', save: 'Guardar cambios', cancel: 'Cancelar', photo: 'Cambiar foto', empty: 'Sin seleccionar', error: 'No se pudo guardar', photoError: 'No se pudo cambiar la foto', choose: 'Selecciona tus intereses', helpBody: 'Puedes editar tu nombre, idioma y preferencias desde Editar perfil. Tu correo identifica la cuenta. En Club encontrarás los beneficios de tu membresía. Para consultas sobre planes, abre el chat de la app.', chat: 'Abrir chat', size: 'Selecciona una foto de menos de 5 MB.', saving: 'Guardando…' },
-  en: { title: 'My profile', edit: 'Edit profile', personal: 'Personal information', preferences: 'My preferences', area: 'Usual area', interests: 'Interests', membership: 'My membership', active: 'Active', plan: 'View your plan and benefits', manage: 'View membership', help: 'Help and support', save: 'Save changes', cancel: 'Cancel', photo: 'Change photo', empty: 'Not selected', error: 'Could not save', photoError: 'Could not change photo', choose: 'Select your interests', helpBody: 'Edit your name, language and preferences from Edit profile. Your email identifies your account. Find your membership benefits in Club. For questions about plans, open the app chat.', chat: 'Open chat', size: 'Choose a photo smaller than 5 MB.', saving: 'Saving…' },
-  pt: { title: 'Meu perfil', edit: 'Editar perfil', personal: 'Informações pessoais', preferences: 'Minhas preferências', area: 'Zona habitual', interests: 'Interesses', membership: 'Minha assinatura', active: 'Ativa', plan: 'Consulte seu plano e benefícios', manage: 'Ver assinatura', help: 'Ajuda e suporte', save: 'Salvar alterações', cancel: 'Cancelar', photo: 'Alterar foto', empty: 'Não selecionado', error: 'Não foi possível salvar', photoError: 'Não foi possível alterar a foto', choose: 'Selecione seus interesses', helpBody: 'Edite seu nome, idioma e preferências em Editar perfil. Seu e-mail identifica a conta. Veja os benefícios da assinatura em Club. Para perguntas sobre passeios, abra o chat do app.', chat: 'Abrir chat', size: 'Selecione uma foto com menos de 5 MB.', saving: 'Salvando…' },
+  es: { title: 'Mi perfil', edit: 'Editar perfil', personal: 'Información personal', preferences: 'Mis preferencias', area: 'Zona habitual', interests: 'Intereses', membership: 'Mi membresía', active: 'Activa', plan: 'Consulta tu plan y tus beneficios', manage: 'Ver mi membresía', help: 'Ayuda y soporte', save: 'Guardar cambios', cancel: 'Cancelar', photo: 'Cambiar foto', empty: 'Sin seleccionar', error: 'No se pudo guardar', photoError: 'No se pudo cambiar la foto', choose: 'Selecciona tus intereses', size: 'Selecciona una foto de menos de 5 MB.', saving: 'Guardando…' },
+  en: { title: 'My profile', edit: 'Edit profile', personal: 'Personal information', preferences: 'My preferences', area: 'Usual area', interests: 'Interests', membership: 'My membership', active: 'Active', plan: 'View your plan and benefits', manage: 'View membership', help: 'Help and support', save: 'Save changes', cancel: 'Cancel', photo: 'Change photo', empty: 'Not selected', error: 'Could not save', photoError: 'Could not change photo', choose: 'Select your interests', size: 'Choose a photo smaller than 5 MB.', saving: 'Saving…' },
+  pt: { title: 'Meu perfil', edit: 'Editar perfil', personal: 'Informações pessoais', preferences: 'Minhas preferências', area: 'Zona habitual', interests: 'Interesses', membership: 'Minha assinatura', active: 'Ativa', plan: 'Consulte seu plano e benefícios', manage: 'Ver assinatura', help: 'Ajuda e suporte', save: 'Salvar alterações', cancel: 'Cancelar', photo: 'Alterar foto', empty: 'Não selecionado', error: 'Não foi possível salvar', photoError: 'Não foi possível alterar a foto', choose: 'Selecione seus interesses', size: 'Selecione uma foto com menos de 5 MB.', saving: 'Salvando…' },
 };
 function initials(value: string) {
   const parts = value.trim().split(/\s+/).filter(Boolean);
@@ -36,7 +36,6 @@ export default function ProfileScreen() {
   const c = COPY[language];
   const { membership } = useLocalSearchParams<{ membership?: string }>();
   const [editing, setEditing] = useState(false);
-  const [help, setHelp] = useState(false);
   const [aiConsentOpen, setAiConsentOpen] = useState(false);
   const [aiConsentBusy, setAiConsentBusy] = useState(false);
   const [aiConsentError, setAiConsentError] = useState('');
@@ -172,7 +171,7 @@ export default function ProfileScreen() {
         })}
       </View>
       <View style={styles.card}>
-        {row('help-buoy-outline', c.help, '', () => setHelp(true))}
+        {row('help-buoy-outline', c.help, '', () => router.push('/support'))}
         <Pressable accessibilityRole="button" onPress={signOut} style={styles.infoRow}><Ionicons name="log-out-outline" size={21} color="#FF8080" /><Text style={styles.logoutText}>{t('profile.signOut')}</Text></Pressable>
         <Pressable accessibilityRole="button" onPress={() => router.push('/delete-account')} style={styles.infoRow}><Ionicons name="trash-outline" size={21} color="#FF8080" /><Text style={styles.logoutText}>{ui('Eliminar cuenta')}</Text></Pressable>
       </View>
@@ -203,9 +202,6 @@ export default function ProfileScreen() {
           </Pressable>
           <Pressable accessibilityRole="button" disabled={aiConsentBusy} style={styles.photoButton} onPress={() => setAiConsentOpen(false)}><Text style={styles.secondaryText}>{c.cancel}</Text></Pressable>
         </View></View>
-      </Modal>
-      <Modal visible={help} transparent animationType="fade" onRequestClose={() => setHelp(false)}>
-        <View style={styles.modalBackdrop}><View style={styles.helpCard}><Text style={styles.sectionTitle}>{c.help}</Text><Text style={styles.helpText}>{c.helpBody}</Text><Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => { setHelp(false); router.push('/chat'); }}><Text style={styles.primaryText}>{c.chat}</Text></Pressable><Pressable accessibilityRole="button" style={styles.photoButton} onPress={() => setHelp(false)}><Text style={styles.secondaryText}>{c.cancel}</Text></Pressable></View></View>
       </Modal>
       <Modal visible={membershipDetails} animationType="slide" onRequestClose={() => { if (!renewalBusy && !portalBusy) setMembershipDetails(false); }}>
         <SafeAreaProvider><SafeAreaView style={styles.container}>

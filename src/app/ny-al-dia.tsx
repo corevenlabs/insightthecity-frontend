@@ -17,7 +17,7 @@ import { NewsImage } from '../components/NewsImage';
 import { formatDate, useNewsFeed, type NewsCard } from '../lib/news';
 
 export default function NyAlDiaScreen() {
-  const { columns, width } = useResponsiveLayout();
+  const { columns } = useResponsiveLayout();
   const { ui, language } = useLanguage();
   const router = useRouter();
   const feed = useNewsFeed('ny-al-dia');
@@ -42,7 +42,7 @@ export default function NyAlDiaScreen() {
       <Text style={styles.subtitle}>{ui("Noticias, alertas y lo más importante para estar al día en Nueva York.")}</Text>
 
       {featured && (
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title} style={[styles.mainCard, { height: Math.min(400, Math.max(220, width * 0.65)) }]} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title} style={styles.mainCard} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
           <NewsImage
             uri={featured.image}
             style={styles.mainImage}
@@ -50,7 +50,7 @@ export default function NyAlDiaScreen() {
           />
           <View style={styles.mainContent}>
             <Text style={styles.badge}>{ui("NUEVA YORK AL DÍA")}</Text>
-            <Text style={styles.mainTitle} numberOfLines={3}>
+            <Text style={styles.mainTitle}>
               {featured.title}
             </Text>
             {!!featured.excerpt && (
@@ -76,7 +76,7 @@ export default function NyAlDiaScreen() {
       />
       <View style={styles.newsContent}>
         <Text style={styles.date}>{formatDate(item.date, language)}</Text>
-        <Text style={styles.newsTitle} numberOfLines={2}>
+        <Text style={styles.newsTitle}>
           {item.title}
         </Text>
         {!!item.excerpt && (

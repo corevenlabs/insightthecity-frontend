@@ -23,6 +23,10 @@ test('map tap consumes the event and opens full destination rather than the even
  const node=exportsModule.exports.ExperienceLocation({experience:{region:'NY',shortAddress:'45 E 42nd St',location:'45 E 42nd St, Manhattan'}});
  assert.equal(node.type,'pressable');node.props.onPress({stopPropagation:()=>stopped=true});await Promise.resolve();assert.equal(stopped,true);assert.match(decodeURIComponent(opened),/45 E 42nd St, Manhattan/);
  assert.equal(exportsModule.exports.ExperienceLocation({experience:{region:'NJ'}}).type,'view');
+ const mapOnly=exportsModule.exports.ExperienceLocation({full:true,experience:{region:'NY',mapsUrl:'https://www.google.com/maps/d/viewer?mid=public-map',locations:[]}});
+ assert.equal(mapOnly.type,'pressable');assert.match(mapOnly.props.accessibilityLabel,/Abrir en Google Maps/);
+ assert.equal(mapOnly.children[0].children[1].children[0],'NY · Abrir en Google Maps');
+ mapOnly.props.onPress({stopPropagation(){}});await Promise.resolve();assert.equal(opened,'https://www.google.com/maps/d/viewer?mid=public-map');
 });
 test('six locations produce a single Google Maps link, without a route or selector',()=>{
  const locations=Array.from({length:6},(_,i)=>({name:`Sucursal ${i+1}`,address:`${i+1} Test St`,placeId:`ChIJ_test_${i}`,benefitApplies:true}));

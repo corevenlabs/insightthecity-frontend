@@ -1,13 +1,12 @@
 import { Text, TextInput } from '../../components/typography';
 import { AdaptiveGrid } from '../../components/AdaptiveGrid';
-import { MemberBenefitSummary } from '@/components/MemberBenefitSummary';
+import { BenefitPreview } from '../../components/BenefitPreview';
 import { TagFilter } from '@/components/TagFilter';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import type { Experience } from '../../constants/experiences';
 import { getExperienceTags, matchesExperienceTags } from '../../lib/experienceFilters';
@@ -17,7 +16,6 @@ const CONTENT_SECTIONS = new Set(['ny_al_dia', 'que_hacer']);
 
 export default function ExploreScreen() {
   const router = useRouter();
-  const { user } = useAuth();
   const { t, ui, language } = useLanguage();
   const [items, setItems] = useState<Experience[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string[]>([]);
@@ -46,9 +44,6 @@ export default function ExploreScreen() {
     [searchResults, selectedFilter],
   );
 
-  const openExperience = (id: string) => {
-    router.push({ pathname: '/experience-detail', params: { id } } as any);
-  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -86,32 +81,7 @@ export default function ExploreScreen() {
             <Text style={styles.emptyText}>{ui("No hay eventos para este filtro.")}</Text>
           </View>
         ) : <AdaptiveGrid>{filteredEvents.map((event) => (
-          <TouchableOpacity
-            key={event.id}
-            style={styles.card}
-            onPress={() => openExperience(event.id)}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel={`${event.title}, ${event.region ?? 'NY'}`}
-          >
-            <Image source={{ uri: event.image }} style={styles.image} />
-
-            <View style={styles.cardContent}>
-              <View style={styles.topRow}>
-                <View style={styles.categoryRow}>
-                  <View style={styles.regionBadge}><Text style={styles.regionBadgeText}>{event.region ?? 'NY'}</Text></View>
-                </View>
-                <View style={[styles.badge, event.access === 'premium' ? styles.premiumBadge : styles.freeBadge]}>
-                  <Text style={[styles.badgeText, event.access === 'premium' && styles.premiumBadgeText]}>
-                    {event.access === 'premium' ? user?.is_premium ? 'ITC CLUB' : 'PREMIUM' : ui("GRATIS")}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.eventTitle}>{event.title}</Text>
-              <MemberBenefitSummary experience={event} />
-              <Text style={styles.time}>{event.date}</Text>
-            </View>
-          </TouchableOpacity>
+          <BenefitPreview key={event.id} experience={event} variant="grid" />
         ))}</AdaptiveGrid>}
 
         <View style={{ height: 120 }} />
@@ -137,21 +107,4 @@ const styles = StyleSheet.create({
   results: { color: '#888', marginBottom: 15 },
   state: { minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 12 },
   emptyText: { color: '#A6A6A6', fontSize: 15 },
-  card: { backgroundColor: '#121212', borderRadius: 20, overflow: 'hidden', marginBottom: 18 },
-  image: { width: '100%', aspectRatio: 1.8, backgroundColor: '#1A1A1A' },
-  cardContent: { padding: 16 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  categoryRow: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  category: { flexShrink: 1, color: '#FDDD56', fontWeight: '700' },
-  regionBadge: { minWidth: 38, paddingHorizontal: 9, paddingVertical: 5, alignItems: 'center', borderRadius: 999, backgroundColor: '#FDDD56' },
-  regionBadgeText: { color: '#050505', fontSize: 11, fontWeight: '900' },
-  badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  freeBadge: { backgroundColor: '#FDDD56' },
-  premiumBadge: { backgroundColor: '#303030', borderWidth: 1, borderColor: '#FDDD56' },
-  badgeText: { color: '#000', fontSize: 11, fontWeight: '700' },
-  premiumBadgeText: { color: '#FDDD56' },
-  eventTitle: { color: '#FFF', fontSize: 18, fontWeight: '700', marginTop: 12 },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8 },
-  location: { flex: 1, color: '#AAA' },
-  time: { color: '#AAA', marginTop: 4 },
 });

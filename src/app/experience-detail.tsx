@@ -1,6 +1,7 @@
 import { formatBenefitCountdown, useBenefitSchedule } from '../lib/benefitSchedule';
 import { ExperienceSocialLinks } from '../components/ExperienceSocialLinks';
 import { ExperienceLocation } from '../components/ExperienceLocation';
+import { eventMapsUrl } from '../lib/experienceLocation';
 import { Text } from '../components/typography';
 import { partnerDisclosure } from '../lib/partnerDisclosure';
 import { ClubLogo } from '../components/ClubLogo';
@@ -238,7 +239,7 @@ export default function ExperienceDetailScreen() {
           ))}
         </ExpandableSection>}
 
-        {(experience.location || experience.shortAddress || !!experience.locations?.length) && <View style={styles.addressCard}>
+        {(experience.location || experience.shortAddress || !!experience.locations?.length || eventMapsUrl(experience)) && <View style={styles.addressCard}>
           <Text style={styles.addressTitle}>{ui("Ubicación")}</Text>
           <ExperienceLocation experience={experience} full />
         </View>}

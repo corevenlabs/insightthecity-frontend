@@ -199,6 +199,7 @@ export default function RootLayout() {
           <Stack.Screen name="checkout-return" />
           <Stack.Screen name="success" />
           <Stack.Screen name="legal" />
+          <Stack.Screen name="support" />
           <Stack.Screen name="delete-account" />
           <Stack.Screen name="que-hacer" />
           <Stack.Screen name="ny-al-dia" />

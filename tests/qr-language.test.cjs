@@ -1,7 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'), vm=require('node:vm'), ts=require('typescript');
-function load(file, deps, React){const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.React}}).outputText,{React,exports:m.exports,module:m,require:n=>{if(!(n in deps))throw Error('Missing '+n);return deps[n];},fetch:(...args)=>deps.fetch(...args),URLSearchParams,Date,setInterval:()=>0,clearInterval:()=>{}});return m.exports;}
+function load(file, deps, React){const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.React}}).outputText,{React,exports:m.exports,module:m,require:n=>{if(!(n in deps))throw Error('Missing '+n);return deps[n];},fetch:(...args)=>deps.fetch(...args),URL,URLSearchParams,Date,setInterval:()=>0,clearInterval:()=>{}});return m.exports;}
 function nodes(n){return Array.isArray(n)?n.flatMap(nodes):n&&typeof n==='object'?[n,...nodes(n.children||[])]:[];}
 function harness({summary=true,scheduleOverrides={}}={}){
  let cursor=0,effects=[],lang='es',token='account-one',pendingTranslation,issues=0,reserved=false;
@@ -16,6 +16,7 @@ function harness({summary=true,scheduleOverrides={}}={}){
  Object.assign(deps,{
   '../components/ExperienceSocialLinks':{ExperienceSocialLinks:'social'},'../components/ExperienceLocation':{ExperienceLocation:'location'},'../components/typography':{Text:'text'},'../lib/partnerDisclosure':{partnerDisclosure:()=>null},'../components/ClubLogo':{ClubLogo:'logo'},'../hooks/useResponsiveLayout':{useResponsiveLayout:()=>({width:390,height:844})},'../components/SaveButton':{SaveButton:'save'},'../context/SavedContext':{savedExperience:x=>x},'@/context/LanguageContext':{useLanguage:()=>({language:lang,ui:s=>s})},'@/components/ExperienceTags':{ExperienceTags:'tags'},'@/lib/experienceFilters':{getExperienceTags:()=>[]},'@/components/ExpandableContent':{ExpandableSection:'section',ExpandableText:'expand'},'@expo/vector-icons':{Ionicons:'icon'},'expo-router':{router:{},useLocalSearchParams:()=>({id:'venue'})},'expo-web-browser':{},'expo-linear-gradient':{LinearGradient:'gradient'},'react-native':{AppState:{addEventListener:()=>({remove(){}})},ActivityIndicator:'busy',FlatList:'list',Image:'image',Modal:'modal',ScrollView:'scroll',TouchableOpacity:'button',View:'view',StyleSheet:{create:x=>x}},'react-native-safe-area-context':{SafeAreaView:'safe'},'../context/AuthContext':{useAuth:()=>({user:{id:token,is_premium:true},token})},'../lib/experiences':{fetchExperience:async(id,language)=>language==='es'?item:new Promise(resolve=>{pendingTranslation=()=>resolve({...item,memberBenefit:'Localized',cardDescription:summary?(language==='en'?'Seasonal Peruvian food, perfect for sharing.':'Cozinha peruana sazonal, ideal para compartilhar.'):undefined,couponStatus:'sold_out'});})},'../lib/benefits':benefits,
  });
+ deps['../lib/experienceLocation']=load('src/lib/experienceLocation.ts',{},React);
  deps['../lib/benefitSchedule']=load('src/lib/benefitSchedule.ts',deps,React);
  const screen=load('src/app/experience-detail.tsx',deps,React).default;
  return {render(){cursor=0;effects=[];const result=screen();effects.forEach(fn=>fn());return nodes(result);},setLanguage:l=>{lang=l;},resolve:()=>pendingTranslation(),switchAccount:()=>{token='account-two';reserved=false;},get issues(){return issues;},setSchedule:p=>Object.assign(item,p),benefits};
@@ -79,5 +80,13 @@ test('Manual pauses and expired benefits remain disabled without a misleading la
  const h=harness({scheduleOverrides:{couponStatus:'paused',...config}});h.render();await settle();const n=h.render();
  assert.ok(!n.some(x=>x.type==='text'&&x.children?.includes('Disponible en')));
  const cta=n.find(x=>x.type==='button'&&x.props.accessibilityLabel==='NO DISPONIBLE');assert.equal(cta.props.disabled,true);await cta.props.onPress();assert.equal(h.issues,0);
+ }
+});
+
+test('Detail shows a saved My Maps link without an address or registered branches; invalid links do not create an empty location section',async()=>{
+ for (const mapsUrl of ['https://www.google.com/maps/d/u/0/viewer?mid=shared-map', 'javascript:alert(1)']) {
+  const h=harness({scheduleOverrides:{location:null,shortAddress:null,locations:[],mapsUrl}});
+  h.render();await settle();const n=h.render();
+  assert.equal(n.some(x=>x.type==='location'), mapsUrl.startsWith('https:'));
  }
 });
