@@ -1,6 +1,7 @@
 import { formatBenefitCountdown, useBenefitSchedule } from '../lib/benefitSchedule';
 import { ExperienceSocialLinks } from '../components/ExperienceSocialLinks';
 import { ExperienceLocation } from '../components/ExperienceLocation';
+import { PublicationGallery } from '../components/PublicationGallery';
 import { eventMapsUrl } from '../lib/experienceLocation';
 import { Text } from '../components/typography';
 import { partnerDisclosure } from '../lib/partnerDisclosure';
@@ -16,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ActivityIndicator, FlatList, Image, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -29,16 +30,13 @@ export default function ExperienceDetailScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { user, token } = useAuth();
   const [experience, setExperience] = useState<Experience | undefined>(undefined);
-  // Se guarda para qué id se cargó / qué foto se ve: al cambiar de experiencia
-  // el estado anterior deja de aplicar sin tener que resetearlo en un efecto.
+  // Content from a previous publication does not replace the current detail.
   const [loadedId, setLoadedId] = useState<string | undefined>(undefined);
-  const [photo, setPhoto] = useState<{ id?: string; index: number }>({ id, index: 0 });
   const refreshing = Boolean(id) && loadedId !== `${id}:${language}`;
   const loading = refreshing && experience?.id !== id;
   const [contentError, setContentError] = useState(false);
   const requestScope = `${id}:${token || ''}`;
   const currentScope = useRef(requestScope);
-  const photoIndex = photo.id === id ? photo.index : 0;
   const [benefitCode, setBenefitCode] = useState<(BenefitCode & { scope: string }) | null>(null);
   const hasReservation = useBenefitReservation(experience?.id === id && experience?.benefitAction === 'qr' && user?.is_premium ? id : undefined, token, benefitCode?.reference);
   const [benefitLoading, setBenefitLoading] = useState(false);
@@ -100,7 +98,7 @@ export default function ExperienceDetailScreen() {
   const hasBenefitAction = requiresPremium && !isLocked && !couponUnavailable && (benefitAction === 'qr' || (benefitAction === 'external' && Boolean(experience.benefitUrl)));
   const benefitCta = ui(experience.benefitCta?.trim() || '') || ui('OBTENER BENEFICIO');
   const isCtaEnabled = !scheduledQr && (isPaidEvent || isLocked || hasBenefitAction);
-  const photos = requiresPremium && experience.images?.length ? experience.images : [experience.image];
+  const photos = Array.from(new Set([experience.image, ...(experience.images ?? [])].filter(Boolean)));
 
   async function handleCta() {
     if (!isCtaEnabled || benefitLoading) return;
@@ -124,19 +122,7 @@ export default function ExperienceDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         {contentError && <Text style={styles.ctaError} accessibilityRole="alert">{ui('No se pudo actualizar el contenido. Revisa tu conexión.')}</Text>}
         <View style={[styles.hero, { height: heroHeight }]}>
-          <FlatList
-            key={`${screenWidth}`}
-            data={photos}
-            initialScrollIndex={Math.min(photoIndex, photos.length - 1)}
-            getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
-            horizontal
-            pagingEnabled
-            scrollEnabled={requiresPremium && photos.length > 1}
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(url, index) => `${index}-${url}`}
-            renderItem={({ item }) => <Image source={{ uri: item }} style={[styles.heroImage, { width: screenWidth, height: heroHeight }]} />}
-            onMomentumScrollEnd={(event) => setPhoto({ id, index: Math.round(event.nativeEvent.contentOffset.x / screenWidth) })}
-          />
+          <PublicationGallery key={`${id}:${screenWidth}:${photos.join('|')}`} photos={photos} width={screenWidth} height={heroHeight} />
           {summary ? <LinearGradient
             colors={['rgba(0,0,0,0.12)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.92)']}
             locations={[0, 0.4, 1]}
@@ -148,10 +134,6 @@ export default function ExperienceDetailScreen() {
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={ui('Volver')} style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={22} color="#FDDD56" />
             </TouchableOpacity>
-
-            {requiresPremium && photos.length > 1 && <View style={styles.photoCount}>
-              <Text style={styles.photoCountText}>{photoIndex + 1}/{photos.length}</Text>
-            </View>}
 
             <View style={styles.heroText} pointerEvents="none" onLayout={({ nativeEvent }) => {
               const height = Math.ceil(nativeEvent.layout.height);
@@ -345,9 +327,6 @@ const styles = StyleSheet.create({
     height: 360,
     backgroundColor: COLORS.card,
   },
-  heroImage: {
-    height: 360,
-  },
   heroShade: {
     position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
     backgroundColor: 'rgba(0,0,0,0.34)',
@@ -360,12 +339,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
   },
-  photoCount: {
-    position: 'absolute', top: 26, right: 20,
-    borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5,
-    backgroundColor: 'rgba(0,0,0,0.72)',
-  },
-  photoCountText: { color: COLORS.white, fontSize: 12, fontWeight: '800' },
   backButton: {
     width: 42,
     height: 42,

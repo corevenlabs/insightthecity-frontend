@@ -14,7 +14,7 @@ function harness({summary=true,scheduleOverrides={}}={}){
  }};
  const benefits=load('src/lib/benefits.ts',deps,React);
  Object.assign(deps,{
-  '../components/ExperienceSocialLinks':{ExperienceSocialLinks:'social'},'../components/ExperienceLocation':{ExperienceLocation:'location'},'../components/typography':{Text:'text'},'../lib/partnerDisclosure':{partnerDisclosure:()=>null},'../components/ClubLogo':{ClubLogo:'logo'},'../hooks/useResponsiveLayout':{useResponsiveLayout:()=>({width:390,height:844})},'../components/SaveButton':{SaveButton:'save'},'../context/SavedContext':{savedExperience:x=>x},'@/context/LanguageContext':{useLanguage:()=>({language:lang,ui:s=>s})},'@/components/ExperienceTags':{ExperienceTags:'tags'},'@/lib/experienceFilters':{getExperienceTags:()=>[]},'@/components/ExpandableContent':{ExpandableSection:'section',ExpandableText:'expand'},'@expo/vector-icons':{Ionicons:'icon'},'expo-router':{router:{},useLocalSearchParams:()=>({id:'venue'})},'expo-web-browser':{},'expo-linear-gradient':{LinearGradient:'gradient'},'react-native':{AppState:{addEventListener:()=>({remove(){}})},ActivityIndicator:'busy',FlatList:'list',Image:'image',Modal:'modal',ScrollView:'scroll',TouchableOpacity:'button',View:'view',StyleSheet:{create:x=>x}},'react-native-safe-area-context':{SafeAreaView:'safe'},'../context/AuthContext':{useAuth:()=>({user:{id:token,is_premium:true},token})},'../lib/experiences':{fetchExperience:async(id,language)=>language==='es'?item:new Promise(resolve=>{pendingTranslation=()=>resolve({...item,memberBenefit:'Localized',cardDescription:summary?(language==='en'?'Seasonal Peruvian food, perfect for sharing.':'Cozinha peruana sazonal, ideal para compartilhar.'):undefined,couponStatus:'sold_out'});})},'../lib/benefits':benefits,
+  '../components/PublicationGallery':{PublicationGallery:'gallery'},'../components/ExperienceSocialLinks':{ExperienceSocialLinks:'social'},'../components/ExperienceLocation':{ExperienceLocation:'location'},'../components/typography':{Text:'text'},'../lib/partnerDisclosure':{partnerDisclosure:()=>null},'../components/ClubLogo':{ClubLogo:'logo'},'../hooks/useResponsiveLayout':{useResponsiveLayout:()=>({width:390,height:844})},'../components/SaveButton':{SaveButton:'save'},'../context/SavedContext':{savedExperience:x=>x},'@/context/LanguageContext':{useLanguage:()=>({language:lang,ui:s=>s})},'@/components/ExperienceTags':{ExperienceTags:'tags'},'@/lib/experienceFilters':{getExperienceTags:()=>[]},'@/components/ExpandableContent':{ExpandableSection:'section',ExpandableText:'expand'},'@expo/vector-icons':{Ionicons:'icon'},'expo-router':{router:{},useLocalSearchParams:()=>({id:'venue'})},'expo-web-browser':{},'expo-linear-gradient':{LinearGradient:'gradient'},'react-native':{AppState:{addEventListener:()=>({remove(){}})},ActivityIndicator:'busy',FlatList:'list',Image:'image',Modal:'modal',ScrollView:'scroll',TouchableOpacity:'button',View:'view',StyleSheet:{create:x=>x}},'react-native-safe-area-context':{SafeAreaView:'safe'},'../context/AuthContext':{useAuth:()=>({user:{id:token,is_premium:true},token})},'../lib/experiences':{fetchExperience:async(id,language)=>language==='es'?item:new Promise(resolve=>{pendingTranslation=()=>resolve({...item,memberBenefit:'Localized',cardDescription:summary?(language==='en'?'Seasonal Peruvian food, perfect for sharing.':'Cozinha peruana sazonal, ideal para compartilhar.'):undefined,couponStatus:'sold_out'});})},'../lib/benefits':benefits,
  });
  deps['../lib/experienceLocation']=load('src/lib/experienceLocation.ts',{},React);
  deps['../lib/benefitSchedule']=load('src/lib/benefitSchedule.ts',deps,React);
@@ -55,9 +55,9 @@ test('Details without an existing card summary do not invent a preview; long tex
  const h=harness({summary:false});h.render();await settle();let n=h.render();
  assert.ok(!n.some(x=>x.type==='gradient'));
  assert.ok(!n.some(x=>x.type==='text'&&x.props.ellipsizeMode==='tail'&&x.props.numberOfLines===2));
- const photo=n.find(x=>x.type==='list');const before=photo.props.renderItem({item:'https://example.test/photo'}).props.style[1].height;
+ const photo=n.find(x=>x.type==='gallery');const before=photo.props.height;
  n.find(x=>x.type==='view'&&x.props.onLayout).props.onLayout({nativeEvent:{layout:{height:400}}});
- n=h.render();const after=n.find(x=>x.type==='list').props.renderItem({item:'https://example.test/photo'}).props.style[1].height;
+ n=h.render();const after=n.find(x=>x.type==='gallery').props.height;
  assert.ok(after>=500);assert.ok(after>before);
 });
 
@@ -88,5 +88,11 @@ test('Detail shows a saved My Maps link without an address or registered branche
   const h=harness({scheduleOverrides:{location:null,shortAddress:null,locations:[],mapsUrl}});
   h.render();await settle();const n=h.render();
   assert.equal(n.some(x=>x.type==='location'), mapsUrl.startsWith('https:'));
+ }
+});
+
+test('Every publication uses the looping gallery with its main and additional photos, including free publications',async()=>{
+ for(const access of ['free','premium']){
+  const h=harness({scheduleOverrides:{access,image:'main.jpg',images:['main.jpg','second.jpg','third.jpg']}});h.render();await settle();const gallery=h.render().find(n=>n.type==='gallery');assert.ok(gallery);assert.deepEqual(Array.from(gallery.props.photos),['main.jpg','second.jpg','third.jpg']);
  }
 });
