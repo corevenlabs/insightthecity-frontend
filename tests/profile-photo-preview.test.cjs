@@ -1,0 +1,27 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
+const all=n=>Array.isArray(n)?n.flatMap(all):n&&typeof n==='object'?[n,...all(n.children||[])]:[];
+function setup(){
+ let cursor=0,effects=[],result={canceled:false,assets:[{uri:'file:///test-preview.jpg',base64:'test-image-only',mimeType:'image/jpeg'}]},uploadFails=false;
+ const state=[],calls=[];const user={id:42,name:'Test User',email:'test@example.test',avatar_url:'/api/users/me/avatar?v=1',language:'es',is_premium:false,interests:[]};
+ const React={createElement:(type,props,...children)=>({type,props:props||{},children}),useState:v=>{const i=cursor++;if(!(i in state))state[i]=v;return[state[i],v=>{state[i]=typeof v==='function'?v(state[i]):v;}];},useEffect:(fn,deps)=>{const i=cursor++;if(!state[i]||deps.some((d,j)=>state[i].deps[j]!==d)){state[i]={deps};effects.push(fn);}},useCallback:f=>f};
+ const deps={react:React,'expo':{requireOptionalNativeModule:()=>({})},'expo-image-picker':{launchImageLibraryAsync:async()=>result},'expo-image':{Image:'image'},'expo-router':{router:{},Redirect:'redirect',useFocusEffect(){},useLocalSearchParams:()=>({})},'@expo/vector-icons':{Ionicons:'icon'},'react-native':{ActivityIndicator:'busy',KeyboardAvoidingView:'keyboard',Modal:'modal',Platform:{OS:'ios'},Pressable:'button',ScrollView:'scroll',StyleSheet:{create:x=>x},View:'view'},'react-native-safe-area-context':{SafeAreaProvider:'provider',SafeAreaView:'safe'},'../../context/AuthContext':{useAuth:()=>({user,token:'test-token',loading:false,isAuthenticated:true,refreshUser:async()=>user,updateProfile:async()=>calls.push('profile'),uploadAvatar:async asset=>{calls.push(['upload',asset.uri]);if(uploadFails)throw Error('Photo upload failed');user.avatar_url='/api/users/me/avatar?v=2';}})},'../../context/LanguageContext':{useLanguage:()=>({language:'es',t:s=>s,ui:s=>s,tagLabel:s=>s})},'../../lib/aiConsent':{},'../../lib/payments':{},'../../lib/membershipTrial':{isMembershipTrial:()=>false,TRIAL_COPY:{es:{}}}};
+ for(const [path,name]of Object.entries({'../../components/ScreenBackButton':'ScreenBackButton','../../components/typography':'Text','../../components/ClubLogo':'ClubLogo','../../components/SubscriptionRenewal':'SubscriptionRenewal','../../components/LanguagePicker':'LanguagePicker','../../components/PrivateAvatar':'PrivateAvatar'}))deps[path]={[name]:name};
+ deps['../../components/typography'].TextInput='input';
+ const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/app/(tabs)/profile.tsx','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.React}}).outputText,{React,Error,exports:m.exports,module:m,require:n=>{if(!(n in deps))throw Error(n);return deps[n];}});
+ const render=()=>{cursor=0;effects=[];const nodes=all(m.exports.default());effects.forEach(f=>f());return nodes;};
+ const editor=()=>render().find(n=>n.type==='modal'&&n.props.visible);
+ return {render,editor,calls,user,picker:v=>result=v,fail:()=>uploadFails=true,open(){render();render().find(n=>n.type==='button'&&n.props.accessibilityLabel==='Editar perfil').props.onPress();},photo:async()=>{await all(editor()).find(n=>n.type==='button'&&n.props.accessibilityLabel==='Cambiar foto').props.onPress();},save:async()=>{await all(editor()).find(n=>n.type==='button'&&n.children.some(c=>c?.type==='Text'&&c.children.includes('Guardar cambios'))).props.onPress();},cancel:()=>{all(editor()).find(n=>n.type==='button'&&n.props.accessibilityLabel==='Cancelar').props.onPress();}};
+}
+test('Editor displays current private avatar and a newly selected photo before any upload; cancel discards it',async()=>{
+ const h=setup();h.open();assert.ok(all(h.editor()).some(n=>n.type==='PrivateAvatar'&&n.props.url.endsWith('v=1')));await h.photo();assert.equal(h.calls.length,0);assert.ok(all(h.editor()).some(n=>n.type==='image'&&n.props.source.uri==='file:///test-preview.jpg'));h.cancel();assert.equal(h.calls.length,0);assert.equal(h.editor(),undefined);h.open();assert.ok(!all(h.editor()).some(n=>n.type==='image'&&n.props.source.uri==='file:///test-preview.jpg'));
+});
+test('Save confirms both profile and photo and the profile uses the new server avatar',async()=>{
+ const h=setup();h.open();await h.photo();await h.save();assert.deepEqual(h.calls,['profile',['upload','file:///test-preview.jpg']]);assert.equal(h.editor(),undefined);assert.ok(h.render().some(n=>n.type==='PrivateAvatar'&&n.props.url.endsWith('v=2')));
+});
+test('Upload error retains the preview for retry; canceling the picker does not upload',async()=>{
+ const h=setup();h.open();h.picker({canceled:true,assets:null});await h.photo();assert.equal(h.calls.length,0);h.picker({canceled:false,assets:[{uri:'file:///test-preview.jpg',base64:'test'}]});await h.photo();h.fail();await h.save();assert.ok(h.editor());assert.ok(all(h.editor()).some(n=>n.type==='Text'&&n.children.includes('Photo upload failed')));assert.ok(all(h.editor()).some(n=>n.type==='image'&&n.props.source.uri==='file:///test-preview.jpg'));
+});
+
+test('Switching accounts hides the previous account editor and discards its pending preview on reopening',async()=>{
+ const h=setup();h.open();await h.photo();h.user.id=43;assert.equal(h.editor(),undefined);h.open();assert.ok(!all(h.editor()).some(n=>n.type==='image'&&n.props.source.uri==='file:///test-preview.jpg'));assert.equal(h.calls.length,0);
+});

@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { PrivateAvatar } from '../../components/PrivateAvatar';
 import { requireOptionalNativeModule } from 'expo';
+import type { ImagePickerAsset } from 'expo-image-picker';
 import { Redirect, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -36,6 +37,7 @@ export default function ProfileScreen() {
   const c = COPY[language];
   const { membership } = useLocalSearchParams<{ membership?: string }>();
   const [editing, setEditing] = useState(false);
+  const [editorOwner, setEditorOwner] = useState<string | number | null>(null);
   const [aiConsentOpen, setAiConsentOpen] = useState(false);
   const [aiConsentBusy, setAiConsentBusy] = useState(false);
   const [aiConsentError, setAiConsentError] = useState('');
@@ -47,6 +49,8 @@ export default function ProfileScreen() {
   const [portalError, setPortalError] = useState('');
   const [saving, setSaving] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [storedPhoto, setPendingPhoto] = useState<ImagePickerAsset | null>(null);
+  const pendingPhoto = editorOwner === user?.id ? storedPhoto : null;
   const [error, setError] = useState('');
   const [name, setName] = useState('');
   const [area, setArea] = useState('');
@@ -83,13 +87,22 @@ export default function ProfileScreen() {
     finally { setPortalBusy(false); }
   };
   const openEditor = () => {
+    setEditorOwner(user?.id ?? null);
     setName(user?.name || ''); setArea(user?.home_area || ''); setInterests(user?.interests || []);
-    setSelectedLanguage(user?.language || language); setError(''); setEditing(true);
+    setPendingPhoto(null); setSelectedLanguage(user?.language || language); setError(''); setEditing(true);
+  };
+  const closeEditor = () => {
+    if (saving || photoBusy) return;
+    setPendingPhoto(null); setEditing(false);
   };
   const save = async () => {
     if (saving || photoBusy) return;
     setSaving(true); setError('');
-    try { await updateProfile({ name, language: selectedLanguage, home_area: area, interests }); setEditing(false); }
+    try {
+      await updateProfile({ name, language: selectedLanguage, home_area: area, interests });
+      if (pendingPhoto) await uploadAvatar(pendingPhoto);
+      setPendingPhoto(null); setEditing(false);
+    }
     catch (err) { setError(err instanceof Error ? err.message : c.error); }
     finally { setSaving(false); }
   };
@@ -108,7 +121,7 @@ export default function ProfileScreen() {
       const asset = result.assets[0];
       if (Platform.OS !== 'web' && (!asset.base64 || asset.base64.length > 7 * 1024 * 1024)) throw new Error(c.size);
       if (Platform.OS === 'web' && asset.fileSize && asset.fileSize > 5 * 1024 * 1024) throw new Error(c.size);
-      await uploadAvatar(asset);
+      setPendingPhoto(asset);
     } catch (err) { setError(err instanceof Error ? err.message : c.photoError); }
     finally { setPhotoBusy(false); }
   };
@@ -128,13 +141,16 @@ export default function ProfileScreen() {
   const trialCopy = TRIAL_COPY[language];
   const hasBilling = user.has_billing_account === true || !!user.subscription_status;
   const manualMembership = user.is_premium && user.has_billing_account === false && !user.subscription_status;
+  const currentAvatar = user.avatar_url?.startsWith('/api/users/me/avatar?')
+    ? <PrivateAvatar url={user.avatar_url} token={token} style={styles.avatarPhoto} fallback={<Text style={styles.avatarText}>{initials(user.name || user.email)}</Text>} />
+    : user.avatar_url ? <Image source={{ uri: user.avatar_url }} style={styles.avatarPhoto} contentFit="cover" /> : <Text style={styles.avatarText}>{initials(user.name || user.email)}</Text>;
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.pageHeader}><ScreenBackButton /><Text style={styles.pageTitle}>{c.title}</Text><Pressable accessibilityRole="button" accessibilityLabel={c.edit} onPress={openEditor} style={styles.settings}><Ionicons name="settings-outline" size={25} color={GOLD} /></Pressable></View>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32, width: '100%', maxWidth: 680, alignSelf: 'center' }}>
       <View style={styles.header}>
         <Pressable onPress={openEditor} accessibilityRole="button" accessibilityLabel={c.edit} style={styles.avatar}>
-          {user.avatar_url?.startsWith('/api/users/me/avatar?') ? <PrivateAvatar url={user.avatar_url} token={token} style={styles.avatarPhoto} /> : user.avatar_url ? <Image source={{ uri: user.avatar_url }} style={styles.avatarPhoto} contentFit="cover" /> : <Text style={styles.avatarText}>{initials(user.name || user.email)}</Text>}
+          {currentAvatar}
         </Pressable>
         <Text style={styles.name}>{user.name || user.email.split('@')[0]}</Text>
         {user.is_premium ? <ClubLogo width={72} style={{ marginTop: 10 }} /> : <View style={[styles.badge, styles.badgeFree]}><Text style={styles.badgeText}>{t('profile.freeAccount')}</Text></View>}
@@ -176,12 +192,17 @@ export default function ProfileScreen() {
         <Pressable accessibilityRole="button" onPress={() => router.push('/delete-account')} style={styles.infoRow}><Ionicons name="trash-outline" size={21} color="#FF8080" /><Text style={styles.logoutText}>{ui('Eliminar cuenta')}</Text></Pressable>
       </View>
     </ScrollView>
-      <Modal visible={editing} animationType="slide" onRequestClose={() => { if (!saving && !photoBusy) setEditing(false); }}>
+      <Modal visible={editing && editorOwner === user.id} animationType="slide" onRequestClose={closeEditor}>
         <SafeAreaProvider><SafeAreaView style={styles.container}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={styles.pageHeader}><Text style={styles.pageTitle}>{c.edit}</Text><Pressable disabled={saving || photoBusy} onPress={() => setEditing(false)} accessibilityRole="button" accessibilityLabel={c.cancel} style={styles.settings}><Ionicons name="close" size={25} color={GOLD} /></Pressable></View>
+          <View style={styles.pageHeader}><Text style={styles.pageTitle}>{c.edit}</Text><Pressable disabled={saving || photoBusy} onPress={closeEditor} accessibilityRole="button" accessibilityLabel={c.cancel} style={styles.settings}><Ionicons name="close" size={25} color={GOLD} /></Pressable></View>
           <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+            <View style={styles.editorPhoto}>
+              <Pressable onPress={pickPhoto} disabled={photoBusy || saving} accessibilityRole="button" accessibilityLabel={c.photo} style={styles.avatar}>
+                {pendingPhoto ? <Image source={{ uri: pendingPhoto.uri }} style={styles.avatarPhoto} contentFit="cover" cachePolicy="none" accessibilityLabel={ui('Vista previa de tu foto')} /> : currentAvatar}
+              </Pressable>
+            </View>
             <Pressable onPress={pickPhoto} disabled={photoBusy || saving} accessibilityRole="button" style={styles.photoButton}>{photoBusy ? <ActivityIndicator color={GOLD} /> : <Ionicons name="camera-outline" size={22} color={GOLD} />}<Text style={styles.secondaryText}>{c.photo}</Text></Pressable>
-            <Text style={styles.photoHint}>{language === 'es' ? 'La foto se guarda al seleccionarla.' : language === 'en' ? 'Your photo is saved when selected.' : 'A foto é salva ao selecionar.'}</Text>
+            <Text style={styles.photoHint}>{ui('Revisa tu foto y pulsa Guardar cambios para confirmarla.')}</Text>
             <Text style={styles.label}>{t('profile.name')}</Text><TextInput value={name} onChangeText={setName} maxLength={100} editable={!saving} style={styles.input} accessibilityLabel={t('profile.name')} autoComplete="name" />
             <Text style={styles.label}>{t('profile.email')}</Text><Text style={styles.value}>{user.email}</Text>
             <Text style={styles.label}>{t('register.language')}</Text><View style={styles.tags}>{(['es', 'en', 'pt'] as const).map((item) => <Pressable key={item} onPress={() => setSelectedLanguage(item)} disabled={saving} accessibilityRole="button" accessibilityState={{ selected: selectedLanguage === item }} style={[styles.tag, selectedLanguage === item && styles.selectedTag]}><Text style={[styles.tagText, selectedLanguage === item && styles.selectedTagText]}>{({ es: 'Español', en: 'English', pt: 'Português' })[item]}</Text></Pressable>)}</View>
@@ -257,6 +278,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  editorPhoto: { alignItems: 'center', paddingTop: 12 },
   pageHeader: { width: '100%', maxWidth: 680, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, gap: 8 },
   pageTitle: { color: '#FFF', fontSize: 26, fontWeight: '700', flex: 1, flexShrink: 1 },
   centeredTitle: { textAlign: 'center' },

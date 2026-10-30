@@ -2,6 +2,8 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Vista previa de tu foto": { en: "Your photo preview", pt: "Prévia da sua foto" },
+  "Revisa tu foto y pulsa Guardar cambios para confirmarla.": { en: "Review your photo and tap Save changes to confirm it.", pt: "Confira sua foto e toque em Salvar alterações para confirmar." },
   "Recordar mis datos": { en: "Remember my details", pt: "Lembrar meus dados" },
   "Solo en este dispositivo.": { en: "Only on this device.", pt: "Somente neste dispositivo." },
   "Datos de acceso": { en: "Login details", pt: "Dados de acesso" },
