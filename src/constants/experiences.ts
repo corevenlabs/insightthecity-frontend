@@ -55,6 +55,7 @@ export type Experience = {
   isAgeRestricted?: boolean;
   section?: string | null;
   isFeatured?: boolean;
+  isItcRecommended?: boolean;
   isPublished?: boolean;
   sortOrder?: number;
   endsAt?: string | null;

@@ -1,3 +1,4 @@
+import { itcRecommendedExperiences } from '../../lib/itcRecommendations';
 import { useHomeEntrance } from '../../hooks/useHomeEntrance';
 import { HomeCardsSkeleton } from '../../components/HomeCardsSkeleton';
 import { Text } from '../../components/typography';
@@ -149,7 +150,7 @@ function RecommendationsCarousel({ experiences }: { experiences: Experience[] })
               <NewsImage uri={experience.image} style={styles.recommendationBannerImage} loadingPlaceholder accessibilityLabel={experience.title} />
               <View style={styles.recommendationBannerOverlay}>
                 <Text style={styles.recommendationBannerCategory} numberOfLines={1}>
-                  {experience.region ?? 'NY'}
+                  {experience.region ?? 'NY'}{experience.access === 'premium' ? ' · ITC Club' : ''}
                 </Text>
                 <Text style={styles.recommendationBannerTitle} numberOfLines={2}>{experience.title}</Text>
                 {!!experience.cardDescription && <Text style={styles.recommendationDescription} numberOfLines={2}>{experience.cardDescription}</Text>}
@@ -349,8 +350,7 @@ export default function HomeScreen() {
 
         setCatalog(experiences);
         setClubBenefits(experiences.filter(item => item.access === 'premium'));
-        const curated = experiences.filter(item => item.section === 'top_today' && item.access !== 'premium');
-        setRecommendations(curated.length > 0 ? curated : experiences.filter(item => item.access !== 'premium'));
+        setRecommendations(itcRecommendedExperiences(experiences));
     }).catch(() => { if (alive) setCatalogError(true); })
       .finally(() => { if (alive) setCatalogLoading(false); });
     return () => { alive = false; };
