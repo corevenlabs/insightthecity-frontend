@@ -1,8 +1,7 @@
-import { MarketingConsent } from './MarketingConsent';
+import { SocialAccessSheet, SocialLegalConsent } from './SocialAccessSheet';
 import { SocialAccessButton } from './SocialAccessButton';
 import { useState } from 'react';
 import { Alert, Platform, Pressable, TurboModuleRegistry, View } from 'react-native';
-import { router } from 'expo-router';
 import { Text, TextInput } from './typography';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -47,16 +46,16 @@ export default function GoogleAccess({onSuccess,buttonHeight=56,compact=false}:{
       else if(e.code!==Google.statusCodes.SIGN_IN_CANCELLED){setPending(null);setMode(null);setPassword('');setAccepted(false);setAcceptedMarketing(false);setError(ui('No se pudo iniciar sesión con Google. Inténtalo de nuevo.'));}
     }finally{setBusy(false);}
   };
-  return <View style={[{gap:12},compact&&{flexGrow:1,flexBasis:mode ? '100%' : 0,minWidth:140}]}>
-    {mode==='register'&&<>
-      <Pressable accessibilityRole="checkbox" accessibilityState={{checked:accepted}} onPress={()=>setAccepted(!accepted)} style={{minHeight:48,justifyContent:'center'}}><Text style={{color:'#FDDD56'}}>{accepted?'✓':'□'} {ui('Acepto los términos y la política de privacidad')}</Text></Pressable>
-      <View style={{flexDirection:'row',gap:20}}>{(['terms','privacy'] as const).map(slug=><Pressable key={slug} accessibilityRole="link" onPress={()=>router.push({pathname:'/legal',params:{slug}} as never)}><Text style={{color:'#FDDD56'}}>{ui(slug==='terms'?'Términos':'Privacidad')}</Text></Pressable>)}</View>
-      <MarketingConsent checked={acceptedMarketing} onChange={setAcceptedMarketing} />
-    </>}
-    {mode==='link'&&<View style={{gap:8}}><Text style={{color:'#fff'}}>{ui('Contraseña')}</Text><TextInput secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} textContentType="password" accessibilityLabel={ui('Contraseña')} placeholder={ui('Contraseña')} placeholderTextColor="#999" value={password} onChangeText={setPassword} style={{backgroundColor:'#171717',color:'#fff',borderWidth:1,borderColor:'#555',borderRadius:14,padding:16}} /><Pressable accessibilityRole="button" onPress={()=>setShowPassword(!showPassword)} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:'#FDDD56'}}>{ui(showPassword?'Ocultar contraseña':'Mostrar contraseña')}</Text></Pressable></View>}
-    <SocialAccessButton provider="google" label={ui('Continuar con Google')} height={buttonHeight} compact={compact && !mode} busy={busy}
-      disabled={(mode==='register'&&!accepted)||(mode==='link'&&!password)} onPress={()=>void run()} />
-    {mode&&<Pressable accessibilityRole="button" onPress={()=>{setMode(null);setPending(null);setPassword('');setAccepted(false);setAcceptedMarketing(false);setError('');}} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:'#fff',textAlign:'center'}}>{ui('Cancelar')}</Text></Pressable>}
-    {!!error&&<Text accessibilityRole="alert" style={{color:'#FF8080'}}>{error}</Text>}
+  const cancel = () => { if(busy)return; setMode(null);setPending(null);setPassword('');setAccepted(false);setAcceptedMarketing(false);setError(''); };
+  return <View style={[{gap:12},compact&&{flexGrow:1,flexBasis:0,minWidth:140}]}>
+    <SocialAccessButton provider="google" label={ui('Continuar con Google')} height={buttonHeight} compact={compact} busy={busy} onPress={()=>void run()} />
+    <SocialAccessSheet visible={mode !== null} title={ui('Continuar con Google')} busy={busy} onClose={cancel}>
+      {mode==='register'&&<SocialLegalConsent accepted={accepted} onAccept={setAccepted} marketing={acceptedMarketing} onMarketing={setAcceptedMarketing} busy={busy} />}
+      {mode==='link'&&<View style={{gap:8}}><Text style={{color:'#fff'}}>{ui('Contraseña')}</Text><TextInput secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} textContentType="password" accessibilityLabel={ui('Contraseña')} placeholder={ui('Contraseña')} placeholderTextColor="#999" value={password} onChangeText={setPassword} style={{backgroundColor:'#171717',color:'#fff',borderWidth:1,borderColor:'#555',borderRadius:14,padding:16}} /><Pressable accessibilityRole="button" onPress={()=>setShowPassword(!showPassword)} style={{minHeight:48,justifyContent:'center'}}><Text style={{color:'#FDDD56'}}>{ui(showPassword?'Ocultar contraseña':'Mostrar contraseña')}</Text></Pressable></View>}
+      {!!error&&<Text accessibilityRole="alert" style={{color:'#FF8080'}}>{error}</Text>}
+      <SocialAccessButton provider="google" label={ui('Continuar con Google')} height={buttonHeight} busy={busy}
+        disabled={(mode==='register'&&!accepted)||(mode==='link'&&!password)} onPress={()=>void run()} />
+    </SocialAccessSheet>
+    {!!error&&!mode&&<Text accessibilityRole="alert" style={{color:'#FF8080'}}>{error}</Text>}
   </View>;
 }

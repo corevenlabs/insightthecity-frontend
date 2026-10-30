@@ -1,9 +1,8 @@
-import { MarketingConsent } from './MarketingConsent';
+import { SocialAccessSheet, SocialLegalConsent } from './SocialAccessSheet';
 import { SocialAccessButton } from './SocialAccessButton';
 import { useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import { requireOptionalNativeModule } from 'expo-modules-core';
-import { router } from 'expo-router';
 import { Text } from './typography';
 import { API_URL } from '../constants/api';
 import { useAuth } from '../context/AuthContext';
@@ -54,16 +53,15 @@ export default function AppleAccess({ link = false, onSuccess, buttonHeight = 56
       else if (!['ERR_REQUEST_CANCELED', 'ERR_REQUEST_CANCELLED', 'ERR_CANCELED', 'ERR_CANCELLED', '1001'].includes(String(e.code)) && e.message !== 'The user canceled the authorization attempt') setError(e.message || ui('No se pudo iniciar sesión.'));
     } finally { setBusy(false); }
   };
-  return <View style={[{gap:16}, compact && {flexGrow:1, flexBasis:pending ? '100%' : 0, minWidth:140}]}>
+  const cancel = () => { if(busy)return; setPending(null);setAccepted(false);setAcceptedMarketing(false);setError(''); };
+  return <View style={[{gap:16}, compact && {flexGrow:1, flexBasis:0, minWidth:140}]}>
     {link && <Text style={{color:"white"}}>{ui("Vincular Apple a mi cuenta")}</Text>}
-    {pending ? <>
-      <Text style={{color:'white'}}>{ui('Para crear tu cuenta, acepta los términos y la privacidad.')}</Text>
-      <Pressable accessibilityRole="checkbox" accessibilityState={{checked:accepted}} onPress={()=>setAccepted(!accepted)} style={{minHeight:48,justifyContent:'center'}}><Text style={{color:'#FDDD56'}}>{accepted?'✓':'□'} {ui('Acepto los términos y la política de privacidad')}</Text></Pressable>
-      <View style={{flexDirection:'row',gap:20}}><Pressable accessibilityRole="link" onPress={()=>router.push({pathname:'/legal',params:{slug:'terms'}} as never)}><Text style={{color:'#FDDD56'}}>{ui('Términos')}</Text></Pressable><Pressable accessibilityRole="link" onPress={()=>router.push({pathname:'/legal',params:{slug:'privacy'}} as never)}><Text style={{color:'#FDDD56'}}>{ui('Privacidad')}</Text></Pressable></View>
-      <MarketingConsent checked={acceptedMarketing} onChange={setAcceptedMarketing} />
-      <Pressable accessibilityRole="button" disabled={!accepted||busy} onPress={()=>void run()} style={{backgroundColor:'#FDDD56',padding:18,borderRadius:14,opacity:accepted?1:0.5}}><Text style={{textAlign:'center',color:'black'}}>{ui('Crear cuenta con Apple')}</Text></Pressable>
-      <Pressable onPress={()=>{setPending(null);setAccepted(false);setAcceptedMarketing(false);}}><Text style={{color:'white'}}>{ui('Cancelar')}</Text></Pressable>
-    </> : <SocialAccessButton provider="apple" label={ui('Continuar con Apple')} height={buttonHeight} compact={compact} busy={busy} onPress={()=>void run()} />}
-    {!!error && <Text accessibilityRole="alert" style={{color:'#FF8080'}}>{error}</Text>}
+    <SocialAccessButton provider="apple" label={ui('Continuar con Apple')} height={buttonHeight} compact={compact} busy={busy} onPress={()=>void run()} />
+    <SocialAccessSheet visible={pending !== null} title={ui('Continuar con Apple')} busy={busy} onClose={cancel}>
+      <SocialLegalConsent accepted={accepted} onAccept={setAccepted} marketing={acceptedMarketing} onMarketing={setAcceptedMarketing} busy={busy} />
+      {!!error && <Text accessibilityRole="alert" style={{color:'#FF8080'}}>{error}</Text>}
+      <SocialAccessButton provider="apple" label={ui('Crear cuenta con Apple')} height={buttonHeight} busy={busy} disabled={!accepted} onPress={()=>void run()} />
+    </SocialAccessSheet>
+    {!!error && !pending && <Text accessibilityRole="alert" style={{color:'#FF8080'}}>{error}</Text>}
   </View>;
 }
