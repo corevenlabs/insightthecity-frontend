@@ -1,13 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, AppState, FlatList, Image, Pressable, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { AccessibilityInfo, AppState, FlatList, Image, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { Text } from './typography';
-import { useLanguage } from '../context/LanguageContext';
 
 /** Duplicate end slides let both autoplay and manual swipes cross the boundary seamlessly. */
 export function PublicationGallery({ photos, width, height }: { photos: string[]; width: number; height: number }) {
-  const { ui } = useLanguage();
   const count = photos.length;
   const loop = count > 1;
   const data = loop ? [photos[count - 1], ...photos, photos[0]] : photos;
@@ -17,7 +14,6 @@ export function PublicationGallery({ photos, width, height }: { photos: string[]
   const moving = useRef(false);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(true);
   const [appActive, setAppActive] = useState(AppState.currentState === 'active');
   const clearSettle = useCallback(() => {
@@ -45,7 +41,7 @@ export function PublicationGallery({ photos, width, height }: { photos: string[]
     dragging.current = false;
   }, [clearSettle, count, data.length, loop, width]);
   useFocusEffect(useCallback(() => {
-    if (!loop || paused || reduceMotion || !appActive) return;
+    if (!loop || reduceMotion || !appActive) return;
     const timer = setInterval(() => {
       if (dragging.current || moving.current || !list.current) return;
       moving.current = true;
@@ -56,7 +52,7 @@ export function PublicationGallery({ photos, width, height }: { photos: string[]
       settleTimer.current = setTimeout(() => settle(offset), 900);
     }, 4500);
     return () => { clearInterval(timer); clearSettle(); moving.current = false; dragging.current = false; };
-  }, [appActive, clearSettle, loop, paused, reduceMotion, settle, width]));
+  }, [appActive, clearSettle, loop, reduceMotion, settle, width]));
   function endDrag(event: NativeSyntheticEvent<NativeScrollEvent>) {
     clearSettle();
     const offset = event.nativeEvent.contentOffset.x;
@@ -80,14 +76,10 @@ export function PublicationGallery({ photos, width, height }: { photos: string[]
     />
     {loop && <View style={styles.controls}>
       <Text style={styles.count}>{index + 1}/{count}</Text>
-      {!reduceMotion && <Pressable accessibilityRole="button" accessibilityLabel={ui(paused ? 'Reanudar galería' : 'Pausar galería')} onPress={() => setPaused(value => !value)} style={({ pressed }) => [styles.pause, pressed && { opacity: 0.65 }]}>
-        <Ionicons name={paused ? 'play' : 'pause'} size={15} color="#FFF" />
-      </Pressable>}
     </View>}
   </View>;
 }
 const styles = StyleSheet.create({
-  controls: { position: 'absolute', top: 60, right: 20, flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 4, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.72)', zIndex: 3 },
+  controls: { position: 'absolute', top: 60, right: 20, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.72)', zIndex: 3 },
   count: { color: '#FFF', fontSize: 12, fontWeight: '800', paddingVertical: 8 },
-  pause: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
 });

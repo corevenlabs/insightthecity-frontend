@@ -19,8 +19,8 @@ test('Auto gallery advances each 4.5s and wraps from the last photo to the first
 test('Manual swipes wrap backwards too and autoplay waits while dragging',async()=>{
  const h=setup();const nodes=await ready(h);nodes.find(n=>n.type==='list').props.onScrollBeginDrag();h.tick();assert.equal(h.scrolls.length,0);h.finish(0);assert.equal(h.scrolls.at(-1).offset,1170);assert.equal(h.scrolls.at(-1).animated,false);h.tick();assert.equal(h.scrolls.at(-1).offset,1560);
 });
-test('Pause, reduce motion, background and navigation stop autoplay; resuming restarts it',async()=>{
- const h=setup();let nodes=await ready(h);nodes.find(n=>n.type==='button').props.onPress();nodes=h.render();assert.equal(h.intervals.size,0);nodes.find(n=>n.type==='button').props.onPress();h.render();assert.equal(h.intervals.size,1);
+test('No playback buttons are shown; reduce motion, background and navigation still stop autoplay',async()=>{
+ const h=setup();const nodes=await ready(h);assert.ok(!nodes.some(n=>n.type==='button'));assert.equal(h.intervals.size,1);
  h.focus(false);assert.equal(h.intervals.size,0);h.focus(true);assert.equal(h.intervals.size,1);h.app('background');assert.equal(h.intervals.size,0);h.app('active');assert.equal(h.intervals.size,1);h.motion(true);assert.equal(h.intervals.size,0);h.unmount();assert.equal(h.timeouts.size,0);
 });
 test('A single photo remains static; programmatic-scroll fallback closes the loop without a native momentum event',async()=>{
