@@ -17,7 +17,7 @@
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleAllowMixedLocalizations": true
       },
-      "supportsTablet": true,
+      "supportsTablet": false,
       "usesAppleSignIn": true,
       "runtimeVersion": {
         "policy": "fingerprint"
