@@ -1,3 +1,4 @@
+import { scopedBenefitExperience } from '../lib/privateBenefits';
 import { formatBenefitCountdown, useBenefitSchedule } from '../lib/benefitSchedule';
 import { ExperienceSocialLinks } from '../components/ExperienceSocialLinks';
 import { ExperienceLocation } from '../components/ExperienceLocation';
@@ -15,7 +16,7 @@ import { getExperienceTags } from '@/lib/experienceFilters';
 import { ExpandableSection, ExpandableText } from '@/components/ExpandableContent';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
+import { openExperienceLink } from '../lib/openExperienceLink';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -29,7 +30,10 @@ export default function ExperienceDetailScreen() {
   const { ui, language } = useLanguage();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { user, token } = useAuth();
-  const [experience, setExperience] = useState<Experience | undefined>(undefined);
+  const [loadedExperience, setExperience] = useState<Experience | undefined>(undefined);
+  const privacyScope = `${id}:${language}:${token || ''}:${user?.is_premium ? 'premium' : 'public'}`;
+  const [loadedPrivacyScope, setLoadedPrivacyScope] = useState('');
+  const experience = scopedBenefitExperience(loadedExperience, loadedPrivacyScope, privacyScope, Boolean(user?.is_premium));
   // Content from a previous publication does not replace the current detail.
   const [loadedId, setLoadedId] = useState<string | undefined>(undefined);
   const refreshing = Boolean(id) && loadedId !== `${id}:${language}`;
@@ -37,9 +41,12 @@ export default function ExperienceDetailScreen() {
   const [contentError, setContentError] = useState(false);
   const requestScope = `${id}:${token || ''}`;
   const currentScope = useRef(requestScope);
+  const currentPrivacyScope = useRef(privacyScope);
+  const detailRequestVersion = useRef(0);
   const [benefitCode, setBenefitCode] = useState<(BenefitCode & { scope: string }) | null>(null);
   const hasReservation = useBenefitReservation(experience?.id === id && experience?.benefitAction === 'qr' && user?.is_premium ? id : undefined, token, benefitCode?.reference);
   const [benefitLoading, setBenefitLoading] = useState(false);
+  const externalLinkOpening = useRef(false);
   const [benefitError, setBenefitError] = useState('');
   const [scheduleRevision, setScheduleRevision] = useState(0);
   const refreshSchedule = useCallback(() => setScheduleRevision(value => value + 1), []);
@@ -60,14 +67,35 @@ export default function ExperienceDetailScreen() {
   }, [requestScope]);
 
   useEffect(() => {
+    currentPrivacyScope.current = privacyScope;
+    return () => { currentPrivacyScope.current = ''; };
+  }, [privacyScope]);
+
+  useEffect(() => {
     let active = true;
     if (!id) return;
-    fetchExperience(id, language)
-      .then((item) => { if (active) { setExperience(item); setContentError(false); } })
-      .catch(() => { if (active) setContentError(true); })
-      .finally(() => { if (active) setLoadedId(`${id}:${language}`); });
-    return () => { active = false; };
-  }, [id, language, scheduleRevision]);
+    const version = ++detailRequestVersion.current;
+    const isCurrent = () => active && detailRequestVersion.current === version;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    let attempts = 0;
+    const load = () => {
+      if (!isCurrent()) return;
+      attempts += 1;
+      fetchExperience(id, language, token)
+        .then((item) => {
+          if (isCurrent()) { setExperience(item); setLoadedPrivacyScope(privacyScope); setContentError(false); }
+        })
+        .catch(() => {
+          if (!isCurrent()) return;
+          // Recover transient failures immediately after membership activation.
+          if (user?.is_premium && attempts < 2) retry = setTimeout(load, 1000);
+          else setContentError(true);
+        })
+        .finally(() => { if (isCurrent()) setLoadedId(`${id}:${language}`); });
+    };
+    load();
+    return () => { active = false; clearTimeout(retry); };
+  }, [id, language, scheduleRevision, token, user?.is_premium, privacyScope]);
 
   if (loading) {
     return <SafeAreaView style={styles.container}><View style={styles.emptyState}><Text style={styles.emptyTitle}>{ui("Actualizando contenido…")}</Text></View></SafeAreaView>;
@@ -95,16 +123,50 @@ export default function ExperienceDetailScreen() {
   const disclosure = requiresPremium ? partnerDisclosure(experience.partnerOffer, isPaidEvent || (benefitAction === 'external' && Boolean(experience.benefitUrl))) : null;
   const scheduledQr = !isPaidEvent && benefitAction === 'qr' && (schedule.phase === 'scheduled' || schedule.phase === 'checking');
   const couponUnavailable = benefitAction === 'qr' && (schedule.blocked || qrUnavailable(experience.couponStatus, Boolean(hasReservation)));
-  const hasBenefitAction = requiresPremium && !isLocked && !couponUnavailable && (benefitAction === 'qr' || (benefitAction === 'external' && Boolean(experience.benefitUrl)));
+  // A confirmed premium member can retry fetching their private link even if
+  // the public snapshot has no URL yet. The server still authorizes every open.
+  const canRefreshPrivateLink = Boolean(experience.privateBenefitRequired && token);
+  const hasBenefitAction = requiresPremium && !isLocked && !couponUnavailable && (benefitAction === 'qr' || (benefitAction === 'external' && (Boolean(experience.benefitUrl) || canRefreshPrivateLink)));
   const benefitCta = ui(experience.benefitCta?.trim() || '') || ui('OBTENER BENEFICIO');
   const isCtaEnabled = !scheduledQr && (isPaidEvent || isLocked || hasBenefitAction);
   const photos = Array.from(new Set([experience.image, ...(experience.images ?? [])].filter(Boolean)));
 
   async function handleCta() {
-    if (!isCtaEnabled || benefitLoading) return;
-    if (isPaidEvent && experience?.ticketUrl) return void WebBrowser.openBrowserAsync(experience.ticketUrl);
+    if (!isCtaEnabled || benefitLoading || externalLinkOpening.current) return;
+    if (isPaidEvent || (!isLocked && benefitAction === 'external' && (experience?.benefitUrl || canRefreshPrivateLink))) {
+      externalLinkOpening.current = true;
+      setBenefitLoading(true);
+      setBenefitError('');
+      try {
+        await openExperienceLink(async (signal) => {
+          if (experience?.privateBenefitRequired) {
+            // Preserve the fresh signed link and the existing membership check.
+            if (!id || !token || isLocked) throw new Error('Membership unavailable');
+            // A background response must not overwrite this newer validation.
+            detailRequestVersion.current += 1;
+            const fresh = await fetchExperience(id, language, token, signal);
+            if (signal.aborted || currentPrivacyScope.current !== privacyScope) return null;
+            setExperience(fresh);
+            setLoadedPrivacyScope(privacyScope);
+            setContentError(false);
+            const destination = fresh?.isPaidEvent && fresh.ticketUrl ? fresh.ticketUrl : fresh?.benefitUrl;
+            if (!fresh?.privateBenefitCode || !destination) {
+              setBenefitError(ui('No se pudo verificar tu membresía. Inicia sesión nuevamente.'));
+              return null;
+            }
+            return destination;
+          }
+          return isPaidEvent ? experience?.ticketUrl || null : experience?.benefitUrl || null;
+        }, () => currentPrivacyScope.current === privacyScope);
+      } catch {
+        if (currentPrivacyScope.current === privacyScope) setBenefitError(ui('No pudimos abrir el enlace. Revisa tu conexión e inténtalo de nuevo.'));
+      } finally {
+        externalLinkOpening.current = false;
+        setBenefitLoading(false);
+      }
+      return;
+    }
     if (isLocked) return router.push('/club-form');
-    if (benefitAction === 'external' && experience?.benefitUrl) return void WebBrowser.openBrowserAsync(experience.benefitUrl);
     if (benefitAction === 'qr' && experience && token) {
       setBenefitLoading(true);
       setBenefitError('');
@@ -191,6 +253,7 @@ export default function ExperienceDetailScreen() {
               <Text style={styles.benefitLabel}>{ui("BENEFICIO ITC CLUB")}</Text>
             </View>
             <Text style={styles.benefitTitle}>{experience.memberBenefit}</Text>
+            {user?.is_premium && experience.privateBenefitCode ? <Text style={styles.benefitTitle}>{ui('Código de descuento')}: {experience.privateBenefitCode}</Text> : null}
             {!!experience.memberBenefitDetails && <ExpandableText text={experience.memberBenefitDetails} style={styles.benefitDetails} showChevron={false} />}
           </View>
         )}

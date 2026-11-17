@@ -1,3 +1,4 @@
+import { publicSavedExperience } from '../lib/privateBenefits';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveAccountLocalItem } from '../lib/accountLocalData';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
@@ -8,7 +9,7 @@ import type { Experience } from '../constants/experiences';
 import type { NewsCard } from '../lib/news';
 
 export type SavedItem = { key: string; id: string; kind: 'experience' | 'plan'; canSave?: boolean; title: string; image: string | null; experience?: Experience; plan?: NewsCard };
-export const savedExperience = (item: Experience): SavedItem => ({ key: `experience:${item.id}`, id: item.id, kind: 'experience', canSave: !['ny_al_dia', 'ny-al-dia'].includes(item.section || ''), title: item.title, image: item.image, experience: item });
+export const savedExperience = (item: Experience): SavedItem => ({ key: `experience:${item.id}`, id: item.id, kind: 'experience', canSave: !['ny_al_dia', 'ny-al-dia'].includes(item.section || ''), title: item.title, image: item.image, experience: publicSavedExperience(item) });
 export const savedPlan = (item: NewsCard): SavedItem => ({ key: `plan:${item.id}`, id: String(item.id), kind: 'plan', title: item.title, image: item.image, plan: { id: item.id, title: item.title, excerpt: item.excerpt, image: item.image, date: item.date, link: item.link } });
 const Context = createContext<{ items: SavedItem[]; ready: boolean; toggle: (item: SavedItem) => Promise<void> }>({ items: [], ready: false, toggle: async () => {} });
 
@@ -27,8 +28,11 @@ export function SavedProvider({ children }: { children: ReactNode }) {
       const parsed: SavedItem[] = raw ? JSON.parse(raw) : [];
       if (!Array.isArray(parsed)) throw new Error('Invalid saved items');
       if (active) {
-        current.current = { key: storageKey, items: parsed.filter(item => item && ['experience', 'plan'].includes(item.kind) && item.canSave !== false && item.id !== 'nyc-local-guides'), ready: true };
+        current.current = { key: storageKey, items: parsed.map(item => item?.experience ? { ...item, experience: publicSavedExperience(item.experience) } : item).filter(item => item && ['experience', 'plan'].includes(item.kind) && item.canSave !== false && item.id !== 'nyc-local-guides'), ready: true };
         setState(current.current);
+        queue.current = queue.current.then(async () => {
+          if (active && current.current.key === storageKey) await saveAccountLocalItem(storageKey, JSON.stringify(current.current.items));
+        }).catch(() => {});
       }
     }).catch(() => { if (active) Alert.alert(ui('Guardados'), ui('No se pudieron cargar tus guardados.')); });
     return () => { active = false; };

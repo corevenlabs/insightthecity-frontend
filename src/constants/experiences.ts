@@ -31,6 +31,8 @@ export type Experience = {
   memberBenefitDetails?: string | null;
   benefitAction?: BenefitAction;
   benefitUrl?: string | null;
+  privateBenefitRequired?: boolean;
+  privateBenefitCode?: string | null;
   benefitCta?: string | null;
   benefitInstructions?: string | null;
   couponInventoryMode?: 'limited' | 'unlimited';

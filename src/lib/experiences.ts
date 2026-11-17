@@ -14,9 +14,10 @@ export async function fetchExperiences(section?: string, language: AppLanguage =
   return response.json() as Promise<Experience[]>;
 }
 
-export async function fetchExperience(id: string, language: AppLanguage = 'es'): Promise<Experience> {
+export async function fetchExperience(id: string, language: AppLanguage = 'es', token?: string | null, signal?: AbortSignal): Promise<Experience> {
   const response = await fetch(`${API_URL}/api/experiences/${encodeURIComponent(id)}?lang=${language}&_fresh=${Date.now()}`, {
-    headers: { 'Cache-Control': 'no-cache' },
+    ...(signal ? { signal } : {}),
+    headers: { 'Cache-Control': 'no-cache', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
   });
   if (!response.ok) throw new Error('Contenido no disponible.');
   const item = await response.json() as Experience;

@@ -2,6 +2,9 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Código de descuento": { en: "Discount code", pt: "Código de desconto" },
+  "No pudimos abrir el enlace. Revisa tu conexión e inténtalo de nuevo.": { en: "We couldn't open the link. Check your connection and try again.", pt: "Não foi possível abrir o link. Verifique sua conexão e tente novamente." },
+  "No se pudo verificar tu membresía. Inicia sesión nuevamente.": { en: "We could not verify your membership. Please sign in again.", pt: "Não foi possível verificar sua assinatura. Entre novamente." },
   "Pausar galería": { en: "Pause gallery", pt: "Pausar galeria" },
   "Reanudar galería": { en: "Resume gallery", pt: "Retomar galeria" },
   "Vista previa de tu foto": { en: "Your photo preview", pt: "Prévia da sua foto" },
