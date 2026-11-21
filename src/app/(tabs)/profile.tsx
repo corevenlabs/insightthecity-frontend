@@ -18,7 +18,7 @@ import { useLanguage, type AppLanguage } from '../../context/LanguageContext';
 import type { LegalSlug } from '../../lib/legal';
 import { revokeAiConsent } from '../../lib/aiConsent';
 import { createBillingPortal, formatDate, formatMoney, openStripePage } from '../../lib/payments';
-import { enablePushNotifications, openNotificationSettings, pushPermission, setAccountNotices, type PushPermission } from '../../lib/pushNotifications';
+import { enablePushNotifications, openNotificationSettings, pushPermission, setAccountNotices, setPromotionNotices, type PushPermission } from '../../lib/pushNotifications';
 
 const GOLD = '#FDDD56';
 const BLACK = '#0A0A0A';
@@ -75,10 +75,10 @@ export default function ProfileScreen() {
     try { setPermission(await enablePushNotifications(token, language)); }
     finally { setNoticesBusy(false); }
   };
-  const toggleAccountNotices = async (enabled: boolean) => {
+  const toggleNotices = async (kind: 'account' | 'promotions', enabled: boolean) => {
     if (!token || noticesBusy) return;
     setNoticesBusy(true); setNoticesError('');
-    try { await setAccountNotices(token, enabled); await refreshUser(); }
+    try { await (kind === 'account' ? setAccountNotices : setPromotionNotices)(token, enabled); await refreshUser(); }
     catch { setNoticesError(ui('No se pudo guardar tu preferencia. Inténtalo de nuevo.')); }
     finally { setNoticesBusy(false); }
   };
@@ -193,6 +193,7 @@ export default function ProfileScreen() {
       {permission !== 'unsupported' && <View style={styles.card}>
         <Text style={styles.sectionTitle}>{ui('Notificaciones')}</Text>
         {row('notifications-outline', ui('Avisos de cuenta y membresía'), permission !== 'granted' || user.notification_preferences?.account === false ? ui('Desactivadas') : ui('Activadas'), () => { setNoticesError(''); setNoticesOpen(true); })}
+        {row('megaphone-outline', ui('Novedades y promociones'), permission === 'granted' && user.notification_preferences?.promotions === true ? ui('Activadas') : ui('Desactivadas'), () => { setNoticesError(''); setNoticesOpen(true); })}
       </View>}
       <View style={[styles.card, styles.membershipCard]}>
         <View style={styles.membershipHeading}><Text style={styles.sectionTitle}>{c.membership}</Text><Text style={styles.status}>{trial ? trialCopy.status : user.is_premium && user.subscription_cancel_at_period_end ? ui('Renovación cancelada') : user.is_premium ? c.active : t('profile.free')}</Text></View>
@@ -240,12 +241,18 @@ export default function ProfileScreen() {
       <Modal visible={noticesOpen} transparent animationType="fade" onRequestClose={() => { if (!noticesBusy) setNoticesOpen(false); }}>
         <View style={styles.modalBackdrop}><View style={styles.helpCard}>
           <Text style={styles.sectionTitle}>{ui('Notificaciones')}</Text>
-          <Text style={styles.helpText}>{ui('Te avisamos cuando se activa tu membresía, si un pago no se pudo cobrar o si tu membresía termina. No enviamos publicidad por notificación.')}</Text>
+          <Text style={styles.helpText}>{ui('Elige qué notificaciones quieres recibir. Puedes cambiarlo cuando quieras.')}</Text>
           {permission === 'granted' ? (
-            <View style={styles.noticeSwitchRow}>
-              <Text style={styles.noticeSwitchLabel}>{ui('Avisos de cuenta y membresía')}</Text>
-              <Switch value={user.notification_preferences?.account !== false} disabled={noticesBusy} onValueChange={(value) => void toggleAccountNotices(value)} trackColor={{ true: GOLD, false: '#444' }} thumbColor="#FFF" accessibilityLabel={ui('Avisos de cuenta y membresía')} />
-            </View>
+            <>
+              <View style={styles.noticeSwitchRow}>
+                <View style={styles.noticeSwitchText}><Text style={styles.noticeSwitchLabel}>{ui('Avisos de cuenta y membresía')}</Text><Text style={styles.noticeSwitchHint}>{ui('Activación, pagos no cobrados y fin de tu membresía.')}</Text></View>
+                <Switch value={user.notification_preferences?.account !== false} disabled={noticesBusy} onValueChange={(value) => void toggleNotices('account', value)} trackColor={{ true: GOLD, false: '#444' }} thumbColor="#FFF" accessibilityLabel={ui('Avisos de cuenta y membresía')} />
+              </View>
+              <View style={styles.noticeSwitchRow}>
+                <View style={styles.noticeSwitchText}><Text style={styles.noticeSwitchLabel}>{ui('Novedades y promociones')}</Text><Text style={styles.noticeSwitchHint}>{ui('Nuevas experiencias, beneficios y planes del Club. Como máximo una cada 12 horas.')}</Text></View>
+                <Switch value={user.notification_preferences?.promotions === true} disabled={noticesBusy} onValueChange={(value) => void toggleNotices('promotions', value)} trackColor={{ true: GOLD, false: '#444' }} thumbColor="#FFF" accessibilityLabel={ui('Novedades y promociones')} />
+              </View>
+            </>
           ) : (
             <>
               {permission === 'denied' && <Text style={styles.helpText}>{ui('Las notificaciones están desactivadas en los ajustes de tu teléfono.')}</Text>}
@@ -357,7 +364,9 @@ const styles = StyleSheet.create({
   photoButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
   photoHint: { color: '#A6A6A6', fontSize: 12, textAlign: 'center', marginBottom: 12 },
   noticeSwitchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 48, marginBottom: 8 },
-  noticeSwitchLabel: { color: '#FFF', fontSize: 15, flexShrink: 1 },
+  noticeSwitchLabel: { color: '#FFF', fontSize: 15 },
+  noticeSwitchText: { flexShrink: 1, gap: 3 },
+  noticeSwitchHint: { color: '#A6A6A6', fontSize: 13, lineHeight: 18 },
   error: { color: '#FF8080', marginTop: 16 }, modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: 24 },
   helpCard: { width: '100%', maxWidth: 560, alignSelf: 'center', backgroundColor: '#1A1A1A', borderRadius: 20, padding: 24 }, helpText: { color: '#CCC', lineHeight: 23, marginBottom: 24 },
 

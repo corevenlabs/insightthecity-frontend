@@ -11,8 +11,11 @@ export type PushPermission = 'unsupported' | 'granted' | 'undetermined' | 'denie
 
 // Android notification channel for account and membership notices (must match the backend's channelId).
 export const ACCOUNT_CHANNEL = 'account';
+// Android channel for news and promotions sent from the panel (separate opt-in).
+export const PROMOTIONS_CHANNEL = 'promotions';
 const STORED_TOKEN_KEY = 'itc_push_token';
 const CHANNEL_NAMES: Record<AppLanguage, string> = { es: 'Cuenta y membresía', en: 'Account and membership', pt: 'Conta e assinatura' };
+const PROMOTIONS_CHANNEL_NAMES: Record<AppLanguage, string> = { es: 'Novedades y promociones', en: 'News and promotions', pt: 'Novidades e promoções' };
 // Only in-app routes the backend sends; anything else is ignored.
 const ALLOWED_ROUTE = /^\/(club|profile|home|experience-detail|news-detail)(\?[A-Za-z0-9_=&%.-]*)?$/;
 
@@ -74,6 +77,10 @@ async function ensureChannel(Notifications: NotificationsModule, language: AppLa
     name: CHANNEL_NAMES[language] ?? CHANNEL_NAMES.es,
     importance: Notifications.AndroidImportance.HIGH,
   });
+  await Notifications.setNotificationChannelAsync(PROMOTIONS_CHANNEL, {
+    name: PROMOTIONS_CHANNEL_NAMES[language] ?? PROMOTIONS_CHANNEL_NAMES.es,
+    importance: Notifications.AndroidImportance.DEFAULT,
+  });
 }
 
 // Registers this device for the signed-in account. Never prompts; returns false when it could not register.
@@ -123,6 +130,22 @@ export async function unregisterPushToken(authToken: string | null): Promise<voi
 
 export async function setAccountNotices(authToken: string, enabled: boolean): Promise<void> {
   await request('/api/users/me/notification-preferences', 'PATCH', authToken, { account: enabled });
+}
+
+// News and promotions are off until the person turns them on (Apple guideline 4.5.4).
+export async function setPromotionNotices(authToken: string, enabled: boolean): Promise<void> {
+  await request('/api/users/me/notification-preferences', 'PATCH', authToken, { promotions: enabled });
+}
+
+// Campaign id carried by a panel notification, or null.
+export function notificationCampaign(value: unknown): number | null {
+  const id = typeof value === 'number' ? value : typeof value === 'string' && /^\d{1,9}$/.test(value) ? Number(value) : NaN;
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+// Lets the panel count opens. Best effort.
+export async function recordPushOpen(authToken: string, campaign: number): Promise<void> {
+  await request('/api/users/me/push-opens', 'POST', authToken, { campaign }).catch(() => undefined);
 }
 
 export function openNotificationSettings() {
