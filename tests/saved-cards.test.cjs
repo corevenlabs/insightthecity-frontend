@@ -23,7 +23,7 @@ test('Saved plans include their image, preview and date plus a remove bookmark',
  const h=setup();h.items([{key:'plan:9',id:'9',kind:'plan',title:'Old plan',image:'old.jpg'}]);h.render();await settle();const nodes=h.render();assert.ok(nodes.some(n=>n.type==='Text'&&n.children.includes('A short preview')));assert.ok(nodes.some(n=>n.type==='Text'&&n.children.includes('2026-10-29')));assert.ok(nodes.some(n=>n.type==='SaveButton'&&n.props.item.key==='plan:9'));
 });
 test('Saving keeps a complete experience preview but does not persist full article HTML',()=>{
- const React={createContext:()=>({})};const m=load('src/context/SavedContext.tsx',{react:React,'../lib/privateBenefits':load('src/lib/privateBenefits.ts',{},React),'@react-native-async-storage/async-storage':{},'../lib/accountLocalData':{},'react-native':{},'./LanguageContext':{},'./AuthContext':{}},React);
+ const React={createContext:()=>({})};const m=load('src/context/SavedContext.tsx',{react:React,'../lib/privateBenefits':load('src/lib/privateBenefits.ts',{},React),'@react-native-async-storage/async-storage':{},'../lib/accountLocalData':{},'react-native':{},'./LanguageContext':{},'./AuthContext':{},'../lib/pushNotifications':{}},React);
  const exp={id:'a',title:'A',image:'a.jpg',cardDescription:'Summary',cardBenefit:'15% OFF'};assert.deepEqual(m.savedExperience(exp).experience,exp);
  const plan=m.savedPlan({id:1,title:'Plan',excerpt:'Preview',image:'p.jpg',date:'2026-10-29',link:'url',contentHtml:'Long article'});assert.equal(plan.plan.excerpt,'Preview');assert.equal(plan.plan.contentHtml,undefined);
 });

@@ -1,6 +1,7 @@
 import { publicSavedExperience } from '../lib/privateBenefits';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveAccountLocalItem } from '../lib/accountLocalData';
+import { syncSavedExperiences } from '../lib/pushNotifications';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Alert } from 'react-native';
 import { useLanguage } from './LanguageContext';
@@ -14,7 +15,7 @@ export const savedPlan = (item: NewsCard): SavedItem => ({ key: `plan:${item.id}
 const Context = createContext<{ items: SavedItem[]; ready: boolean; toggle: (item: SavedItem) => Promise<void> }>({ items: [], ready: false, toggle: async () => {} });
 
 export function SavedProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { ui } = useLanguage();
   const storageKey = `itc:saved:${user?.id ?? 'guest'}`;
   const [state, setState] = useState<{ key: string; items: SavedItem[]; ready: boolean }>({ key: '', items: [], ready: false });
@@ -37,6 +38,21 @@ export function SavedProvider({ children }: { children: ReactNode }) {
     }).catch(() => { if (active) Alert.alert(ui('Guardados'), ui('No se pudieron cargar tus guardados.')); });
     return () => { active = false; };
   }, [storageKey, ui]);
+  // Keep the server copy (used for reminders) in step with this account's saved experiences.
+  const savedIds = state.key === storageKey && state.ready && user
+    ? state.items.filter((item) => item.kind === 'experience').map((item) => item.id).sort().join('|') : null;
+  const lastSynced = useRef<string | null>(null);
+  useEffect(() => {
+    if (savedIds === null || !token) return;
+    const signature = `${storageKey}:${savedIds}`;
+    if (lastSynced.current === signature) return;
+    const timer = setTimeout(() => {
+      syncSavedExperiences(token, savedIds ? savedIds.split('|') : [])
+        .then(() => { lastSynced.current = signature; })
+        .catch(() => undefined);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [savedIds, storageKey, token]);
   const toggle = (item: SavedItem) => {
     queue.current = queue.current.then(async () => {
       if (item.canSave === false || !current.current.ready || current.current.key !== storageKey) return;
