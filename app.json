@@ -25,6 +25,7 @@
     },
     "android": {
       "package": "com.insightthecity.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#050505",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

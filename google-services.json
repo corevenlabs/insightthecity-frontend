@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "734580894299",
+    "project_id": "itc-club-push-5027",
+    "storage_bucket": "itc-club-push-5027.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:734580894299:android:2c31c563687d0c3feb6d7e",
+        "android_client_info": {
+          "package_name": "com.insightthecity.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBf06Jq68MI3v5viTsDX-2hgkjR7c2gtUg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
