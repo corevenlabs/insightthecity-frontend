@@ -17,6 +17,7 @@ import {
 import { AppState, Platform } from 'react-native';
 
 import { API_URL } from '../constants/api';
+import { unregisterPushToken } from '../lib/pushNotifications';
 import type { AppLanguage } from './LanguageContext';
 
 export type DeletionVerification = {google:true;identityToken?:string} |{challenge:string;code:string} | {apple:true;identityToken?:string;nonce?:string};
@@ -44,6 +45,8 @@ export type User = {
   has_billing_account?: boolean;
   // Permiso vigente para que el chat envíe datos a OpenAI.
   ai_chat_consent?: boolean;
+  // Avisos push de cuenta y membresía (activados salvo que el usuario los apague).
+  notification_preferences?: { account: boolean };
 };
 
 type AuthContextValue = {
@@ -329,6 +332,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    // Este dispositivo deja de recibir los avisos de la cuenta que cierra sesión.
+    // No espera a la red: cerrar sesión debe ser inmediato aunque no haya conexión.
+    void unregisterPushToken(await readToken().catch(() => null));
     clearHomeEntrance();
     setHasSignedOut(true);
     profileRevision.current += 1;

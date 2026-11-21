@@ -14,6 +14,7 @@ import { RobotoCondensed_900Black } from '@expo-google-fonts/roboto-condensed';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { LanguageProvider, useLanguage } from '../context/LanguageContext';
 import { BiometricLockScreen } from '../components/BiometricLockScreen';
+import { PushNotificationsBridge } from '../components/PushNotificationsBridge';
 
 function ChatLauncher({ visible, animate }: { visible: boolean; animate: boolean }) {
   const router = useRouter();
@@ -209,6 +210,7 @@ export default function RootLayout() {
 
         <ChatLauncher visible={!hideChatButton} animate={pathname === '/home'} />
         <BiometricLockScreen />
+        <PushNotificationsBridge />
       </View></View>
       </SavedProvider></LanguageProvider>
     </AuthProvider>

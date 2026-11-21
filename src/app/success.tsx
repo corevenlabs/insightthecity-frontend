@@ -7,12 +7,13 @@ import { ActivityIndicator, Animated, ScrollView, StyleSheet, TouchableOpacity }
 
 import { useAuth } from '../context/AuthContext';
 import { confirmSubscription } from '../lib/payments';
+import { enablePushNotifications, pushPermission, type PushPermission } from '../lib/pushNotifications';
 
 type Status = 'confirming' | 'active' | 'pending';
 
 // El premium solo se activa cuando el backend verifica la sesión de pago con Stripe.
 export default function SuccessScreen() {
-  const { ui } = useLanguage();
+  const { ui, language } = useLanguage();
   const { token, applyServerUser, refreshUser } = useAuth();
   const params = useLocalSearchParams<{ session_id?: string }>();
   const sessionId = Array.isArray(params.session_id) ? params.session_id[0] : params.session_id;
@@ -20,6 +21,17 @@ export default function SuccessScreen() {
   const [scaleAnim] = useState(() => new Animated.Value(0));
   const [fadeAnim] = useState(() => new Animated.Value(0));
   const started = useRef(false);
+  const [permission, setPermission] = useState<PushPermission>('unsupported');
+  const [askingPermission, setAskingPermission] = useState(false);
+
+  useEffect(() => { void pushPermission().then(setPermission); }, []);
+  // Contextual opt-in: the member just paid, so membership notices are clearly useful now.
+  const enableNotices = async () => {
+    if (askingPermission) return;
+    setAskingPermission(true);
+    try { setPermission(await enablePushNotifications(token, language)); }
+    finally { setAskingPermission(false); }
+  };
 
   useEffect(() => {
     if (started.current || !token) return;
@@ -88,6 +100,12 @@ export default function SuccessScreen() {
         >
           <Text style={styles.buttonText}>{active ? ui('VER CONTENIDO ITC CLUB') : ui('IR A MI PERFIL')}</Text>
         </TouchableOpacity>
+        {active && permission === 'undetermined' && (
+          <TouchableOpacity style={styles.secondaryButton} onPress={() => void enableNotices()} disabled={askingPermission} accessibilityRole="button" accessibilityState={{ busy: askingPermission }}>
+            {askingPermission ? <ActivityIndicator color="#FDDD56" /> : <Text style={styles.secondaryText}>{ui('AVISARME SOBRE MI MEMBRESÍA')}</Text>}
+          </TouchableOpacity>
+        )}
+        {active && permission === 'granted' && <Text style={styles.notice}>{ui('Te avisaremos si hay cambios en tu membresía.')}</Text>}
       </Animated.View>
     </ScrollView>
   );
@@ -101,4 +119,7 @@ const styles = StyleSheet.create({
   buttonContainer: { width: '100%' },
   button: { minHeight: 54, backgroundColor: '#FDDD56', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   buttonText: { color: '#000', fontWeight: '700', fontSize: 15 },
+  secondaryButton: { minHeight: 54, marginTop: 14, borderWidth: 1, borderColor: '#FDDD56', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  secondaryText: { color: '#FDDD56', fontWeight: '700', fontSize: 15 },
+  notice: { color: '#C4C4C4', fontSize: 14, textAlign: 'center', marginTop: 16 },
 });

@@ -2,6 +2,17 @@
 export type AppLanguage = 'es' | 'en' | 'pt';
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = { es: 'Español', en: 'English', pt: 'Português' };
 export const UI_TRANSLATIONS = {
+  "Notificaciones": { en: "Notifications", pt: "Notificações" },
+  "Avisos de cuenta y membresía": { en: "Account and membership notices", pt: "Avisos de conta e assinatura" },
+  "Activadas": { en: "On", pt: "Ativadas" },
+  "Desactivadas": { en: "Off", pt: "Desativadas" },
+  "Te avisamos cuando se activa tu membresía, si un pago no se pudo cobrar o si tu membresía termina. No enviamos publicidad por notificación.": { en: "We let you know when your membership is activated, if a payment could not be charged or if your membership ends. We do not send advertising by notification.", pt: "Avisamos quando sua assinatura é ativada, se um pagamento não pôde ser cobrado ou se sua assinatura termina. Não enviamos publicidade por notificação." },
+  "Las notificaciones están desactivadas en los ajustes de tu teléfono.": { en: "Notifications are turned off in your phone settings.", pt: "As notificações estão desativadas nos ajustes do seu telefone." },
+  "ABRIR AJUSTES": { en: "OPEN SETTINGS", pt: "ABRIR AJUSTES" },
+  "ACTIVAR NOTIFICACIONES": { en: "TURN ON NOTIFICATIONS", pt: "ATIVAR NOTIFICAÇÕES" },
+  "No se pudo guardar tu preferencia. Inténtalo de nuevo.": { en: "Your preference could not be saved. Please try again.", pt: "Não foi possível salvar sua preferência. Tente novamente." },
+  "AVISARME SOBRE MI MEMBRESÍA": { en: "NOTIFY ME ABOUT MY MEMBERSHIP", pt: "AVISAR-ME SOBRE MINHA ASSINATURA" },
+  "Te avisaremos si hay cambios en tu membresía.": { en: "We will let you know about any changes to your membership.", pt: "Avisaremos você sobre qualquer mudança na sua assinatura." },
   "Código de descuento": { en: "Discount code", pt: "Código de desconto" },
   "No pudimos abrir el enlace. Revisa tu conexión e inténtalo de nuevo.": { en: "We couldn't open the link. Check your connection and try again.", pt: "Não foi possível abrir o link. Verifique sua conexão e tente novamente." },
   "No se pudo verificar tu membresía. Inicia sesión nuevamente.": { en: "We could not verify your membership. Please sign in again.", pt: "Não foi possível verificar sua assinatura. Entre novamente." },
