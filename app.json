@@ -82,6 +82,14 @@
         }
       ],
       "expo-video",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#FDDD56",
+          "defaultChannel": "account"
+        }
+      ],
       "expo-apple-authentication",
       [
         "@react-native-google-signin/google-signin",

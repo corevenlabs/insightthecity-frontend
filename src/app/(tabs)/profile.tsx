@@ -11,13 +11,14 @@ import { requireOptionalNativeModule } from 'expo';
 import type { ImagePickerAsset } from 'expo-image-picker';
 import { Redirect, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, type AppLanguage } from '../../context/LanguageContext';
 import type { LegalSlug } from '../../lib/legal';
 import { revokeAiConsent } from '../../lib/aiConsent';
 import { createBillingPortal, formatDate, formatMoney, openStripePage } from '../../lib/payments';
+import { enablePushNotifications, openNotificationSettings, pushPermission, setAccountNotices, type PushPermission } from '../../lib/pushNotifications';
 
 const GOLD = '#FDDD56';
 const BLACK = '#0A0A0A';
@@ -56,12 +57,31 @@ export default function ProfileScreen() {
   const [area, setArea] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState<AppLanguage>('es');
   const [interests, setInterests] = useState<string[]>([]);
+  const [noticesOpen, setNoticesOpen] = useState(false);
+  const [noticesBusy, setNoticesBusy] = useState(false);
+  const [noticesError, setNoticesError] = useState('');
+  const [permission, setPermission] = useState<PushPermission>('unsupported');
   const openMembership = useCallback(async () => {
     setMembershipDetails(true); setMembershipLoading(true); setMembershipLoadError(false);
     try { const current = await refreshUser(); if (!current) setMembershipLoadError(true); }
     catch { setMembershipLoadError(true); }
     finally { setMembershipLoading(false); }
   }, [refreshUser]);
+  useFocusEffect(useCallback(() => { void pushPermission().then(setPermission); }, []));
+  const enableNotices = async () => {
+    if (noticesBusy) return;
+    if (permission === 'denied') return openNotificationSettings();
+    setNoticesBusy(true); setNoticesError('');
+    try { setPermission(await enablePushNotifications(token, language)); }
+    finally { setNoticesBusy(false); }
+  };
+  const toggleAccountNotices = async (enabled: boolean) => {
+    if (!token || noticesBusy) return;
+    setNoticesBusy(true); setNoticesError('');
+    try { await setAccountNotices(token, enabled); await refreshUser(); }
+    catch { setNoticesError(ui('No se pudo guardar tu preferencia. Inténtalo de nuevo.')); }
+    finally { setNoticesBusy(false); }
+  };
   useFocusEffect(useCallback(() => {
     if (membership === '1' && isAuthenticated) {
       router.setParams({ membership: undefined });
@@ -170,6 +190,10 @@ export default function ProfileScreen() {
           <View style={styles.tags}>{user.interests?.length ? user.interests.map((item) => <View style={styles.tag} key={item}><Text style={styles.tagText}>{tagLabel(item)}</Text></View>) : <Text style={styles.rowValue}>{c.empty}</Text>}</View>
         </Pressable>
       </View>
+      {permission !== 'unsupported' && <View style={styles.card}>
+        <Text style={styles.sectionTitle}>{ui('Notificaciones')}</Text>
+        {row('notifications-outline', ui('Avisos de cuenta y membresía'), permission !== 'granted' || user.notification_preferences?.account === false ? ui('Desactivadas') : ui('Activadas'), () => { setNoticesError(''); setNoticesOpen(true); })}
+      </View>}
       <View style={[styles.card, styles.membershipCard]}>
         <View style={styles.membershipHeading}><Text style={styles.sectionTitle}>{c.membership}</Text><Text style={styles.status}>{trial ? trialCopy.status : user.is_premium && user.subscription_cancel_at_period_end ? ui('Renovación cancelada') : user.is_premium ? c.active : t('profile.free')}</Text></View>
         {user.is_premium ? <ClubLogo width={108} header /> : <Text style={styles.planTitle}>{t('profile.freeAccount')}</Text>}
@@ -212,6 +236,27 @@ export default function ProfileScreen() {
             <Pressable disabled={saving || photoBusy || !name.trim()} accessibilityRole="button" onPress={save} style={[styles.primaryButton, { marginTop: 24, opacity: saving || photoBusy || !name.trim() ? 0.5 : 1 }]}><Text style={styles.primaryText}>{saving ? c.saving : c.save}</Text></Pressable>
           </ScrollView>
         </KeyboardAvoidingView></SafeAreaView></SafeAreaProvider>
+      </Modal>
+      <Modal visible={noticesOpen} transparent animationType="fade" onRequestClose={() => { if (!noticesBusy) setNoticesOpen(false); }}>
+        <View style={styles.modalBackdrop}><View style={styles.helpCard}>
+          <Text style={styles.sectionTitle}>{ui('Notificaciones')}</Text>
+          <Text style={styles.helpText}>{ui('Te avisamos cuando se activa tu membresía, si un pago no se pudo cobrar o si tu membresía termina. No enviamos publicidad por notificación.')}</Text>
+          {permission === 'granted' ? (
+            <View style={styles.noticeSwitchRow}>
+              <Text style={styles.noticeSwitchLabel}>{ui('Avisos de cuenta y membresía')}</Text>
+              <Switch value={user.notification_preferences?.account !== false} disabled={noticesBusy} onValueChange={(value) => void toggleAccountNotices(value)} trackColor={{ true: GOLD, false: '#444' }} thumbColor="#FFF" accessibilityLabel={ui('Avisos de cuenta y membresía')} />
+            </View>
+          ) : (
+            <>
+              {permission === 'denied' && <Text style={styles.helpText}>{ui('Las notificaciones están desactivadas en los ajustes de tu teléfono.')}</Text>}
+              <Pressable accessibilityRole="button" accessibilityState={{ busy: noticesBusy }} disabled={noticesBusy} style={styles.primaryButton} onPress={() => void enableNotices()}>
+                {noticesBusy ? <ActivityIndicator color={BLACK} /> : <Text style={styles.primaryText}>{permission === 'denied' ? ui('ABRIR AJUSTES') : ui('ACTIVAR NOTIFICACIONES')}</Text>}
+              </Pressable>
+            </>
+          )}
+          {!!noticesError && <Text style={styles.error} accessibilityRole="alert">{noticesError}</Text>}
+          <Pressable accessibilityRole="button" disabled={noticesBusy} style={styles.photoButton} onPress={() => setNoticesOpen(false)}><Text style={styles.secondaryText}>{ui('Cerrar')}</Text></Pressable>
+        </View></View>
       </Modal>
       <Modal visible={aiConsentOpen} transparent animationType="fade" onRequestClose={() => { if (!aiConsentBusy) setAiConsentOpen(false); }}>
         <View style={styles.modalBackdrop}><View style={styles.helpCard}>
@@ -311,6 +356,8 @@ const styles = StyleSheet.create({
   form: { width: '100%', maxWidth: 680, alignSelf: 'center', padding: 20, paddingBottom: 40 }, input: { color: '#FFF', backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#333', borderRadius: 12, padding: 14, fontSize: 16, marginTop: 8, marginBottom: 12 },
   photoButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
   photoHint: { color: '#A6A6A6', fontSize: 12, textAlign: 'center', marginBottom: 12 },
+  noticeSwitchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 48, marginBottom: 8 },
+  noticeSwitchLabel: { color: '#FFF', fontSize: 15, flexShrink: 1 },
   error: { color: '#FF8080', marginTop: 16 }, modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: 24 },
   helpCard: { width: '100%', maxWidth: 560, alignSelf: 'center', backgroundColor: '#1A1A1A', borderRadius: 20, padding: 24 }, helpText: { color: '#CCC', lineHeight: 23, marginBottom: 24 },
 
