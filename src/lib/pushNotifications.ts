@@ -15,6 +15,7 @@ export const ACCOUNT_CHANNEL = 'account';
 export const PROMOTIONS_CHANNEL = 'promotions';
 const STORED_TOKEN_KEY = 'itc_push_token';
 const CHANNEL_NAMES: Record<AppLanguage, string> = { es: 'Cuenta y membresía', en: 'Account and membership', pt: 'Conta e assinatura' };
+const SAVED_CHANNEL_NAMES: Record<AppLanguage, string> = { es: 'Recordatorios de guardados', en: 'Saved reminders', pt: 'Lembretes de salvos' };
 const PROMOTIONS_CHANNEL_NAMES: Record<AppLanguage, string> = { es: 'Novedades y promociones', en: 'News and promotions', pt: 'Novidades e promoções' };
 // Only in-app routes the backend sends; anything else is ignored.
 const ALLOWED_ROUTE = /^\/(club|profile|home|experience-detail|news-detail)(\?[A-Za-z0-9_=&%.-]*)?$/;
@@ -77,6 +78,10 @@ async function ensureChannel(Notifications: NotificationsModule, language: AppLa
     name: CHANNEL_NAMES[language] ?? CHANNEL_NAMES.es,
     importance: Notifications.AndroidImportance.HIGH,
   });
+  await Notifications.setNotificationChannelAsync('saved', {
+    name: SAVED_CHANNEL_NAMES[language] ?? SAVED_CHANNEL_NAMES.es,
+    importance: Notifications.AndroidImportance.DEFAULT,
+  });
   await Notifications.setNotificationChannelAsync(PROMOTIONS_CHANNEL, {
     name: PROMOTIONS_CHANNEL_NAMES[language] ?? PROMOTIONS_CHANNEL_NAMES.es,
     importance: Notifications.AndroidImportance.DEFAULT,
@@ -133,6 +138,15 @@ export async function setAccountNotices(authToken: string, enabled: boolean): Pr
 }
 
 // News and promotions are off until the person turns them on (Apple guideline 4.5.4).
+export async function setSavedReminders(authToken: string, enabled: boolean): Promise<void> {
+  await request('/api/users/me/notification-preferences', 'PATCH', authToken, { saved: enabled });
+}
+
+// Mirrors the saved experiences on the server so it can send reminders. The device stays the source of truth.
+export async function syncSavedExperiences(authToken: string, ids: string[]): Promise<void> {
+  await request('/api/users/me/saved-experiences', 'PUT', authToken, { ids: [...new Set(ids)].slice(0, 300) });
+}
+
 export async function setPromotionNotices(authToken: string, enabled: boolean): Promise<void> {
   await request('/api/users/me/notification-preferences', 'PATCH', authToken, { promotions: enabled });
 }
