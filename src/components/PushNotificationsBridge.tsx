@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { notificationsModule, safeNotificationRoute, syncPushToken } from '../lib/pushNotifications';
+import { notificationCampaign, notificationsModule, recordPushOpen, safeNotificationRoute, syncPushToken } from '../lib/pushNotifications';
 
 const Notifications = notificationsModule();
 // Account notices are also shown while the app is open.
@@ -16,6 +16,7 @@ export function PushNotificationsBridge() {
   const { token, loading } = useAuth();
   const { language } = useLanguage();
   const [pendingRoute, setPendingRoute] = useState<string | null>(null);
+  const [pendingOpen, setPendingOpen] = useState<number | null>(null);
 
   useEffect(() => {
     if (token) void syncPushToken(token, language);
@@ -25,14 +26,24 @@ export function PushNotificationsBridge() {
     if (!Notifications) return;
     const take = (response: import('expo-notifications').NotificationResponse | null) => {
       if (!response || response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
-      const route = safeNotificationRoute(response.notification.request.content.data?.url);
+      const data = response.notification.request.content.data;
+      const route = safeNotificationRoute(data?.url);
       if (route) setPendingRoute(route);
+      const campaign = notificationCampaign(data?.campaign);
+      if (campaign) setPendingOpen(campaign);
     };
     // A tap that launched the app from a closed state.
     try { take(Notifications.getLastNotificationResponse()); Notifications.clearLastNotificationResponse(); } catch { /* not available */ }
     const subscription = Notifications.addNotificationResponseReceivedListener(take);
     return () => subscription.remove();
   }, []);
+
+  // Panel notifications report the tap once the session is available.
+  useEffect(() => {
+    if (!pendingOpen || !token) return;
+    setPendingOpen(null);
+    void recordPushOpen(token, pendingOpen);
+  }, [pendingOpen, token]);
 
   // Wait for the saved session to load so protected screens do not bounce to the welcome screen.
   useEffect(() => {
