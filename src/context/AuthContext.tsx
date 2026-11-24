@@ -46,7 +46,7 @@ export type User = {
   // Permiso vigente para que el chat envíe datos a OpenAI.
   ai_chat_consent?: boolean;
   // Avisos push de cuenta y membresía (activados salvo que el usuario los apague).
-  notification_preferences?: { account: boolean; promotions?: boolean; saved?: boolean };
+  notification_preferences?: { account: boolean; promotions?: boolean; saved?: boolean; savedSync?: boolean };
 };
 
 type AuthContextValue = {
