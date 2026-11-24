@@ -14,6 +14,8 @@ export interface NewsCard {
   image: string | null;
   date: string; // ISO
   link: string;
+  /** Se muestra en español porque la versión en el idioma elegido no está disponible. */
+  inSpanish?: boolean;
 }
 
 export interface NewsArticle extends NewsCard {
@@ -62,11 +64,16 @@ async function fetchNewsFromWordPress(section: string, page: number, perPage: nu
   };
 }
 
+// Sin esta opción, en inglés o portugués nunca se muestra el original en español.
+// Quien la active debe avisarlo en pantalla (inSpanish).
+interface FallbackOptions { spanishFallback?: boolean }
+
 export async function fetchNews(
   section: string,
   page = 1,
   perPage = PER_PAGE,
   language: AppLanguage = 'es',
+  options: FallbackOptions = {},
 ): Promise<NewsPage> {
   try {
     const res = await fetch(
@@ -79,23 +86,26 @@ export async function fetchNews(
       total: data.total ?? 0, totalPages: data.totalPages ?? 0,
     };
   } catch (error) {
-    if (language !== 'es') throw error;
-    return fetchNewsFromWordPress(section, page, perPage);
+    if (language !== 'es' && !options.spanishFallback) throw error;
+    const result = await fetchNewsFromWordPress(section, page, perPage);
+    return language === 'es' ? result : { ...result, items: result.items.map(item => ({ ...item, inSpanish: true })) };
   }
 }
 
-export async function fetchArticle(id: number | string, language: AppLanguage = 'es'): Promise<NewsArticle> {
+export async function fetchArticle(id: number | string, language: AppLanguage = 'es', options: FallbackOptions = {}): Promise<NewsArticle> {
   try {
     const res = await fetch(`${API_URL}/api/news/${encodeURIComponent(String(id))}?lang=${language}`);
     if (!res.ok) throw new Error('Backend de contenido no disponible.');
     const data = (await res.json()) as { success: boolean; article: NewsArticle };
+    // Una nota sin título ni texto es un fallo del origen, no contenido.
+    if (!data.article?.title && !data.article?.contentHtml) throw new Error('Nota vacía.');
     return data.article;
   } catch (error) {
-    if (language !== 'es') throw error;
+    if (language !== 'es' && !options.spanishFallback) throw error;
     const fallback = await fetch(`${WORDPRESS_API_URL}/posts/${encodeURIComponent(String(id))}?_embed=1`);
     if (!fallback.ok) throw new Error('No se pudo cargar la nota.');
     const post = await fallback.json();
-    return { ...wordpressCard(post), contentHtml: post.content?.rendered || '' };
+    return { ...wordpressCard(post), contentHtml: post.content?.rendered || '', ...(language === 'es' ? {} : { inSpanish: true }) };
   }
 }
 
@@ -145,7 +155,7 @@ export function useNewsFeed(section: string) {
         error: mode === 'initial' ? null : s.error,
       }));
       try {
-        const res = await fetchNews(section, page, PER_PAGE, language);
+        const res = await fetchNews(section, page, PER_PAGE, language, { spanishFallback: true });
         if (current !== generation.current) return;
         pageRef.current = res.page;
         totalPagesRef.current = res.totalPages;

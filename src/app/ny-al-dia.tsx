@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { NewsImage } from '../components/NewsImage';
+import { SpanishContentNotice } from '../components/SpanishContentNotice';
 import { formatDate, useNewsFeed, type NewsCard } from '../lib/news';
 
 export default function NyAlDiaScreen() {
@@ -41,6 +42,7 @@ export default function NyAlDiaScreen() {
 
       <Text style={styles.subtitle}>{ui("Noticias, alertas y lo más importante para estar al día en Nueva York.")}</Text>
 
+      <SpanishContentNotice visible={feed.items.some(item => item.inSpanish)} />
       {featured && (
         <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title} style={styles.mainCard} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
           <NewsImage

@@ -333,8 +333,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     // Este dispositivo deja de recibir los avisos de la cuenta que cierra sesión.
-    // No espera a la red: cerrar sesión debe ser inmediato aunque no haya conexión.
-    void unregisterPushToken(await readToken().catch(() => null));
+    // No espera a la red: cerrar sesión debe ser inmediato aunque no haya conexión (se reintenta después).
+    void unregisterPushToken();
     clearHomeEntrance();
     setHasSignedOut(true);
     profileRevision.current += 1;

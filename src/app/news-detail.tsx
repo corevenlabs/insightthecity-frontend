@@ -24,7 +24,7 @@ function buildHtml(article: NewsArticle, language: AppLanguage): string {
     : '';
   const date = formatDate(article.date, language);
   return `<!DOCTYPE html>
-<html lang="${language}">
+<html lang="${article.inSpanish ? 'es' : language}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
@@ -58,6 +58,7 @@ function buildHtml(article: NewsArticle, language: AppLanguage): string {
   .kicker { color: #FDDD56; font-size: 12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
   h1.title { color: #FFFFFF; font-size: 27px; line-height: 1.25; font-weight: 800; margin: 8px 0 6px; }
   .date { color: #8A8A8A; font-size: 13px; font-weight: 700; margin-bottom: 22px; }
+  .notice { color: #C7C7C7; font-size: 14px; line-height: 1.5; padding: 10px 14px; margin: 0 0 20px; background: #151515; border-left: 3px solid #FDDD56; border-radius: 8px; }
   .content img, .content video, .content iframe {
     max-width: 100% !important;
     height: auto;
@@ -147,6 +148,7 @@ function buildHtml(article: NewsArticle, language: AppLanguage): string {
   <div class="kicker">Insight The City</div>
   <h1 class="title">${escapeHtml(article.title)}</h1>
   ${date ? `<div class="date">${date}</div>` : ''}
+  ${article.inSpanish ? `<div class="notice" lang="${language}">${escapeHtml(translateUi(language, 'Por ahora este contenido solo está disponible en español.'))}</div>` : ''}
   <div class="content">${article.contentHtml}</div>
   <script>
     document.addEventListener('error', function (event) {
@@ -186,7 +188,7 @@ export default function NewsDetailScreen() {
 
   useEffect(() => {
     let alive = true;
-    fetchArticle(id, language)
+    fetchArticle(id, language, { spanishFallback: true })
       .then((a) => {
         if (alive) setLoaded({ id: `${id}:${language}`, article: a });
       })
