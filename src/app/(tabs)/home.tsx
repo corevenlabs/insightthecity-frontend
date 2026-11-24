@@ -29,6 +29,7 @@ import { NewsImage } from '../../components/NewsImage';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { fetchNews, formatDate, type NewsCard } from '../../lib/news';
+import { SpanishContentNotice } from '../../components/SpanishContentNotice';
 import { fetchExperiences } from '../../lib/experiences';
 import {
   fetchCurrentWeather,
@@ -188,10 +189,10 @@ function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionPr
     let alive = true;
     const itemLimit = isNewsSection ? 5 : 4;
     const load = async () => {
-      const first = await fetchNews(section, 1, filteringPlans ? 20 : itemLimit, language);
+      const first = await fetchNews(section, 1, filteringPlans ? 20 : itemLimit, language, { spanishFallback: true });
       const loaded = [...first.items];
       if (filteringPlans) for (let page = 2; page <= first.totalPages && alive; page++) {
-        loaded.push(...(await fetchNews(section, page, 20, language)).items);
+        loaded.push(...(await fetchNews(section, page, 20, language, { spanishFallback: true })).items);
       }
       return loaded;
     };
@@ -318,7 +319,10 @@ function HomeNewsSection({ section, title, route, tags = [] }: HomeNewsSectionPr
       ) : visibleItems.length === 0 ? (
         <Text style={styles.emptyText}>{ui("Todavía no hay publicaciones en esta sección.")}</Text>
       ) : (
-        isNewsSection ? renderNewsLayout() : renderPlansCarousel()
+        <>
+          <SpanishContentNotice visible={visibleItems.some(item => item.inSpanish)} />
+          {isNewsSection ? renderNewsLayout() : renderPlansCarousel()}
+        </>
       )}
     </View>
   );

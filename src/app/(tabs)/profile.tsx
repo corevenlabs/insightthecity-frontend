@@ -193,7 +193,7 @@ export default function ProfileScreen() {
       {permission !== 'unsupported' && <View style={styles.card}>
         <Text style={styles.sectionTitle}>{ui('Notificaciones')}</Text>
         {row('notifications-outline', ui('Avisos de cuenta y membresía'), permission !== 'granted' || user.notification_preferences?.account === false ? ui('Desactivadas') : ui('Activadas'), () => { setNoticesError(''); setNoticesOpen(true); })}
-        {row('bookmark-outline', ui('Recordatorios de guardados'), permission === 'granted' && user.notification_preferences?.saved !== false ? ui('Activadas') : ui('Desactivadas'), () => { setNoticesError(''); setNoticesOpen(true); })}
+        {row('bookmark-outline', ui('Recordatorios de guardados'), permission === 'granted' && user.notification_preferences?.saved === true ? ui('Activadas') : ui('Desactivadas'), () => { setNoticesError(''); setNoticesOpen(true); })}
         {row('megaphone-outline', ui('Novedades y promociones'), permission === 'granted' && user.notification_preferences?.promotions === true ? ui('Activadas') : ui('Desactivadas'), () => { setNoticesError(''); setNoticesOpen(true); })}
       </View>}
       <View style={[styles.card, styles.membershipCard]}>
@@ -250,8 +250,8 @@ export default function ProfileScreen() {
                 <Switch value={user.notification_preferences?.account !== false} disabled={noticesBusy} onValueChange={(value) => void toggleNotices('account', value)} trackColor={{ true: GOLD, false: '#444' }} thumbColor="#FFF" accessibilityLabel={ui('Avisos de cuenta y membresía')} />
               </View>
               <View style={styles.noticeSwitchRow}>
-                <View style={styles.noticeSwitchText}><Text style={styles.noticeSwitchLabel}>{ui('Recordatorios de guardados')}</Text><Text style={styles.noticeSwitchHint}>{ui('Cuando algo que guardaste está por terminar o su beneficio ya empezó.')}</Text></View>
-                <Switch value={user.notification_preferences?.saved !== false} disabled={noticesBusy} onValueChange={(value) => void toggleNotices('saved', value)} trackColor={{ true: GOLD, false: '#444' }} thumbColor="#FFF" accessibilityLabel={ui('Recordatorios de guardados')} />
+                <View style={styles.noticeSwitchText}><Text style={styles.noticeSwitchLabel}>{ui('Recordatorios de guardados')}</Text><Text style={styles.noticeSwitchHint}>{ui('Cuando algo que guardaste está por terminar o su beneficio ya empezó. Para avisarte, tus experiencias guardadas se copian a nuestro servidor.')}</Text></View>
+                <Switch value={user.notification_preferences?.saved === true} disabled={noticesBusy} onValueChange={(value) => void toggleNotices('saved', value)} trackColor={{ true: GOLD, false: '#444' }} thumbColor="#FFF" accessibilityLabel={ui('Recordatorios de guardados')} />
               </View>
               <View style={styles.noticeSwitchRow}>
                 <View style={styles.noticeSwitchText}><Text style={styles.noticeSwitchLabel}>{ui('Novedades y promociones')}</Text><Text style={styles.noticeSwitchHint}>{ui('Nuevas experiencias, beneficios y planes del Club. Como máximo una cada 12 horas.')}</Text></View>

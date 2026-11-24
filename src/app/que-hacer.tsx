@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { NewsImage } from '../components/NewsImage';
+import { SpanishContentNotice } from '../components/SpanishContentNotice';
 import { formatDate, useNewsFeed, type NewsCard } from '../lib/news';
 
 export default function QueHacerScreen() {
@@ -43,6 +44,7 @@ export default function QueHacerScreen() {
       {backHeader}
       <Text style={styles.subtitle}>{ui("Planes, eventos y experiencias para vivir Nueva York con intención.")}</Text>
 
+      <SpanishContentNotice visible={feed.items.some(item => item.inSpanish)} />
       {featured && (
         <TouchableOpacity accessibilityRole="button" accessibilityLabel={featured.title} style={[styles.heroCard, { height: Math.min(400, Math.max(220, width * 0.65)) }]} onPress={() => openArticle(featured.id)} activeOpacity={0.85}>
           <NewsImage
