@@ -38,12 +38,15 @@ export function SavedProvider({ children }: { children: ReactNode }) {
     }).catch(() => { if (active) Alert.alert(ui('Guardados'), ui('No se pudieron cargar tus guardados.')); });
     return () => { active = false; };
   }, [storageKey, ui]);
-  // Keep the server copy (used for reminders) in step with this account's saved experiences.
+  // Saved experiences stay on the device unless the server needs them for reminders: the automation is on,
+  // this person accepts reminders and has a registered device. Otherwise nothing is sent.
+  const savedSync = user?.notification_preferences?.savedSync === true;
   const savedIds = state.key === storageKey && state.ready && user
     ? state.items.filter((item) => item.kind === 'experience').map((item) => item.id).sort().join('|') : null;
   const lastSynced = useRef<string | null>(null);
   useEffect(() => {
-    if (savedIds === null || !token) return;
+    if (!savedSync) lastSynced.current = null; // the server deletes its copy; send it again if this is turned back on
+    if (savedIds === null || !token || !savedSync) return;
     const signature = `${storageKey}:${savedIds}`;
     if (lastSynced.current === signature) return;
     const timer = setTimeout(() => {
@@ -52,7 +55,7 @@ export function SavedProvider({ children }: { children: ReactNode }) {
         .catch(() => undefined);
     }, 1500);
     return () => clearTimeout(timer);
-  }, [savedIds, storageKey, token]);
+  }, [savedIds, savedSync, storageKey, token]);
   const toggle = (item: SavedItem) => {
     queue.current = queue.current.then(async () => {
       if (item.canSave === false || !current.current.ready || current.current.key !== storageKey) return;
